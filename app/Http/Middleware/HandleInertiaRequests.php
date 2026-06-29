@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\MasterPegawai;
+use App\Models\Outsourcing;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -39,9 +41,23 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $request->user()?->load(
+                    [
+                        'userable' => function ($query) {
+                            $query->morphWith(
+                                [
+                                    MasterPegawai::class => ['biro'],
+                                    Outsourcing::class => ['biro', 'jabatan'],
+                                ]
+                            );
+                        }
+                    ]
+                ),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'flash' => [
+                'pathTemp' => fn() => $request->session()->get('pathTemp'),
+            ],
         ];
     }
 }

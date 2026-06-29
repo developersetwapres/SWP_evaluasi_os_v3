@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\KelompokJabatan;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class KelompokJabatanSeeder extends Seeder
@@ -24,7 +23,7 @@ class KelompokJabatanSeeder extends Seeder
         ];
 
         foreach ($files as $file) {
-            KelompokJabatan::firstOrCreate([
+            KelompokJabatan::create([
                 'nama_kelompok' => $file['nama_kelompok'],
             ]);
         }

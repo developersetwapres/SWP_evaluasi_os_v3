@@ -1,0 +1,378 @@
+<?php
+
+namespace App\Services\Penilaian;
+
+use App\Models\Aspek;
+use Illuminate\Support\Collection;
+
+class EvaluationEngineService
+{
+    public function calculate(Collection $penugasanCollection): array
+    {
+        $evaluators = [];
+        $globalAspek = [];
+        $finalScore = 0;
+
+        foreach ($penugasanCollection as $penugasan) {
+
+            $evaluatorResult = $this->calculateEvaluator($penugasan);
+
+            $evaluators[] = $evaluatorResult;
+
+            $finalScore += $evaluatorResult['weightedScore'];
+
+            foreach ($evaluatorResult['aspects'] as $aspek) {
+
+                $globalAspek[$aspek['id']]['title'] = $aspek['title'];
+                $globalAspek[$aspek['id']]['bobot'] = $aspek['bobot'];
+
+                // gunakan weightedScore PER evaluator (sudah termasuk bobot aspek)
+                $globalAspek[$aspek['id']]['nilai'][] =
+                    $aspek['weightedScore'] * $evaluatorResult['bobot'];
+            }
+        }
+
+        return [
+            'status' => $this->resolveStatus($evaluators),
+            'finalScore' => round($finalScore, 2),
+            'evaluators' => $evaluators,
+            'aspectsGlobal' => $this->calculateGlobalAspek($globalAspek),
+        ];
+    }
+
+    protected function calculateEvaluator($penugasan): array
+    {
+        $aspekData = [];
+        $totalEvaluatorScore = 0;
+
+        foreach ($penugasan->penilaian as $penilaian) {
+
+            $aspek = $penilaian->kriteria->aspek;
+
+            $aspekData[$aspek->id]['title'] = $aspek->title;
+            $aspekData[$aspek->id]['bobot'] = $aspek->bobotSkor->bobot / 100;
+            $aspekData[$aspek->id]['nilai'][] = $penilaian->nilai;
+        }
+
+        $aspekResults = [];
+
+        foreach ($aspekData as $id => $data) {
+
+            $countNilai = count($data['nilai']);
+
+            if ($countNilai === 0) {
+                continue;
+            }
+
+            $avg = array_sum($data['nilai']) / $countNilai;
+            $weightedAspek = $avg * $data['bobot'];
+
+            $totalEvaluatorScore += $weightedAspek;
+
+            $aspekResults[] = [
+                'id' => $id,
+                'title' => $data['title'],
+                'averageScore' => round($avg, 2),
+                'weightedScore' => round($weightedAspek, 2),
+                'bobot' => $data['bobot'],
+            ];
+        }
+
+        $bobotEvaluator = $penugasan->bobotSkor->bobot / 100;
+
+        // konsisten: sum(avg × bobot_aspek) × bobot_evaluator
+        $weightedFinal = $totalEvaluatorScore * $bobotEvaluator;
+
+        return [
+            'type' => $penugasan->tipe_penilai,
+            'uuidPenugasan' => $penugasan->uuid,
+            'evaluatorName' => $penugasan->evaluators?->userable?->name,
+            'averageScore' => round($totalEvaluatorScore, 2),
+            'bobot' => $bobotEvaluator,
+            'weightedScore' => round($weightedFinal, 2),
+            'status' => $penugasan->status,
+            'notes' => $penugasan->catatan,
+            'aspects' => $aspekResults,
+        ];
+    }
+
+    protected function calculateGlobalAspek(array $globalAspek): array
+    {
+        $result = [];
+
+        foreach ($globalAspek as $id => $data) {
+
+            $countNilai = count($data['nilai'] ?? []);
+
+            if ($countNilai === 0) {
+                continue;
+            }
+
+            $total = array_sum($data['nilai']);
+
+            $result[] = [
+                'id' => $id,
+                'title' => $data['title'],
+                'averageScore' => round($total / $countNilai, 2),
+                'weightedScore' => round($total, 2),
+                'bobot' => $data['bobot'],
+            ];
+        }
+
+        return $result;
+    }
+
+    private function resolveStatus(array $evaluators): string
+    {
+        $completed = collect($evaluators)
+            ->every(fn($e) => $e['status'] === 'completed');
+
+        return $completed ? 'completed' : 'draft';
+    }
+
+    public function calculateDetailPerAspek(
+        Collection $penugasanCollection,
+        string $outsourcingUuid
+    ): array {
+
+        $result = $this->calculate($penugasanCollection);
+
+        $aspects = [];
+
+        foreach ($result['aspectsGlobal'] as $globalAspek) {
+
+            $evaluators = [];
+
+            foreach ($result['evaluators'] as $evaluator) {
+
+                $found = collect($evaluator['aspects'])
+                    ->firstWhere('id', $globalAspek['id']);
+
+                if ($found) {
+
+                    $weighted =
+                        $found['weightedScore'] * $evaluator['bobot'];
+
+                    $evaluators[] = [
+                        'evaluatorName' => $evaluator['evaluatorName'],
+                        'evaluatorType' => $evaluator['type'],
+                        'averageScore' => $found['averageScore'],
+                        'weightedScore' => round($weighted, 2),
+                        'bobot' => $evaluator['bobot'],
+                    ];
+                } else {
+
+                    $evaluators[] = [
+                        'evaluatorName' => $evaluator['evaluatorName'],
+                        'evaluatorType' => $evaluator['type'],
+                        'averageScore' => 0,
+                        'weightedScore' => 0,
+                        'bobot' => $evaluator['bobot'],
+                    ];
+                }
+            }
+
+            $total = collect($evaluators)->sum('weightedScore');
+
+            $aspects[] = [
+                'id' => $globalAspek['id'],
+                'aspectTitle' => $globalAspek['title'],
+                'evaluators' => $evaluators,
+                'total' => round($total, 2),
+            ];
+        }
+
+        return [
+            'uuid' => $outsourcingUuid,
+            'aspects' => $aspects,
+        ];
+    }
+
+    public function calculateRawScore($penugasan): float
+    {
+        $aspekData = [];
+
+        foreach ($penugasan->penilaian as $penilaian) {
+
+            $aspek = $penilaian->kriteria->aspek;
+
+            $aspekData[$aspek->id]['bobot'] =
+                $aspek->bobotSkor->bobot / 100;
+
+            $aspekData[$aspek->id]['nilai'][] =
+                $penilaian->nilai;
+        }
+
+        $total = 0;
+
+        foreach ($aspekData as $data) {
+
+            $count = count($data['nilai']);
+
+            if ($count === 0) {
+                continue;
+            }
+
+            $avg = array_sum($data['nilai']) / $count;
+
+            $total += $avg * $data['bobot'];
+        }
+
+        return round($total, 2);
+    }
+
+    public function calculateSingleSummary($penilaian): array
+    {
+        $aspects = Aspek::with(['kriteria', 'bobotSkor'])->get();
+
+        $finalTotalScore = 0;
+        $aspectResults = [];
+
+        foreach ($aspects as $aspect) {
+
+            $kriteriaIds = $aspect->kriteria->pluck('id');
+
+            $nilai = $penilaian
+                ->whereIn('kriteria_id', $kriteriaIds)
+                ->pluck('nilai')
+                ->filter(fn($n) => $n !== null)
+                ->map(fn($n) => (float) $n);
+
+            if ($nilai->isEmpty() || !$aspect->bobotSkor) {
+                continue;
+            }
+
+            $average = round($nilai->avg(), 2);
+            $bobot = $aspect->bobotSkor->bobot / 100;
+
+            $weighted = round($average * $bobot, 2);
+
+            $finalTotalScore += $weighted;
+
+            $aspectResults[] = [
+                'title' => $aspect->title,
+                'nilai' => $average,
+                'bobot' => $bobot,
+            ];
+        }
+
+        return [
+            'finalTotalScore' => round($finalTotalScore, 2),
+            'aspects' => $aspectResults,
+        ];
+    }
+
+    public function getEvaluationData($penugasan, int $jabatanId)
+    {
+        return Aspek::select(['id', 'title'])
+            ->with([
+                'kriteria' => fn($q) =>
+                $q->with([
+                    'penilaian' => fn($qPenilaian) =>
+                    $qPenilaian->where('penugasan_id', $penugasan->id),
+
+                    'indikators' => fn($q2) =>
+                    $q2->where('jabatan_id', $jabatanId)
+                        ->orWhere('jabatan_id', 16),
+                ]),
+            ])
+            ->latest()
+            ->get();
+    }
+
+    public function getDetailByAspek($penilaian): array
+    {
+        $aspects = Aspek::with(['kriteria', 'bobotSkor'])->get();
+
+        $finalTotalScore = 0;
+        $aspectResults = [];
+
+        foreach ($aspects as $aspect) {
+            $kriteriaIds = $aspect->kriteria->pluck('id');
+
+            // kumpulkan semua nilai kriteria dalam 1 aspek
+            $nilai = collect();
+            $bobot = optional($aspect->bobotSkor)->bobot;
+
+            $penilaian
+                ->whereIn('kriteria_id', $kriteriaIds)
+                ->each(
+                    fn($p) =>
+                    $p->nilai !== null
+                        ? $nilai->push((float) $p->nilai)
+                        : null
+                );
+
+            if ($nilai->isEmpty() || $bobot === null) {
+                continue;
+            }
+
+            $average = round($nilai->avg(), 2);
+            $weighted = round($average * ($bobot / 100), 2);
+
+            $finalTotalScore += $weighted;
+
+            $aspectResults[] = [
+                'title' => $aspect->title,
+                'nilai' => $average,
+                'avg' => round($nilai->avg(), 2),
+                'bobot' => $bobot / 100,
+            ];
+        }
+
+        return [
+            'finalTotalScore' => round($finalTotalScore, 2),
+            'aspects' => $aspectResults,
+        ];
+    }
+
+    public function calculateRankingByJabatan(Collection $outsourcings): array
+    {
+        $result = [];
+
+        foreach ($outsourcings as $outsourcing) {
+
+            if ($outsourcing->penugasan->isEmpty()) {
+                continue;
+            }
+
+            $calc = $this->calculate($outsourcing->penugasan);
+
+            $evaluators = collect($calc['evaluators']);
+
+            $atasan = $evaluators->firstWhere('type', 'atasan')['weightedScore'] ?? 0;
+            $penerima = $evaluators->firstWhere('type', 'penerima_layanan')['weightedScore'] ?? 0;
+            $teman = $evaluators->firstWhere('type', 'teman_setingkat')['weightedScore'] ?? 0;
+
+            $jabatan = $outsourcing->jabatan?->nama_jabatan ?? 'Tanpa Jabatan';
+
+            $result[$jabatan][] = [
+                'nama' => $outsourcing->name,
+                'atasan' => round($atasan, 2),
+                'penerima_layanan' => round($penerima, 2),
+                'teman' => round($teman, 2),
+                'total' => round($calc['finalScore'], 2),
+            ];
+        }
+
+        $final = [];
+
+        foreach ($result as $jabatan => $items) {
+
+            $sorted = collect($items)
+                ->sortByDesc('total')
+                ->values()
+                ->map(function ($item, $index) {
+                    $item['ranking'] = $index + 1;
+                    return $item;
+                });
+
+            $final[] = [
+                'jabatan' => $jabatan,
+                'ranking' => $sorted->values(),
+            ];
+        }
+
+        return $final;
+    }
+}

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Penilaian;
 use App\Http\Requests\StorePenilaianRequest;
 use App\Http\Requests\UpdatePenilaianRequest;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PenilaianController extends Controller
 {
@@ -62,5 +64,10 @@ class PenilaianController extends Controller
     public function destroy(Penilaian $penilaian)
     {
         //
+    }
+
+    public function rekaphasil(): Response
+    {
+        return Inertia::render('admin/rekaphasil/page');
     }
 }
