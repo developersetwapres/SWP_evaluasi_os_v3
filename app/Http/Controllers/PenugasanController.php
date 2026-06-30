@@ -11,7 +11,6 @@ use App\Models\Outsourcing;
 use App\Models\Siklus;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -22,8 +21,6 @@ class PenugasanController extends Controller
      */
     public function index(): Response
     {
-        dd(Hash::make('7777777'));
-
         $siklus = Siklus::where('is_active', 1)->first();
 
 

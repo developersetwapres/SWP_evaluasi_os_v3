@@ -366,7 +366,7 @@ function BehavioralScale({
                         />
                         <span className="grid gap-1">
                             <span className="font-semibold">
-                                {option.value} - Score {option.value}
+                                Score {option.value}
                             </span>
                             <span className="text-sm leading-6 text-muted-foreground">
                                 {option.description}
@@ -487,6 +487,9 @@ export default function EvaluationForm({
         () => normalizePillars(evaluationData),
         [evaluationData],
     );
+
+    console.log(evaluationData);
+
     const [currentStep, setCurrentStep] = useState(0);
     const [stepMessage, setStepMessage] = useState('');
 
@@ -704,10 +707,11 @@ export default function EvaluationForm({
                                             <FileText className="h-5 w-5" />
                                         </div>
                                         <div>
-                                            <CardTitle>Global Notes</CardTitle>
+                                            <CardTitle>
+                                                Saran Perbaikan
+                                            </CardTitle>
                                             <CardDescription>
-                                                Optional summary, context, or
-                                                improvement suggestion.
+                                                Optional
                                             </CardDescription>
                                         </div>
                                     </div>

@@ -130,7 +130,7 @@ class EvaluationEngineService
     private function resolveStatus(array $evaluators): string
     {
         $completed = collect($evaluators)
-            ->every(fn ($e) => $e['status'] === 'completed');
+            ->every(fn($e) => $e['status'] === 'completed');
 
         return $completed ? 'completed' : 'draft';
     }
@@ -244,8 +244,8 @@ class EvaluationEngineService
             $nilai = $penilaian
                 ->whereIn('indikator_id', $indikatorIds)
                 ->pluck('nilai')
-                ->filter(fn ($n) => $n !== null)
-                ->map(fn ($n) => (float) $n);
+                ->filter(fn($n) => $n !== null)
+                ->map(fn($n) => (float) $n);
 
             if ($nilai->isEmpty() || ! $aspect->bobotSkor) {
                 continue;
@@ -279,12 +279,12 @@ class EvaluationEngineService
         return Pilar::select(['id', 'title', 'bobot_skor_id'])
             ->with([
                 'bobotSkor:id,bobot',
-                'indikator' => fn ($query) => $query
+                'indikator' => fn($query) => $query
                     ->where('kelompok_jabatan_id', $kelompokJabatanId)
                     ->orderBy('id')
                     ->with([
-                        'behavioral' => fn ($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
-                        'penilaian' => fn ($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
+                        'behavioral' => fn($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
+                        'penilaian' => fn($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
                     ]),
             ])
             ->orderBy('id')
@@ -308,7 +308,7 @@ class EvaluationEngineService
             $penilaian
                 ->whereIn('indikator_id', $indikatorIds)
                 ->each(
-                    fn ($p) => $p->nilai !== null
+                    fn($p) => $p->nilai !== null
                         ? $nilai->push((float) $p->nilai)
                         : null
                 );

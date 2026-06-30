@@ -25,7 +25,7 @@ class PenugasanFactory extends Factory
             'uuid' => fake()->uuid(),
             'bobot_skor_id' => BobotSkor::factory(),
             'siklus_id' => Siklus::factory(),
-            'outsourcing_id' => fn () => Outsourcing::factory()->create()->id,
+            'outsourcing_id' => fn() => Outsourcing::factory()->create()->id,
             'penilai_id' => User::factory(),
             'tipe_penilai' => fake()->randomElement(['atasan', 'penerima_layanan1', 'penerima_layanan2']),
             'status' => fake()->randomElement(['completed', 'draft', 'incomplete']),
