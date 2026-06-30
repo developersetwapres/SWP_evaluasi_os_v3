@@ -25,14 +25,17 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
+            'userable_id' => null,
+            'userable_type' => null,
+            'nip' => fake()->unique()->numerify('##.###.###.#'),
+            'nip_sso' => null,
+            'is_ldap' => false,
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'role' => json_encode(['user']),
             'password' => static::$password ??= Hash::make('password'),
+            'is_active' => true,
+            'email_verified_at' => now(),
             'remember_token' => Str::random(10),
-            'two_factor_secret' => null,
-            'two_factor_recovery_codes' => null,
-            'two_factor_confirmed_at' => null,
         ];
     }
 

@@ -2,7 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\BobotSkor;
+use App\Models\Outsourcing;
 use App\Models\Penugasan;
+use App\Models\Siklus;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +22,14 @@ class PenugasanFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'uuid' => fake()->uuid(),
+            'bobot_skor_id' => BobotSkor::factory(),
+            'siklus_id' => Siklus::factory(),
+            'outsourcing_id' => fn () => Outsourcing::factory()->create()->id,
+            'penilai_id' => User::factory(),
+            'tipe_penilai' => fake()->randomElement(['atasan', 'penerima_layanan1', 'penerima_layanan2']),
+            'status' => fake()->randomElement(['completed', 'draft', 'incomplete']),
+            'catatan' => fake()->sentence(),
         ];
     }
 }

@@ -18,7 +18,11 @@ class SiklusFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'title' => fake()->unique()->word(),
+            'uuid' => fake()->uuid(),
+            'tanggal_mulai' => fake()->dateTime(),
+            'tanggal_selesai' => fake()->dateTime(),
+            'is_active' => false,
         ];
     }
 }

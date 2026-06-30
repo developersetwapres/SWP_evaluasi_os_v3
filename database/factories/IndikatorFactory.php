@@ -3,7 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Indikator;
-use App\Models\Jabatan;
+use App\Models\KelompokJabatan;
 use App\Models\Pilar;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,7 +21,7 @@ class IndikatorFactory extends Factory
     {
         return [
             'pilar_id' => Pilar::factory(),
-            'jabatan_id' => Jabatan::factory(),
+            'kelompok_jabatan_id' => KelompokJabatan::factory(),
             'title' => fake()->sentence(6),
             'defenisi' => fake()->sentence(12),
             'uuid' => fake()->uuid(),

@@ -2,6 +2,7 @@
 
 namespace App\Services\Penilaian;
 
+use App\Models\Jabatan;
 use App\Models\Pilar;
 use Illuminate\Support\Collection;
 
@@ -272,11 +273,14 @@ class EvaluationEngineService
 
     public function getEvaluationData($penugasan, int $jabatanId)
     {
+        // Get kelompok_jabatan_id from jabatan
+        $kelompokJabatanId = Jabatan::find($jabatanId)?->kelompok_jabatan_id;
+
         return Pilar::select(['id', 'title', 'bobot_skor_id'])
             ->with([
                 'bobotSkor:id,bobot',
                 'indikator' => fn ($query) => $query
-                    ->where('jabatan_id', $jabatanId)
+                    ->where('kelompok_jabatan_id', $kelompokJabatanId)
                     ->orderBy('id')
                     ->with([
                         'behavioral' => fn ($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),

@@ -14,18 +14,22 @@ class Indikator extends Model
 {
     /** @use HasFactory<IndikatorFactory> */
     use HasFactory;
-    use HasUuid;
 
+    use HasUuid;
 
     protected $casts = [
         'example' => 'array',
     ];
 
-
     // --------------- BelongsTo-----------------------
     public function aspek(): BelongsTo
     {
         return $this->belongsTo(Pilar::class, 'pilar_id');
+    }
+
+    public function kelompokJabatan(): BelongsTo
+    {
+        return $this->belongsTo(KelompokJabatan::class, 'kelompok_jabatan_id');
     }
 
     // --------------- HasOne------------------------------
