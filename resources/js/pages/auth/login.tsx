@@ -36,7 +36,6 @@ export default function Login({ status, canResetPassword }: Props) {
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
                                     id="email"
-                                    type="email"
                                     name="email"
                                     required
                                     autoFocus

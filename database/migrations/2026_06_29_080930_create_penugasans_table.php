@@ -19,7 +19,7 @@ return new class extends Migration
             $table->foreignId('siklus_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('outsourcing_id')->constrained()->onDelete('cascade')->onUpdate('cascade');
             $table->foreignId('penilai_id')->constrained('users')->onDelete('cascade')->onUpdate('cascade');
-            $table->enum('tipe_penilai', ['atasan', 'penerima_layanan', 'teman_setingkat']);
+            $table->enum('tipe_penilai', ['atasan', 'penerima_layanan1', 'penerima_layanan2']);
             $table->enum('status', ['completed', 'draft', 'incomplete'])->default('incomplete');
             $table->text('catatan')->nullable();
 

@@ -13,13 +13,13 @@ class KelompokJabatanSeeder extends Seeder
     public function run(): void
     {
         $files = [
+            ["nama_kelompok" => "BARS_Transportation Support"],
+            ["nama_kelompok" => "BARS_Hospitality & Service Support"],
             ["nama_kelompok" => "BARS_Administrative Support"],
             ["nama_kelompok" => "BARS_Environment Support"],
-            ["nama_kelompok" => "BARS_Hospitality & Service Support"],
+            ["nama_kelompok" => "BARS_Technical Support"],
             ["nama_kelompok" => "BARS_Media & Communication Support"],
             ["nama_kelompok" => "BARS_Supervisory Support"],
-            ["nama_kelompok" => "BARS_Technical Support"],
-            ["nama_kelompok" => "BARS_Transportation Support"],
         ];
 
         foreach ($files as $file) {

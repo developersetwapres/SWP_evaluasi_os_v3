@@ -12,7 +12,7 @@ class StorePenugasanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,27 @@ class StorePenugasanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'atasan' => ['required', 'uuid', 'exists:master_pegawais,uuid'],
+            'penerima_layanan1' => ['required', 'uuid', 'exists:master_pegawais,uuid'],
+            'penerima_layanan2' => ['required', 'uuid', 'exists:master_pegawais,uuid'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'atasan.required' => 'Penilai atasan wajib dipilih.',
+            'atasan.uuid' => 'Format penilai atasan tidak valid.',
+            'atasan.exists' => 'Penilai atasan tidak ditemukan.',
+
+            'penerima_layanan1.required' => 'Penilai penerima layanan wajib dipilih.',
+            'penerima_layanan1.uuid' => 'Format penilai penerima layanan tidak valid.',
+            'penerima_layanan1.exists' => 'Penilai penerima layanan tidak ditemukan.',
+
+            'penerima_layanan2.required' => 'Penilai penerima layanan wajib dipilih.',
+            'penerima_layanan2.uuid' => 'Format penilai penerima layanan tidak valid.',
+            'penerima_layanan2.exists' => 'Penilai penerima layanan tidak ditemukan.',
+
         ];
     }
 }

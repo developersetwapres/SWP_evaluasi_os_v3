@@ -22,13 +22,13 @@ class JabatanSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'kelompok_jabatan_id' => 2,
+                'kelompok_jabatan_id' => 4,
                 'kode_jabatan' => 'TATA_TEMPAT',
                 'nama_jabatan' => 'Petugas Tata Tempat'
             ],
             [
                 'id' => 3,
-                'kelompok_jabatan_id' => 2,
+                'kelompok_jabatan_id' => 1,
                 'kode_jabatan' => 'PENGEMUDI',
                 'nama_jabatan' => 'Pengemudi'
             ],
