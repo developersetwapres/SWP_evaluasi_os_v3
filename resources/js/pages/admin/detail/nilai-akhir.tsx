@@ -19,7 +19,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
 import { reset } from '@/routes/penugasan';
 import {
     getScoreBadgeColor,
@@ -43,10 +42,10 @@ export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
             {},
             {
                 onSuccess: () => {
-                    toast({
-                        title: 'Berhasil',
-                        description: 'Nilai sudah direset',
-                    });
+                    // toast({
+                    //     title: 'Berhasil',
+                    //     description: 'Nilai sudah direset',
+                    // });
                 },
             },
         );

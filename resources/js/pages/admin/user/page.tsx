@@ -27,7 +27,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
 import AdminLayout from '@/layouts/app/app-adminkmz-layout';
 import { cn } from '@/lib/utils';
 import {
@@ -77,7 +76,6 @@ export default function UserManagement({
 }: any) {
     const { flash } = usePage().props;
     const imageUrl = flash?.pathTemp ?? '';
-    const { toast } = useToast();
 
     const [users, setUsers] = useState(initialUsers);
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
@@ -174,17 +172,17 @@ export default function UserManagement({
                     setIsDialogAsnOpen(false);
                     setOnProcessing(false);
 
-                    toast({
-                        title: 'Validasi Berhasil',
-                        description: 'Data user berhasil diperbarui.',
-                    });
+                    // toast({
+                    //     title: 'Validasi Berhasil',
+                    //     description: 'Data user berhasil diperbarui.',
+                    // });
                 },
                 onError: (err) => {
-                    toast({
-                        title: 'Validasi gagal',
-                        description: Object.values(err)[0],
-                        variant: 'destructive',
-                    });
+                    // toast({
+                    //     title: 'Validasi gagal',
+                    //     description: Object.values(err)[0],
+                    //     variant: 'destructive',
+                    // });
                     setOnProcessing(false);
                 },
             });
@@ -198,17 +196,17 @@ export default function UserManagement({
                     setIsDialogAsnOpen(false);
                     setOnProcessing(false);
 
-                    toast({
-                        title: 'Validasi Berhasil',
-                        description: 'Data user berhasil ditambahkan.',
-                    });
+                    // toast({
+                    //     title: 'Validasi Berhasil',
+                    //     description: 'Data user berhasil ditambahkan.',
+                    // });
                 },
                 onError: (err) => {
-                    toast({
-                        title: 'Validasi gagal',
-                        description: Object.values(err)[0],
-                        variant: 'destructive',
-                    });
+                    // toast({
+                    //     title: 'Validasi gagal',
+                    //     description: Object.values(err)[0],
+                    //     variant: 'destructive',
+                    // });
                     setOnProcessing(false);
                 },
             });
