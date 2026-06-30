@@ -32,7 +32,7 @@ services:
 
 volumes:
   public_data:
-    name: tradingjurnal_public
+    name: evaluasiosv3_public
 
 networks:
   app-network:
