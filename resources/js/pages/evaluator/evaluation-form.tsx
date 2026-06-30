@@ -10,89 +10,469 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { home } from '@/routes';
 import { store } from '@/routes/penilaian';
 import type { Outsourcing } from '@/types/outsourcing';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
     ArrowRight,
-    CheckCircle,
+    BriefcaseBusiness,
+    Building2,
+    CheckCircle2,
     ClipboardCheck,
     FileText,
-    Info,
-    Target,
-    UserCheck,
+    Layers3,
+    LoaderCircle,
+    UserRound,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 
-// Classification function
-const getScoreClassification = (score: number) => {
-    if (score <= 60)
-        return {
-            label: 'SK (Sangat Kurang)',
-            color: 'bg-red-100 text-red-800 border-red-200',
-            range: '51-60',
-        };
-    if (score <= 70)
-        return {
-            label: 'K (Kurang)',
-            color: 'bg-orange-100 text-orange-800 border-orange-200',
-            range: '61-70',
-        };
-    if (score <= 80)
-        return {
-            label: 'BP (Butuh Perbaikan)',
-            color: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-            range: '71-80',
-        };
-    if (score <= 90)
-        return {
-            label: 'B (Baik)',
-            color: 'bg-blue-100 text-blue-800 border-blue-200',
-            range: '81-90',
-        };
-    return {
-        label: 'SB (Sangat Baik)',
-        color: 'bg-green-100 text-green-800 border-green-200',
-        range: '91-100',
-    };
+type BehavioralOption = {
+    value: number;
+    description: string;
 };
 
-const scoreRanges = [
+type Indicator = {
+    id: number;
+    globalNumber: number;
+    title: string;
+    description: string;
+    options: BehavioralOption[];
+};
+
+type Pillar = {
+    id: number;
+    title: string;
+    weight: number;
+    description: string;
+    indicators: Indicator[];
+};
+
+type ScorePayload = {
+    indicator_id: number;
+    value: number;
+};
+
+type EvaluationFormData = {
+    evaluator_id: number | null;
+    outsourcing_id: number | null;
+    scores: ScorePayload[];
+    notes: string;
+};
+
+type Person = {
+    id?: number;
+    name?: string;
+    jabatan?: string | { nama_jabatan?: string };
+    jabatan_id?: number;
+    biro?: { nama_biro?: string };
+    [key: string]: unknown;
+};
+
+interface EvaluationFormProps {
+    outsourcing: Outsourcing & {
+        id?: number;
+        biro?: { nama_biro?: string };
+    };
+    evaluator: Person;
+    evaluationData: unknown;
+    uuidPenugasanPeer: string;
+    tipePenilai: string;
+    overallNotes?: string | null;
+}
+
+const fallbackBars: BehavioralOption[] = [
     {
-        label: 'SK (Sangat Kurang)',
-        range: '51-60',
-        color: 'bg-red-100 text-red-800',
+        value: 4,
+        description: 'Fully meets criteria, no errors, ready to use',
     },
     {
-        label: 'K (Kurang)',
-        range: '61-70',
-        color: 'bg-orange-100 text-orange-800',
+        value: 3,
+        description: 'Minor issues, still usable',
     },
     {
-        label: 'BP (Butuh Perbaikan)',
-        range: '71-80',
-        color: 'bg-yellow-100 text-yellow-800',
+        value: 2,
+        description: 'Needs revision',
     },
-    { label: 'B (Baik)', range: '81-90', color: 'bg-blue-100 text-blue-800' },
     {
-        label: 'SB (Sangat Baik)',
-        range: '91-100',
-        color: 'bg-green-100 text-green-800',
+        value: 1,
+        description: 'Not usable / major issues',
     },
 ];
 
-interface EvaluationFormProps {
-    outsourcing: Outsourcing;
-    evaluator: any;
-    evaluationData: any;
-    uuidPenugasanPeer: string;
-    tipePenilai: string;
+const pillarBlueprints = [
+    {
+        title: 'Task Performance',
+        weight: 40,
+        description: 'Quality, speed, and readiness of day-to-day work output.',
+        indicators: [
+            {
+                title: 'Accuracy & Completeness',
+                description:
+                    'Work output is correct, complete, and ready for use without avoidable gaps.',
+            },
+            {
+                title: 'Timeliness',
+                description:
+                    'Assignments are completed within agreed deadlines and operational priorities.',
+            },
+            {
+                title: 'Information Availability',
+                description:
+                    'Required information, files, and status updates are available when needed.',
+            },
+        ],
+    },
+    {
+        title: 'Work Behavior',
+        weight: 40,
+        description: 'Reliability, discipline, and coordination while working.',
+        indicators: [
+            {
+                title: 'Priority Management',
+                description:
+                    'Able to distinguish urgent work, sequence tasks, and avoid preventable delays.',
+            },
+            {
+                title: 'Stability Under Pressure',
+                description:
+                    'Maintains work quality, focus, and communication during busy or difficult periods.',
+            },
+            {
+                title: 'Discipline',
+                description:
+                    'Consistently follows rules, attendance expectations, and agreed work procedures.',
+            },
+            {
+                title: 'Coordination',
+                description:
+                    'Coordinates clearly with users, supervisors, and peers to keep work moving.',
+            },
+        ],
+    },
+    {
+        title: 'Attitude & Service',
+        weight: 20,
+        description:
+            'Service mindset, trustworthiness, and professional conduct.',
+        indicators: [
+            {
+                title: 'Service Orientation',
+                description:
+                    'Responds helpfully, politely, and with attention to stakeholder needs.',
+            },
+            {
+                title: 'Integrity & Confidentiality',
+                description:
+                    'Acts honestly and protects sensitive information, documents, and access.',
+            },
+        ],
+    },
+];
+
+function readArray(value: unknown): any[] {
+    return Array.isArray(value) ? value : [];
+}
+
+function readPillars(evaluationData: unknown): any[] {
+    if (Array.isArray(evaluationData)) {
+        return evaluationData;
+    }
+
+    if (evaluationData && typeof evaluationData === 'object') {
+        return Object.values(evaluationData);
+    }
+
+    return [];
+}
+
+function normalizeBehavioralOptions(options: unknown): BehavioralOption[] {
+    const normalized = readArray(options)
+        .map((option) => ({
+            value: Number(option?.skor ?? option?.value),
+            description: String(
+                option?.behavioral ?? option?.description ?? '',
+            ).trim(),
+        }))
+        .filter(
+            (option) =>
+                option.value >= 1 &&
+                option.value <= 4 &&
+                option.description.length > 0,
+        )
+        .sort((a, b) => b.value - a.value);
+
+    return normalized.length >= 4 ? normalized.slice(0, 4) : fallbackBars;
+}
+
+function normalizePillars(evaluationData: unknown): Pillar[] {
+    const sourcePillars = readPillars(evaluationData);
+    let globalNumber = 1;
+
+    return pillarBlueprints.map((blueprint, pillarIndex) => {
+        const sourcePillar = sourcePillars[pillarIndex] ?? {};
+        const sourceIndicators = readArray(
+            sourcePillar.indikator ?? sourcePillar.kriteria,
+        );
+
+        return {
+            id: Number(sourcePillar.id ?? pillarIndex + 1),
+            title: blueprint.title,
+            weight: Number(
+                sourcePillar.bobot_skor?.bobot ??
+                    sourcePillar.bobotSkor?.bobot ??
+                    blueprint.weight,
+            ),
+            description: blueprint.description,
+            indicators: blueprint.indicators.map(
+                (indicator, indicatorIndex) => {
+                    const sourceIndicator =
+                        sourceIndicators[indicatorIndex] ?? {};
+
+                    return {
+                        id: Number(sourceIndicator.id ?? globalNumber),
+                        globalNumber: globalNumber++,
+                        title: indicator.title,
+                        description:
+                            String(
+                                sourceIndicator.defenisi ??
+                                    sourceIndicator.description ??
+                                    '',
+                            ).trim() || indicator.description,
+                        options: normalizeBehavioralOptions(
+                            sourceIndicator.behavioral,
+                        ),
+                    };
+                },
+            ),
+        };
+    });
+}
+
+function getJabatan(person?: Person | null): string {
+    if (!person) {
+        return '-';
+    }
+
+    if (typeof person.jabatan === 'string') {
+        return person.jabatan;
+    }
+
+    return person.jabatan?.nama_jabatan ?? '-';
+}
+
+function getBiro(person?: Person | Outsourcing | null): string {
+    const biro = person?.biro;
+
+    return typeof biro === 'object' && biro && 'nama_biro' in biro
+        ? String(biro.nama_biro ?? '-')
+        : '-';
+}
+
+function formatEvaluatorType(value: string): string {
+    return value
+        .replace(/\d/g, '')
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, (letter) => letter.toUpperCase())
+        .trim();
+}
+
+function PersonSummaryCard({
+    label,
+    icon: Icon,
+    person,
+}: {
+    label: string;
+    icon: typeof UserRound;
+    person: Person | (Outsourcing & { biro?: { nama_biro?: string } });
+}) {
+    return (
+        <Card className="gap-3">
+            <CardHeader className="pb-2">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sky-100 text-sky-700">
+                        <Icon className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <Badge variant="secondary">{label}</Badge>
+                        <CardTitle className="mt-2 text-xl">
+                            {person?.name ?? '-'}
+                        </CardTitle>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+                <div className="flex items-center gap-2">
+                    <BriefcaseBusiness className="h-6 w-6 text-muted-foreground" />
+
+                    <div className="flex flex-col">
+                        <p className="text-muted-foreground">Jabatan</p>
+                        <p className="font-medium">{getJabatan(person)}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <BriefcaseBusiness className="h-6 w-6 text-muted-foreground" />
+
+                    <div className="flex flex-col">
+                        <p className="text-muted-foreground">Biro</p>
+                        <p className="font-medium">{getBiro(person)}</p>
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+function BehavioralScale({
+    indicatorId,
+    value,
+    options,
+    onChange,
+}: {
+    indicatorId: number;
+    value?: number;
+    options: BehavioralOption[];
+    onChange: (value: number) => void;
+}) {
+    return (
+        <fieldset className="grid gap-3">
+            <legend className="sr-only">Behavioral Anchor Rating Scale</legend>
+            {options.map((option) => {
+                const optionId = `indicator-${indicatorId}-score-${option.value}`;
+                const selected = value === option.value;
+
+                return (
+                    <Label
+                        key={option.value}
+                        htmlFor={optionId}
+                        className={`flex cursor-pointer items-start gap-4 rounded-md border p-4 transition ${
+                            selected
+                                ? 'border-emerald-500 bg-emerald-50 text-emerald-950 shadow-sm'
+                                : 'border-border bg-background hover:border-sky-300 hover:bg-sky-50/60'
+                        }`}
+                    >
+                        <input
+                            id={optionId}
+                            type="radio"
+                            name={`indicator-${indicatorId}`}
+                            value={option.value}
+                            checked={selected}
+                            onChange={() => onChange(option.value)}
+                            className="mt-1 h-4 w-4 accent-emerald-600"
+                        />
+                        <span className="grid gap-1">
+                            <span className="font-semibold">
+                                {option.value} - Score {option.value}
+                            </span>
+                            <span className="text-sm leading-6 text-muted-foreground">
+                                {option.description}
+                            </span>
+                        </span>
+                    </Label>
+                );
+            })}
+        </fieldset>
+    );
+}
+
+function IndicatorCard({
+    indicator,
+    value,
+    onScoreChange,
+}: {
+    indicator: Indicator;
+    value?: number;
+    onScoreChange: (indicatorId: number, value: number) => void;
+}) {
+    return (
+        <Card className="gap-4">
+            <CardHeader>
+                <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-zinc-900 text-sm font-semibold text-white">
+                        {indicator.globalNumber}
+                    </div>
+                    <div className="space-y-1">
+                        <CardTitle className="text-lg">
+                            {indicator.title}
+                        </CardTitle>
+                        <CardDescription className="leading-6">
+                            {indicator.description}
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <BehavioralScale
+                    indicatorId={indicator.id}
+                    value={value}
+                    options={indicator.options}
+                    onChange={(score) => onScoreChange(indicator.id, score)}
+                />
+            </CardContent>
+        </Card>
+    );
+}
+
+function PilarSection({
+    pillar,
+    scores,
+    onScoreChange,
+}: {
+    pillar: Pillar;
+    scores: ScorePayload[];
+    onScoreChange: (indicatorId: number, value: number) => void;
+}) {
+    const completedIndicators = pillar.indicators.filter((indicator) =>
+        scores.some((score) => score.indicator_id === indicator.id),
+    ).length;
+
+    return (
+        <section className="space-y-5">
+            <div className="flex flex-col gap-4 rounded-md border bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-sky-100 text-sky-700">
+                        <Layers3 className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h2 className="text-2xl font-semibold">
+                                {pillar.title}
+                            </h2>
+                            <Badge className="bg-zinc-900 text-white hover:bg-zinc-900">
+                                {pillar.weight}%
+                            </Badge>
+                        </div>
+                        <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                            {pillar.description}
+                        </p>
+                    </div>
+                </div>
+                <div className="rounded-md border bg-zinc-50 px-4 py-3 text-sm">
+                    <span className="font-semibold">{completedIndicators}</span>{' '}
+                    of {pillar.indicators.length} selected
+                </div>
+            </div>
+
+            <div className="space-y-4">
+                {pillar.indicators.map((indicator) => (
+                    <IndicatorCard
+                        key={indicator.id}
+                        indicator={indicator}
+                        value={
+                            scores.find(
+                                (score) => score.indicator_id === indicator.id,
+                            )?.value
+                        }
+                        onScoreChange={onScoreChange}
+                    />
+                ))}
+            </div>
+        </section>
+    );
 }
 
 export default function EvaluationForm({
@@ -101,833 +481,312 @@ export default function EvaluationForm({
     evaluationData,
     uuidPenugasanPeer,
     tipePenilai,
+    overallNotes = '',
 }: EvaluationFormProps) {
+    const pillars = useMemo(
+        () => normalizePillars(evaluationData),
+        [evaluationData],
+    );
     const [currentStep, setCurrentStep] = useState(0);
-    const [scores, setScores] = useState<Record<string, number>>({});
-    const [overallNotes, setOverallNotes] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [showPreview, setShowPreview] = useState(false);
+    const [stepMessage, setStepMessage] = useState('');
 
-    const aspects = Object?.keys(evaluationData);
+    const form = useForm<EvaluationFormData>({
+        evaluator_id: evaluator?.id ?? null,
+        outsourcing_id: outsourcing?.id ?? null,
+        scores: [],
+        notes: overallNotes ?? '',
+    });
 
-    const currentAspect = aspects[currentStep];
+    const currentPillar = pillars[currentStep];
+    const progress = ((currentStep + 1) / pillars.length) * 100;
+    const isLastStep = currentStep === pillars.length - 1;
+    const selectedScoreMap = useMemo(
+        () =>
+            new Map(
+                form.data.scores.map((score) => [
+                    score.indicator_id,
+                    score.value,
+                ]),
+            ),
+        [form.data.scores],
+    );
 
-    const aspectData =
-        evaluationData[currentAspect as keyof typeof evaluationData];
+    const currentStepComplete = currentPillar.indicators.every((indicator) =>
+        selectedScoreMap.has(indicator.id),
+    );
 
-    const progress = ((currentStep + 1) / aspects.length) * 100;
+    const allIndicatorsComplete = pillars.every((pillar) =>
+        pillar.indicators.every((indicator) =>
+            selectedScoreMap.has(indicator.id),
+        ),
+    );
 
-    console.log(aspectData);
-
-    // Scroll to top when step changes
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        setStepMessage('');
     }, [currentStep]);
 
-    const handleScoreChange = (criteriaId: string, value: string) => {
-        // biarkan kosong
-        setScores((prev) => ({ ...prev, [criteriaId]: value }));
+    const setIndicatorScore = (indicatorId: number, value: number) => {
+        const nextScores = form.data.scores.filter(
+            (score) => score.indicator_id !== indicatorId,
+        );
+
+        form.setData('scores', [
+            ...nextScores,
+            { indicator_id: indicatorId, value },
+        ]);
+        setStepMessage('');
     };
 
-    const handleScoreBlur = (criteriaId: string) => {
-        setScores((prev) => {
-            const raw = prev[criteriaId];
+    const goToPreviousStep = () => {
+        setCurrentStep((step) => Math.max(step - 1, 0));
+    };
 
-            if (raw === '' || raw === undefined) {
-                return { ...prev, [criteriaId]: '' }; // tetap kosong
-            }
+    const goToNextStep = () => {
+        if (!currentStepComplete) {
+            setStepMessage(
+                'Please select a BARS score for every indicator in this pillar.',
+            );
 
-            let n = parseInt(raw as string, 10);
+            return;
+        }
 
-            if (isNaN(n)) return { ...prev, [criteriaId]: '' };
+        setCurrentStep((step) => Math.min(step + 1, pillars.length - 1));
+    };
 
-            if (n < 51) n = 51;
-            if (n > 100) n = 100;
+    const submit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
 
-            return { ...prev, [criteriaId]: n };
+        if (!allIndicatorsComplete) {
+            const firstIncompleteStep = pillars.findIndex((pillar) =>
+                pillar.indicators.some(
+                    (indicator) => !selectedScoreMap.has(indicator.id),
+                ),
+            );
+
+            setCurrentStep(Math.max(firstIncompleteStep, 0));
+            setStepMessage(
+                'Please complete all required indicator scores before submitting.',
+            );
+
+            return;
+        }
+
+        form.post(store.url(uuidPenugasanPeer), {
+            preserveScroll: true,
         });
     };
-
-    const canProceed = () => {
-        const currentCriteria = aspectData?.kriteria?.map((c: any) => c.id);
-        return currentCriteria?.every(
-            (id: any) =>
-                scores[id] !== undefined &&
-                scores[id] >= 51 &&
-                scores[id] <= 100,
-        );
-    };
-
-    const handleNext = () => {
-        if (!canProceed()) return; // stop kalau nilai invalid
-        if (currentStep < aspects.length - 1) {
-            setCurrentStep((prev) => prev + 1);
-        } else {
-            setShowPreview(true);
-        }
-    };
-
-    const handlePrevious = () => {
-        if (currentStep > 0) {
-            setCurrentStep((prev) => prev - 1);
-        }
-    };
-
-    const handleSubmit = () => {
-        setIsSubmitting(true);
-
-        // Comprehensive data logging
-        const submissionData = {
-            catatan: overallNotes,
-            nilai: Object.entries(scores).map(([kriteriaId, skor]) => ({
-                kriteria_id: Number(kriteriaId),
-                skor: skor,
-            })),
-        };
-
-        router.post(store.url(uuidPenugasanPeer), submissionData, {
-            onSuccess: () => {
-                toast({
-                    title: 'Penilaian Berhasil Disimpan!',
-                    description:
-                        'Terima kasih atas penilaian yang telah diberikan.',
-                });
-            },
-            onError: (err) => {
-                toast({
-                    title: 'Penilaian Gagal Disimpan!',
-                    description:
-                        Object.values(err) ??
-                        'Terjadi kesalahan saat menyimpan penilaian.',
-                });
-            },
-            onFinish: () => {
-                setIsSubmitting(false);
-            },
-        });
-    };
-
-    function getAspectStats(aspectKey: string) {
-        const aspect = evaluationData[aspectKey as keyof typeof evaluationData];
-        if (!aspect) return { total: 0, count: 0, avg: 0, percent: 0 };
-        const scoresList = aspect.kriteria.map((c: any) => scores[c.id] || 0);
-        const total = scoresList.reduce((a: number, b: number) => a + b, 0);
-        const count = aspect.kriteria.length;
-        const avg = count ? parseFloat((total / count).toFixed(2)) : 0;
-        // percent setara dengan avg (skala 0-100)
-        const percent = avg;
-        return { total, count, avg, percent };
-    }
-
-    const renderPreview = () => {
-        const getScoreColor = (score: number) => {
-            if (score > 90) return 'text-green-600 bg-green-50';
-            if (score > 80) return 'text-blue-600 bg-blue-50';
-            if (score > 70) return 'text-yellow-600 bg-yellow-50';
-            if (score > 60) return 'text-orange-600 bg-orange-50';
-            return 'text-red-600 bg-red-50';
-        };
-
-        return (
-            <div className="space-y-8">
-                {/* Overall Summary Card */}
-                <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-                    <CardHeader>
-                        <CardTitle className="flex items-center space-x-3 text-2xl">
-                            <div className="rounded-full bg-white/20 p-3">
-                                <CheckCircle className="h-8 w-8" />
-                            </div>
-                            <span>Preview Penilaian Keseluruhan</span>
-                        </CardTitle>
-                    </CardHeader>
-                </Card>
-
-                {/* Detailed Preview by Aspect */}
-                {aspects.map((aspectKey, aspectIndex) => {
-                    const aspect =
-                        evaluationData[
-                            aspectKey as keyof typeof evaluationData
-                        ];
-                    return (
-                        <Card
-                            key={aspectKey}
-                            className="border-l-4 border-l-blue-500"
-                        >
-                            <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-4">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-xl font-bold text-white">
-                                            {aspectIndex + 1}
-                                        </div>
-                                        <div>
-                                            <CardTitle className="text-2xl text-blue-800">
-                                                {aspect.title}
-                                            </CardTitle>
-                                            <CardDescription className="text-blue-600">
-                                                {aspect.kriteria.length}{' '}
-                                                Kriteria
-                                            </CardDescription>
-                                        </div>
-                                    </div>
-                                    {(() => {
-                                        const { total, avg } =
-                                            getAspectStats(aspectKey);
-                                        return (
-                                            <div
-                                                className={`rounded-xl px-6 py-3 ${getScoreColor(avg)}`}
-                                            >
-                                                <div className="">
-                                                    Total Skor: {total}
-                                                </div>
-                                                <div className="font-semibold">
-                                                    Rata-Rata : {avg}
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                            </CardHeader>
-
-                            <CardContent className="p-6">
-                                <div className="space-y-6">
-                                    {aspect.kriteria.map(
-                                        (
-                                            criterion: any,
-                                            criterionIndex: any,
-                                        ) => {
-                                            const score =
-                                                scores[criterion.id] || 50;
-                                            const classification =
-                                                getScoreClassification(score);
-
-                                            return (
-                                                <div
-                                                    key={criterion.id}
-                                                    className="rounded-lg border-l-4 border-l-gray-300 bg-gray-50 p-5"
-                                                >
-                                                    <div className="mb-4 flex items-start justify-between">
-                                                        <div className="flex flex-1 items-start space-x-3">
-                                                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-600 text-sm font-bold text-white">
-                                                                {aspectIndex +
-                                                                    1}
-                                                                .
-                                                                {criterionIndex +
-                                                                    1}
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <h4 className="text-xl font-semibold text-gray-800">
-                                                                    {
-                                                                        criterion.name
-                                                                    }
-                                                                </h4>
-                                                                <div className="mt-2 text-lg font-bold text-gray-900">
-                                                                    Nilai:{' '}
-                                                                    {score}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="ml-4">
-                                                            <Badge
-                                                                className={`${classification.color} border px-3 py-1 text-sm font-semibold`}
-                                                            >
-                                                                {
-                                                                    classification.label
-                                                                }
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Indicators as information */}
-                                                    <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4">
-                                                        <h5 className="mb-2 flex items-center space-x-2 font-medium text-gray-700">
-                                                            <Info className="h-4 w-4" />
-                                                            <span>
-                                                                Indikator
-                                                                Penilaian:
-                                                            </span>
-                                                        </h5>
-                                                        <ul className="space-y-1 text-sm text-gray-600">
-                                                            {criterion?.indikators?.map(
-                                                                (
-                                                                    indicator: any,
-                                                                    idx: any,
-                                                                ) => (
-                                                                    <li
-                                                                        key={
-                                                                            idx
-                                                                        }
-                                                                        className="flex items-start space-x-2"
-                                                                    >
-                                                                        <span className="mt-1 text-blue-500">
-                                                                            •
-                                                                        </span>
-                                                                        <span>
-                                                                            {
-                                                                                indicator?.deskripsi
-                                                                            }
-                                                                        </span>
-                                                                    </li>
-                                                                ),
-                                                            )}
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            );
-                                        },
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    );
-                })}
-
-                {/* Overall Notes */}
-                {overallNotes && (
-                    <Card className="gap-0 border-l-4 border-l-yellow-500 py-4">
-                        <CardHeader className="bg-yellow-50 py-1">
-                            <CardTitle className="flex items-center space-x-2 text-xl text-yellow-800">
-                                <FileText className="h-6 w-6" />
-                                <span>Saran Perbaikan</span>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-6">
-                            <div className="rounded-lg border border-yellow-200 bg-white p-4">
-                                <p className="leading-relaxed text-gray-800">
-                                    {overallNotes}
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
-
-                {/* Submit Button */}
-                <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-                    <CardContent className="p-6 text-center">
-                        <div className="space-y-4">
-                            <div>
-                                <h3 className="mb-2 text-xl font-semibold">
-                                    Konfirmasi Penilaian
-                                </h3>
-                                <p className="text-green-100">
-                                    Pastikan semua penilaian sudah benar sebelum
-                                    melakukan submit final. Setelah submit,
-                                    penilaian tidak dapat diubah lagi.
-                                </p>
-                            </div>
-                            <Button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting}
-                                size="lg"
-                                className="bg-white px-8 py-3 font-semibold text-green-600 hover:bg-green-50"
-                            >
-                                {isSubmitting ? (
-                                    <>
-                                        <div className="mr-2 h-5 w-5 animate-spin rounded-full border-b-2 border-green-600"></div>
-                                        Menyimpan Penilaian...
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckCircle className="mr-2 h-5 w-5" />
-                                        Submit Penilaian Final
-                                    </>
-                                )}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        );
-    };
-
-    if (showPreview) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-                <header className="sticky top-0 z-10 border-b bg-white shadow-sm">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between py-4">
-                            <Button
-                                variant="ghost"
-                                onClick={() => setShowPreview(false)}
-                                className="flex items-center space-x-2"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                <span>Kembali</span>
-                            </Button>
-                        </div>
-                    </div>
-                </header>
-                <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                    <div className="space-y-8">{renderPreview()}</div>
-                </main>
-            </div>
-        );
-    }
 
     return (
         <>
-            <Head title="Form" />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-                {/* Header */}
-                <header className="sticky top-0 z-10 border-b bg-white shadow-sm">
-                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                        <div className="flex items-center justify-between py-4">
-                            <Link href={home.url()}>
-                                <Button
-                                    variant="ghost"
-                                    className="flex items-center space-x-2"
-                                >
-                                    <ArrowLeft className="h-4 w-4" />
-                                    <span>Kembali</span>
-                                </Button>
-                            </Link>
+            <Head title="Evaluation Form" />
 
-                            <div className="flex items-center space-x-4">
-                                <Badge variant="outline" className="px-3 py-1">
-                                    Step {currentStep + 1} dari {aspects.length}
-                                </Badge>
-                                <div className="text-sm text-gray-600">
-                                    Progress: {Math.round(progress)}%
-                                </div>
-                            </div>
-                        </div>
+            <div className="min-h-screen bg-zinc-50">
+                <header className="sticky top-0 z-10 border-b bg-white/95 backdrop-blur">
+                    <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+                        <Link href={home.url()}>
+                            <Button variant="ghost" className="gap-2">
+                                <ArrowLeft className="h-4 w-4" />
+                                Back
+                            </Button>
+                        </Link>
+                        {/* <Badge variant="outline" className="px-3 py-1">
+                            {formatEvaluatorType(tipePenilai)}
+                        </Badge> */}
                     </div>
                 </header>
 
-                <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-                    <div className="space-y-8">
-                        {/* Enhanced Evaluator and outsourcing Info Cards */}
-                        <div className="grid gap-8 md:grid-cols-2">
-                            {/* Evaluator Card - Enhanced with Clear Label */}
-                            <Card className="relative gap-1 overflow-hidden border-0 bg-gradient-to-br from-green-500 to-emerald-600 pb-0 text-white shadow-2xl">
-                                {/* Decorative Elements */}
-                                <div className="absolute top-0 right-0 h-32 w-32 translate-x-16 -translate-y-16 rounded-full bg-white/10"></div>
-                                <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-12 translate-y-12 rounded-full bg-white/10"></div>
+                <main className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                            <ClipboardCheck className="h-9 w-9 text-sky-700" />
 
-                                <CardHeader className="relative">
-                                    <div className="mb-4 flex items-center space-x-3">
-                                        <div className="rounded-full bg-white/20 p-2">
-                                            <UserCheck className="h-6 w-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <Badge className="border-white/30 bg-white/20 font-semibold text-white">
-                                                PENILAI
-                                            </Badge>
-                                            <CardTitle className="mt-1 text-sm text-green-100">
-                                                Yang Memberikan Penilaian
-                                            </CardTitle>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-
-                                <CardContent className="relative pb-8 text-center">
-                                    {/* Photo with Enhanced Styling */}
-                                    <div className="relative mx-2 mb-6">
-                                        <div className="absolute inset-0 scale-110 animate-pulse rounded-full bg-white/20"></div>
-                                        <img
-                                            src={`/storage/${evaluator?.image}`}
-                                            alt={evaluator?.name}
-                                            className="mx-auto h-20 w-20 rounded-full border-4 border-white shadow-lg"
-                                        />
-                                    </div>
-
-                                    {/* Name and Position */}
-                                    <h3 className="mb-1 text-2xl font-bold text-white">
-                                        {evaluator?.name}
-                                    </h3>
-                                    <p className="text-lg font-medium text-green-100">
-                                        {evaluator?.jabatan_id
-                                            ? evaluator?.jabatan?.nama_jabatan
-                                            : evaluator?.jabatan}
-                                    </p>
-
-                                    {/* Role Badge */}
-                                    <div className="mt-4">
-                                        <Badge className="border-white/30 bg-white/20 px-4 py-2 text-sm font-semibold text-white">
-                                            {tipePenilai == 'atasan'
-                                                ? 'Atasan'
-                                                : tipePenilai ==
-                                                    'penerima_layanan'
-                                                  ? 'Penerima Layanan'
-                                                  : 'Teman Setingkat'}
-                                        </Badge>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* outsourcing Card - Enhanced with Clear Label */}
-                            <Card className="relative gap-1 overflow-hidden border-0 bg-gradient-to-br from-blue-500 to-indigo-600 pb-0 text-white shadow-2xl">
-                                {/* Decorative Elements */}
-                                <div className="absolute top-0 right-0 h-32 w-32 translate-x-16 -translate-y-16 rounded-full bg-white/10"></div>
-                                <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-12 translate-y-12 rounded-full bg-white/10"></div>
-
-                                <CardHeader className="relative">
-                                    <div className="mb-4 flex items-center space-x-3">
-                                        <div className="rounded-full bg-white/20 p-2">
-                                            <ClipboardCheck className="h-6 w-6 text-white" />
-                                        </div>
-                                        <div>
-                                            <Badge className="border-white/30 bg-white/20 font-semibold text-white">
-                                                YANG DINILAI
-                                            </Badge>
-                                            <CardTitle className="mt-1 text-sm text-blue-100">
-                                                Pegawai yang Sedang Dievaluasi
-                                            </CardTitle>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-
-                                <CardContent className="relative pb-8 text-center">
-                                    {/* Photo with Enhanced Styling */}
-                                    <div className="relative mx-2 mb-6">
-                                        <div className="absolute inset-0 scale-110 animate-pulse rounded-full bg-white/20"></div>
-                                        <img
-                                            src={`/storage/${outsourcing?.image}`}
-                                            alt={
-                                                outsourcing?.jabatan
-                                                    ?.nama_jabatan
-                                            }
-                                            className="mx-auto h-20 w-20 rounded-full border-4 border-white shadow-lg"
-                                        />
-                                    </div>
-
-                                    {/* Name and Position */}
-                                    <h3 className="mb-1 text-2xl font-bold text-white">
-                                        {outsourcing?.name}
-                                    </h3>
-                                    <p className="text-lg font-medium text-blue-100">
-                                        {outsourcing?.jabatan?.nama_jabatan}
-                                    </p>
-
-                                    {/* Unit Badge */}
-                                    <div className="mt-4">
-                                        <Badge className="border-white/30 bg-white/20 px-4 py-2 text-sm font-semibold text-white">
-                                            {outsourcing?.biro?.nama_biro}
-                                        </Badge>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <div className="flex flex-col">
+                                <div className="text font-medium text-sky-700">
+                                    Evaluasi Kinerja Tenaga Outsourcing
+                                </div>
+                                <div className="text-xs text-gray-600">
+                                    Semester I Tahun 2026
+                                </div>
+                            </div>
                         </div>
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
+                                Beri nilai setiap indikator dari 1 hingga 4
+                                menggunakan deskripsi perilaku. Semua indikator
+                                wajib diisi; catatan bersifat opsional.
+                            </p>
 
-                        {/* Score Classification Reference */}
-                        <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-                            <CardHeader>
-                                <CardTitle className="flex items-center space-x-2 text-lg text-purple-800">
-                                    <Target className="h-5 w-5" />
-                                    <span>Panduan Klasifikasi Penilaian</span>
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-                                    {scoreRanges.map((range, index) => (
-                                        <div
-                                            key={index}
-                                            className={`rounded-lg border-2 p-3 ${range.color} border-opacity-50`}
-                                        >
-                                            <div className="text-center">
-                                                <div className="text-sm font-bold">
-                                                    {range.label}
-                                                </div>
-                                                <div className="mt-1 text-xs opacity-75">
-                                                    {range.range}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Evaluation Form - Now per criteria */}
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center space-x-2 text-2xl text-blue-600">
-                                    <div className="rounded-full bg-blue-100 p-2">
-                                        <span className="text-lg font-bold text-blue-600">
-                                            {currentStep + 1}
-                                        </span>
-                                    </div>
-                                    <span>{aspectData.title}</span>
-                                </CardTitle>
-                                <CardDescription className="mt-2 text-gray-600">
-                                    Berikan penilaian untuk setiap kriteria
-                                    berdasarkan indikator yang tersedia
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-8">
-                                {aspectData?.kriteria?.map(
-                                    (criterion: any, index: any) => {
-                                        let currentScore =
-                                            scores[criterion.id] || 0;
-
-                                        const classification =
-                                            getScoreClassification(
-                                                currentScore,
-                                            );
-
-                                        return (
-                                            <div
-                                                key={criterion.id}
-                                                className="space-y-6 rounded-xl border-l-4 border-l-blue-400 bg-gray-50 p-6 px-3 md:px-6"
-                                            >
-                                                <div className="flex items-start space-x-3">
-                                                    <div className="mt-1 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 p-2 text-sm font-bold text-white">
-                                                        {index + 1}
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <h3 className="mb-2 text-xl font-semibold text-gray-900">
-                                                            {criterion.title}
-                                                        </h3>
-
-                                                        {/* Indicators as information */}
-                                                        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-4">
-                                                            <h4 className="mb-3 flex items-center space-x-2 font-medium text-gray-700">
-                                                                <Info className="h-4 w-4 text-blue-500" />
-                                                                <span>
-                                                                    Indikator
-                                                                    Penilaian:
-                                                                </span>
-                                                            </h4>
-                                                            <ul className="space-y-2 text-sm text-gray-600">
-                                                                {criterion?.indikators?.map(
-                                                                    (
-                                                                        indicator: any,
-                                                                        idx: any,
-                                                                    ) => (
-                                                                        <li
-                                                                            key={
-                                                                                idx
-                                                                            }
-                                                                            className="flex items-start space-x-2"
-                                                                        >
-                                                                            <span className="mt-1 font-bold text-blue-500">
-                                                                                •
-                                                                            </span>
-                                                                            <span>
-                                                                                {
-                                                                                    indicator?.deskripsi
-                                                                                }
-                                                                            </span>
-                                                                        </li>
-                                                                    ),
-                                                                )}
-                                                            </ul>
-                                                        </div>
-
-                                                        {/* Score input */}
-                                                        <div className="space-y-4">
-                                                            <div className="flex items-center space-x-4">
-                                                                <div className="flex-1">
-                                                                    <Label
-                                                                        htmlFor={
-                                                                            criterion.id
-                                                                        }
-                                                                        className="mb-2 block text-sm font-medium text-gray-700"
-                                                                    >
-                                                                        Berikan
-                                                                        nilai 51
-                                                                        - 100 !
-                                                                    </Label>
-                                                                    <Input
-                                                                        id={
-                                                                            criterion.id
-                                                                        }
-                                                                        type=""
-                                                                        inputMode="numeric"
-                                                                        min={51}
-                                                                        max={
-                                                                            100
-                                                                        }
-                                                                        value={
-                                                                            scores[
-                                                                                criterion
-                                                                                    .id
-                                                                            ] ??
-                                                                            ''
-                                                                        } // bisa string atau number
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            handleScoreChange(
-                                                                                criterion.id,
-                                                                                e
-                                                                                    .target
-                                                                                    .value,
-                                                                            )
-                                                                        }
-                                                                        onBlur={() =>
-                                                                            handleScoreBlur(
-                                                                                criterion.id,
-                                                                            )
-                                                                        } // clamp saat blur
-                                                                        className="w-32 text-center text-lg font-bold"
-                                                                        placeholder="Min 51"
-                                                                    />
-                                                                </div>
-                                                                {currentScore >
-                                                                    50 &&
-                                                                    currentScore <
-                                                                        100 && (
-                                                                        <div className="hidden flex-1 md:block">
-                                                                            <div className="mb-2 text-sm text-gray-600">
-                                                                                Klasifikasi:
-                                                                            </div>
-                                                                            <Badge
-                                                                                className={`${classification.color} animate-pulse border-2 px-4 py-2 text-sm font-semibold`}
-                                                                            >
-                                                                                {
-                                                                                    classification.label
-                                                                                }
-                                                                            </Badge>
-                                                                        </div>
-                                                                    )}
-                                                            </div>
-
-                                                            {/* Real-time feedback */}
-                                                            {currentScore !=
-                                                                null &&
-                                                                currentScore !=
-                                                                    undefined &&
-                                                                currentScore !=
-                                                                    '' &&
-                                                                (currentScore >
-                                                                    50 &&
-                                                                currentScore <
-                                                                    101 ? (
-                                                                    <div className="rounded-lg border-2 border-dashed border-gray-300 bg-white p-4">
-                                                                        <div className="flex items-center space-x-3">
-                                                                            <div className="text-2xl font-bold text-gray-800">
-                                                                                {
-                                                                                    currentScore
-                                                                                }
-                                                                            </div>
-                                                                            <div className="flex-1">
-                                                                                <div className="text-sm text-gray-600">
-                                                                                    Nilai
-                                                                                    yang
-                                                                                    diberikan
-                                                                                </div>
-                                                                                <div
-                                                                                    className={`text-sm font-medium ${classification.color.replace('bg-', 'text-').replace('-100', '-800')}`}
-                                                                                >
-                                                                                    Kategori:{' '}
-                                                                                    {
-                                                                                        classification.label
-                                                                                    }
-                                                                                </div>
-                                                                            </div>
-                                                                            <div className="text-right">
-                                                                                <div className="text-xs text-gray-500">
-                                                                                    Range:{' '}
-                                                                                    {
-                                                                                        classification.range
-                                                                                    }
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div className="hidden flex-1 md:block">
-                                                                        <Alert
-                                                                            variant="destructive"
-                                                                            className="border-2"
-                                                                        >
-                                                                            <AlertCircle className="h-4 w-4" />
-                                                                            <AlertTitle>
-                                                                                Nilai
-                                                                                tidak
-                                                                                valid
-                                                                            </AlertTitle>
-                                                                            <AlertDescription className="inline">
-                                                                                Nilai
-                                                                                tidak
-                                                                                boleh
-                                                                                di
-                                                                                bawah{' '}
-                                                                                <span className="font-bold">
-                                                                                    {' '}
-                                                                                    51{' '}
-                                                                                </span>
-                                                                                atau
-                                                                                melebihi{' '}
-                                                                                <span className="font-bold">
-                                                                                    100
-                                                                                </span>
-
-                                                                                .
-                                                                            </AlertDescription>
-                                                                        </Alert>
-                                                                    </div>
-                                                                ))}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    },
-                                )}
-
-                                {/* Overall Notes - Show only on last step */}
-                                {currentStep === aspects.length - 1 && (
-                                    <Card className="gap-1 border-yellow-200 bg-yellow-50">
-                                        <CardHeader>
-                                            <CardTitle className="text-lg text-yellow-800">
-                                                Saran Perbaikan
-                                            </CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <Textarea
-                                                placeholder="Berikan saran perbaikan untuk outsourcing yang dinilai ..."
-                                                value={overallNotes}
-                                                onChange={(e) =>
-                                                    setOverallNotes(
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="min-h-[120px] bg-white"
-                                            />
-                                        </CardContent>
-                                    </Card>
-                                )}
-                            </CardContent>
-                        </Card>
-
-                        {/* Navigation */}
-                        <Card>
-                            <CardContent className="pt-6">
-                                <div className="flex justify-between">
-                                    <Button
-                                        variant="outline"
-                                        onClick={handlePrevious}
-                                        disabled={currentStep === 0}
-                                        className="flex items-center space-x-2 bg-transparent"
-                                    >
-                                        <ArrowLeft className="h-4 w-4" />
-                                        <span>Sebelumnya</span>
-                                    </Button>
-
-                                    {currentStep < aspects.length - 1 ? (
-                                        <Button
-                                            onClick={handleNext}
-                                            disabled={!canProceed()}
-                                            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
-                                            <span>Selanjutnya</span>
-                                            <ArrowRight className="h-4 w-4" />
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            onClick={handleNext}
-                                            disabled={!canProceed()}
-                                            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
-                                        >
-                                            <span>Lihat Preview</span>
-                                            <ArrowRight className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
+                            <div className="rounded-md border bg-white px-4 py-3 text-sm shadow-sm">
+                                Step {currentStep + 1} of {pillars.length}
+                            </div>
+                        </div>
                     </div>
+
+                    <div className="grid gap-4 lg:grid-cols-2">
+                        <PersonSummaryCard
+                            label="Evaluator"
+                            icon={UserRound}
+                            person={evaluator}
+                        />
+                        <PersonSummaryCard
+                            label="Outsourcing"
+                            icon={ClipboardCheck}
+                            person={outsourcing}
+                        />
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
+                            <div
+                                className="h-full rounded-full bg-emerald-500 transition-all"
+                                style={{ width: `${progress}%` }}
+                            />
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-3">
+                            {pillars.map((pillar, index) => {
+                                const active = index === currentStep;
+                                const complete = pillar.indicators.every(
+                                    (indicator) =>
+                                        selectedScoreMap.has(indicator.id),
+                                );
+
+                                return (
+                                    <button
+                                        key={pillar.id}
+                                        type="button"
+                                        onClick={() => setCurrentStep(index)}
+                                        className={`rounded-md border px-4 py-3 text-left text-sm transition ${
+                                            active
+                                                ? 'border-sky-500 bg-sky-50 text-sky-950'
+                                                : 'border-border bg-white hover:border-sky-300'
+                                        }`}
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <span className="font-medium">
+                                                {pillar.title}
+                                            </span>
+                                            {complete && (
+                                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                            )}
+                                        </div>
+                                        <span className="mt-1 block text-xs text-muted-foreground">
+                                            {pillar.weight}% weight
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <form onSubmit={submit} className="space-y-5">
+                        {stepMessage && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Complete this section</AlertTitle>
+                                <AlertDescription>
+                                    {stepMessage}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        <PilarSection
+                            pillar={currentPillar}
+                            scores={form.data.scores}
+                            onScoreChange={setIndicatorScore}
+                        />
+
+                        {isLastStep && (
+                            <Card className="gap-3">
+                                <CardHeader>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-100 text-amber-700">
+                                            <FileText className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <CardTitle>Global Notes</CardTitle>
+                                            <CardDescription>
+                                                Optional summary, context, or
+                                                improvement suggestion.
+                                            </CardDescription>
+                                        </div>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    <Textarea
+                                        value={form.data.notes}
+                                        onChange={(event) =>
+                                            form.setData(
+                                                'notes',
+                                                event.target.value,
+                                            )
+                                        }
+                                        placeholder="Add notes for this evaluation..."
+                                        className="min-h-32 resize-y bg-white"
+                                    />
+                                    {form.errors.notes && (
+                                        <p className="mt-2 text-sm text-destructive">
+                                            {form.errors.notes}
+                                        </p>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {Object.keys(form.errors).length > 0 && (
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Unable to submit</AlertTitle>
+                                <AlertDescription>
+                                    Please review the required scores and try
+                                    again.
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        <div className="flex flex-col-reverse gap-3 rounded-md border bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={goToPreviousStep}
+                                disabled={currentStep === 0 || form.processing}
+                                className="gap-2"
+                            >
+                                <ArrowLeft className="h-4 w-4" />
+                                Previous
+                            </Button>
+
+                            {isLastStep ? (
+                                <Button
+                                    type="submit"
+                                    disabled={
+                                        form.processing ||
+                                        !allIndicatorsComplete
+                                    }
+                                    className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+                                >
+                                    {form.processing ? (
+                                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <CheckCircle2 className="h-4 w-4" />
+                                    )}
+                                    Submit Evaluation
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="button"
+                                    onClick={goToNextStep}
+                                    disabled={
+                                        form.processing || !currentStepComplete
+                                    }
+                                    className="gap-2"
+                                >
+                                    Next
+                                    <ArrowRight className="h-4 w-4" />
+                                </Button>
+                            )}
+                        </div>
+                    </form>
                 </main>
             </div>
         </>

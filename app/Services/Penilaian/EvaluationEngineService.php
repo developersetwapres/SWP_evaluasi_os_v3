@@ -47,7 +47,11 @@ class EvaluationEngineService
 
         foreach ($penugasan->penilaian as $penilaian) {
 
-            $aspek = $penilaian->kriteria->aspek;
+            $aspek = $penilaian->indikator?->aspek;
+
+            if (! $aspek) {
+                continue;
+            }
 
             $aspekData[$aspek->id]['title'] = $aspek->title;
             $aspekData[$aspek->id]['bobot'] = $aspek->bobotSkor->bobot / 100;
@@ -125,7 +129,7 @@ class EvaluationEngineService
     private function resolveStatus(array $evaluators): string
     {
         $completed = collect($evaluators)
-            ->every(fn($e) => $e['status'] === 'completed');
+            ->every(fn ($e) => $e['status'] === 'completed');
 
         return $completed ? 'completed' : 'draft';
     }
@@ -194,7 +198,11 @@ class EvaluationEngineService
 
         foreach ($penugasan->penilaian as $penilaian) {
 
-            $aspek = $penilaian->kriteria->aspek;
+            $aspek = $penilaian->indikator?->aspek;
+
+            if (! $aspek) {
+                continue;
+            }
 
             $aspekData[$aspek->id]['bobot'] =
                 $aspek->bobotSkor->bobot / 100;
@@ -223,22 +231,22 @@ class EvaluationEngineService
 
     public function calculateSingleSummary($penilaian): array
     {
-        $aspects = Pilar::with(['kriteria', 'bobotSkor'])->get();
+        $aspects = Pilar::with(['indikator', 'bobotSkor'])->get();
 
         $finalTotalScore = 0;
         $aspectResults = [];
 
         foreach ($aspects as $aspect) {
 
-            $kriteriaIds = $aspect->kriteria->pluck('id');
+            $indikatorIds = $aspect->indikator->pluck('id');
 
             $nilai = $penilaian
-                ->whereIn('kriteria_id', $kriteriaIds)
+                ->whereIn('indikator_id', $indikatorIds)
                 ->pluck('nilai')
-                ->filter(fn($n) => $n !== null)
-                ->map(fn($n) => (float) $n);
+                ->filter(fn ($n) => $n !== null)
+                ->map(fn ($n) => (float) $n);
 
-            if ($nilai->isEmpty() || !$aspect->bobotSkor) {
+            if ($nilai->isEmpty() || ! $aspect->bobotSkor) {
                 continue;
             }
 
@@ -264,41 +272,39 @@ class EvaluationEngineService
 
     public function getEvaluationData($penugasan, int $jabatanId)
     {
-        return Pilar::select(['id', 'title'])
+        return Pilar::select(['id', 'title', 'bobot_skor_id'])
             ->with([
-                'indikator' => fn($q) =>
-                $q->with([
-                    'penilaian' => fn($qPenilaian) =>
-                    $qPenilaian->where('penugasan_id', $penugasan->id),
-
-                    // 'behavioral' => fn($q2) =>
-                    // $q2->where('jabatan_id', $jabatanId)
-                    //     ->orWhere('jabatan_id', 16),
-                ]),
+                'bobotSkor:id,bobot',
+                'indikator' => fn ($query) => $query
+                    ->where('jabatan_id', $jabatanId)
+                    ->orderBy('id')
+                    ->with([
+                        'behavioral' => fn ($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
+                        'penilaian' => fn ($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
+                    ]),
             ])
-            ->latest()
+            ->orderBy('id')
             ->get();
     }
 
     public function getDetailByPilar($penilaian): array
     {
-        $aspects = Pilar::with(['kriteria', 'bobotSkor'])->get();
+        $aspects = Pilar::with(['indikator', 'bobotSkor'])->get();
 
         $finalTotalScore = 0;
         $aspectResults = [];
 
         foreach ($aspects as $aspect) {
-            $kriteriaIds = $aspect->kriteria->pluck('id');
+            $indikatorIds = $aspect->indikator->pluck('id');
 
-            // kumpulkan semua nilai kriteria dalam 1 aspek
+            // kumpulkan semua nilai indikator dalam 1 aspek
             $nilai = collect();
             $bobot = optional($aspect->bobotSkor)->bobot;
 
             $penilaian
-                ->whereIn('kriteria_id', $kriteriaIds)
+                ->whereIn('indikator_id', $indikatorIds)
                 ->each(
-                    fn($p) =>
-                    $p->nilai !== null
+                    fn ($p) => $p->nilai !== null
                         ? $nilai->push((float) $p->nilai)
                         : null
                 );
@@ -364,6 +370,7 @@ class EvaluationEngineService
                 ->values()
                 ->map(function ($item, $index) {
                     $item['ranking'] = $index + 1;
+
                     return $item;
                 });
 

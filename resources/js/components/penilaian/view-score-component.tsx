@@ -11,54 +11,70 @@ import {
 import { CheckCircle, Info } from 'lucide-react';
 
 const getScoreClassification = (score: number) => {
-    if (score <= 50)
+    if (score <= 1) {
         return {
-            label: 'SK (Sangat Kurang)',
+            label: 'Needs Major Improvement',
             color: 'bg-red-100 text-red-800 border-red-200',
-            range: '≤50',
+            range: '1',
         };
-    if (score <= 75)
+    }
+
+    if (score <= 2) {
         return {
-            label: 'K (Kurang)',
+            label: 'Needs Revision',
             color: 'bg-orange-100 text-orange-800 border-orange-200',
-            range: '51-75',
+            range: '2',
         };
-    if (score <= 90)
+    }
+
+    if (score <= 3) {
         return {
-            label: 'B (Baik)',
+            label: 'Meets With Minor Issues',
             color: 'bg-blue-100 text-blue-800 border-blue-200',
-            range: '76-90',
+            range: '3',
         };
+    }
+
     return {
-        label: 'SB (Sangat Baik)',
+        label: 'Fully Meets Criteria',
         color: 'bg-green-100 text-green-800 border-green-200',
-        range: '91-100',
+        range: '4',
     };
 };
 
 export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
+    const getIndicators = (aspect: any) =>
+        aspect.indikator ?? aspect.kriteria ?? [];
+
     function getAspectStats(aspectTitle: string) {
         const aspect = evaluationData.find((a: any) => a.title === aspectTitle);
 
-        if (!aspect) return { total: 0, count: 0, avg: 0 };
+        if (!aspect) {
+            return { total: 0, count: 0, avg: 0 };
+        }
 
-        const scoresList = aspect.kriteria.map(
-            (c: any) => c.penilaian?.nilai || 0,
-        );
-
+        const indicators = getIndicators(aspect);
+        const scoresList = indicators.map((c: any) => c.penilaian?.nilai || 0);
         const total = scoresList.reduce((a: number, b: number) => a + b, 0);
-
-        const count = aspect.kriteria.length;
+        const count = indicators.length;
         const avg = count ? parseFloat((total / count).toFixed(2)) : 0;
 
         return { total, count, avg };
     }
 
     const getScoreColor = (score: number) => {
-        if (score >= 91) return 'text-green-600 bg-green-50';
-        if (score >= 81) return 'text-blue-600 bg-blue-50';
-        if (score >= 71) return 'text-yellow-600 bg-yellow-50';
-        if (score >= 61) return 'text-orange-600 bg-orange-50';
+        if (score >= 4) {
+            return 'text-green-600 bg-green-50';
+        }
+
+        if (score >= 3) {
+            return 'text-blue-600 bg-blue-50';
+        }
+
+        if (score >= 2) {
+            return 'text-orange-600 bg-orange-50';
+        }
+
         return 'text-red-600 bg-red-50';
     };
 
@@ -86,7 +102,7 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                                         </div>
 
                                         <div className="text-xs text-blue-100">
-                                            {aspek.nilai.toFixed(2)} ×{' '}
+                                            {aspek.nilai.toFixed(2)} x{' '}
                                             {aspek.bobot * 100}%
                                         </div>
 
@@ -98,7 +114,6 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                             },
                         )}
 
-                        {/* SKOR AKHIR */}
                         <div className="text-center">
                             <div className="text-sm text-blue-100">
                                 Skor Akhir
@@ -120,9 +135,8 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                 </CardContent>
             </Card>
 
-            {/* Detailed Review by Aspect - UPDATED to show Total, Count, and emphasize Avg */}
             {evaluationData.map((aspect: any, aspectIndex: number) => {
-                console.log(aspect);
+                const indicators = getIndicators(aspect);
 
                 return (
                     <Card
@@ -140,7 +154,7 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                                             {aspect.title}
                                         </CardTitle>
                                         <CardDescription className="text-blue-600">
-                                            {aspect.kriteria.length} Kriteria
+                                            {indicators.length} Indicators
                                         </CardDescription>
                                     </div>
                                 </div>
@@ -149,6 +163,7 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                                     const { total, avg } = getAspectStats(
                                         aspect.title,
                                     );
+
                                     return (
                                         <div
                                             className={`rounded-xl px-6 py-3 ${getScoreColor(avg)}`}
@@ -167,14 +182,13 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
 
                         <CardContent className="p-6 pt-3">
                             <div className="space-y-6">
-                                {aspect.kriteria.map(
+                                {indicators.map(
                                     (
                                         criterion: any,
                                         criterionIndex: number,
                                     ) => {
                                         const score =
                                             criterion.penilaian?.nilai || 0;
-
                                         const classification =
                                             getScoreClassification(score);
 
@@ -215,11 +229,11 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                                                     <h5 className="mb-2 flex items-center space-x-2 font-medium text-gray-700">
                                                         <Info className="h-4 w-4" />
                                                         <span>
-                                                            Indikator Penilaian:
+                                                            BARS Description:
                                                         </span>
                                                     </h5>
                                                     <ul className="space-y-1 text-sm text-gray-600">
-                                                        {criterion?.indikators?.map(
+                                                        {criterion?.behavioral?.map(
                                                             (
                                                                 indicator: any,
                                                                 idx: number,
@@ -229,11 +243,11 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                                                                     className="flex items-start space-x-2"
                                                                 >
                                                                     <span className="mt-1 text-blue-500">
-                                                                        •
+                                                                        -
                                                                     </span>
                                                                     <span>
                                                                         {
-                                                                            indicator?.deskripsi
+                                                                            indicator?.behavioral
                                                                         }
                                                                     </span>
                                                                 </li>

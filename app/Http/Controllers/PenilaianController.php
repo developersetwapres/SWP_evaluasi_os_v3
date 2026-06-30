@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Penilaian;
 use App\Http\Requests\StorePenilaianRequest;
 use App\Http\Requests\UpdatePenilaianRequest;
 use App\Models\Outsourcing;
+use App\Models\Penilaian;
 use App\Models\Penugasan;
 use App\Services\Penilaian\EvaluationEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,9 +28,9 @@ class PenilaianController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Penugasan $penugasan, EvaluationEngineService $engine): Response | RedirectResponse
+    public function create(Penugasan $penugasan, EvaluationEngineService $engine): Response|RedirectResponse
     {
-        abort_if(!$penugasan->outsourcings, 404);
+        abort_if(! $penugasan->outsourcings, 404);
 
         if ($penugasan->evaluators->id !== Auth::id()) {
             return to_route('home');
@@ -39,7 +41,9 @@ class PenilaianController extends Controller
         $evaluator = $penugasan->evaluators?->userable;
 
         if ($penugasan->evaluators?->userable instanceof Outsourcing) {
-            $evaluator->load('jabatan');
+            $evaluator->load(['jabatan', 'biro']);
+        } else {
+            $evaluator?->load('biro');
         }
 
         $data = [
@@ -47,7 +51,7 @@ class PenilaianController extends Controller
             'evaluator' => $evaluator,
             'uuidPenugasanPeer' => $penugasan->uuid,
             'tipePenilai' => $penugasan->tipe_penilai,
-            'overallNotes' =>  $penugasan->catatan,
+            'overallNotes' => $penugasan->catatan,
             'evaluationData' => $engine->getEvaluationData($penugasan, $jabatanId),
         ];
 
@@ -61,9 +65,32 @@ class PenilaianController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StorePenilaianRequest $request)
+    public function store(StorePenilaianRequest $request, Penugasan $penugasan): RedirectResponse
     {
-        //
+        $validated = $request->validated();
+
+        DB::transaction(function () use ($penugasan, $validated): void {
+            foreach ($validated['scores'] as $score) {
+                $penilaian = Penilaian::firstOrNew([
+                    'penugasan_id' => $penugasan->id,
+                    'indikator_id' => $score['indicator_id'],
+                ]);
+
+                if (! $penilaian->exists) {
+                    $penilaian->uuid = (string) Str::uuid();
+                }
+
+                $penilaian->nilai = $score['value'];
+                $penilaian->save();
+            }
+
+            $penugasan->forceFill([
+                'catatan' => $validated['notes'] ?? null,
+                'status' => 'completed',
+            ])->save();
+        });
+
+        return to_route('home')->with('success', 'Penilaian berhasil disimpan.');
     }
 
     /**

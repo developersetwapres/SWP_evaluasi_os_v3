@@ -2,8 +2,9 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Models\Indikator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StorePenilaianRequest extends FormRequest
 {
@@ -12,18 +13,64 @@ class StorePenilaianRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $penugasan = $this->route('penugasan');
+
+        return $penugasan
+            && $this->user()?->id === $penugasan->penilai_id
+            && $penugasan->status !== 'completed';
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, ValidationRule|array<mixed>|string>
+     * @return array<string, array<int, string>>
      */
     public function rules(): array
     {
         return [
-            //
+            'evaluator_id' => ['nullable', 'integer'],
+            'outsourcing_id' => ['nullable', 'integer'],
+            'scores' => ['required', 'array', 'min:1'],
+            'scores.*.indicator_id' => ['required', 'integer', 'distinct', 'exists:indikators,id'],
+            'scores.*.value' => ['required', 'integer', 'between:1,4'],
+            'notes' => ['nullable', 'string', 'max:5000'],
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $penugasan = $this->route('penugasan');
+
+            if (! $penugasan?->outsourcings) {
+                return;
+            }
+
+            $expectedIndicatorIds = Indikator::where('jabatan_id', $penugasan->outsourcings->jabatan_id)
+                ->orderBy('id')
+                ->pluck('id')
+                ->map(fn (int $id): int => $id)
+                ->all();
+
+            if ($expectedIndicatorIds === []) {
+                return;
+            }
+
+            $submittedIndicatorIds = collect($this->input('scores', []))
+                ->pluck('indicator_id')
+                ->map(fn (mixed $id): int => (int) $id)
+                ->sort()
+                ->values()
+                ->all();
+
+            $expectedIndicatorIds = collect($expectedIndicatorIds)
+                ->sort()
+                ->values()
+                ->all();
+
+            if ($submittedIndicatorIds !== $expectedIndicatorIds) {
+                $validator->errors()->add('scores', 'Semua indikator wajib dinilai.');
+            }
+        });
     }
 }
