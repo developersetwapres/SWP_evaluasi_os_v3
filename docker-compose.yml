@@ -23,7 +23,7 @@ services:
       DB_CONNECTION: mysql
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_DATABASE: KMZ_cripto_journal
+      DB_DATABASE: SWP_evaluasi_os_v3
       DB_USERNAME: UserKmzOs
       DB_PASSWORD: 'App08062026$$_'
 
