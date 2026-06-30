@@ -18,7 +18,14 @@ class BobotSkorFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'siklus_id' => null,
+            'title' => fake()->randomElement([
+                'Bobot Kompetensi',
+                'Bobot Kinerja',
+                'Bobot Disiplin',
+            ]),
+            'kode_bobot' => fake()->unique()->bothify('BOB###'),
+            'bobot' => fake()->randomFloat(2, 10, 30),
         ];
     }
 }

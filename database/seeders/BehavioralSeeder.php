@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Behavioral;
 use Illuminate\Database\Seeder;
 
 class BehavioralSeeder extends Seeder
@@ -12,6 +12,6 @@ class BehavioralSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Behavioral::factory()->count(15)->create();
     }
 }

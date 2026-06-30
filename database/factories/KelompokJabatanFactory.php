@@ -18,7 +18,8 @@ class KelompokJabatanFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'uuid' => fake()->uuid(),
+            'nama_kelompok' => ucwords(fake()->unique()->words(2, true)),
         ];
     }
 }

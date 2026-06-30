@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Pilar;
 use Illuminate\Database\Seeder;
 
 class PilarSeeder extends Seeder
@@ -12,6 +12,6 @@ class PilarSeeder extends Seeder
      */
     public function run(): void
     {
-        //
+        Pilar::factory()->count(5)->create();
     }
 }

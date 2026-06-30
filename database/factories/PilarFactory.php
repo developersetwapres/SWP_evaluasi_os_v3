@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\BobotSkor;
 use App\Models\Pilar;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,9 @@ class PilarFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'title' => ucwords(fake()->unique()->words(2, true)),
+            'uuid' => fake()->uuid(),
+            'bobot_skor_id' => BobotSkor::factory(),
         ];
     }
 }

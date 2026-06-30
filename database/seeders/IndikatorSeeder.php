@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Indikator;
 use Illuminate\Database\Seeder;
 
 class IndikatorSeeder extends Seeder
@@ -10,5 +10,8 @@ class IndikatorSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void {}
+    public function run(): void
+    {
+        Indikator::factory()->count(8)->create();
+    }
 }
