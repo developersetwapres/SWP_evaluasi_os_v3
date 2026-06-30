@@ -1,7 +1,7 @@
 version: '3.9'
 
 services:
-  journalcripto_app:
+  evaluasiosv3_app:
     build:
       context: .
       dockerfile: Dockerfile
