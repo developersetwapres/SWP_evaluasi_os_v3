@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
     Route::get('/dashboard/ranking-skor', [PenilaianController::class, 'ranking'])->name('os.ranking');
 
     Route::get('/dashboard/penugasan-peer', [PenugasanController::class, 'index'])->name('penugasan.index');
-    Route::post('/dashboard/penugasan-peer/store', [PenugasanController::class, 'store'])->name('penugasan.store');
+    Route::post('/dashboard/penugasan-peer/store/{outsourcing:uuid}', [PenugasanController::class, 'store'])->name('penugasan.store');
     Route::get('/dashboard/saran-perbaikan-outsourcing', [PenugasanController::class, 'saranPerbaikan'])->name('os.saranEvaluator');
 
     Route::get('/dashboard/user-management/{user}', [UserController::class, 'index'])->name('user.index');
@@ -41,8 +41,6 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::put('/dashboard/pegawai-update/{pegawai:uuid}', [MasterPegawaiController::class, 'update'])->name('pegawai.update');
     Route::post('/dashboard/pegawai-store', [MasterPegawaiController::class, 'store'])->name('pegawai.store');
 
-    Route::get('/dashboard/penugasan-peer', [PenugasanController::class, 'index'])->name('penugasan.index');
-    Route::post('/dashboard/penugasan-peer/store/{outsourcing:uuid}', [PenugasanController::class, 'store'])->name('penugasan.store');
     Route::get('/dashboard/status-penilaian', [PenugasanController::class, 'statusPenilaian'])->name('penugasan.statuspenilaian');
     Route::get('/dashboard/status-penilaian-by-evaluators', [PenugasanController::class, 'byEvaluators'])->name('penugasan.evaluators');
     Route::get('/dashboard/status-penilaian-by-outsourcing', [PenugasanController::class, 'byOutsourcings'])->name('penugasan.outsourcings');

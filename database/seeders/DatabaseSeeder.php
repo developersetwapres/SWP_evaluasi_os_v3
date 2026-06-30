@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
         );
 
         $this->call([
+            SiklusSeeder::class,
+            BobotSkorSeeder::class,
             MasterPegawaiSeeder::class,
             UserSeeder::class,
             KelompokJabatanSeeder::class,
