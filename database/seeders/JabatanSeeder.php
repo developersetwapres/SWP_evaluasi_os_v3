@@ -113,6 +113,12 @@ class JabatanSeeder extends Seeder
                 'kode_jabatan' => 'UMUM',
                 'nama_jabatan' => 'Umum'
             ],
+            [
+                'id' => 17,
+                'kelompok_jabatan_id' => 2,
+                'kode_jabatan' => 'TEKNISI_IT_SECURITY',
+                'nama_jabatan' => 'Teknisi IT Security'
+            ]
         ];
 
         foreach ($jabatans as $key => $value) {

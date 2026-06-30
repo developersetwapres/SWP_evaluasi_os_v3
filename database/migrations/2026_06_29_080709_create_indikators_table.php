@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('pilar_id')->constrained('pilars')->onDelete('cascade')->onUpdate('cascade');
-            $table->foreignId('jabatan_id')->constrained('jabatans')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreignId('kelompok_jabatan_id')->constrained('kelompok_jabatans')->onDelete('cascade')->onUpdate('cascade');
             $table->string('title');
             $table->text('defenisi');
             $table->uuid('uuid')->unique();

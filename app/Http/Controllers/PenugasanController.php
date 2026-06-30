@@ -21,7 +21,9 @@ class PenugasanController extends Controller
      * Display a listing of the resource.
      */
     public function index(): Response
-    { 
+    {
+        dd(Hash::make('7777777'));
+
         $siklus = Siklus::where('is_active', 1)->first();
 
 
@@ -110,14 +112,14 @@ class PenugasanController extends Controller
         DB::transaction(function () use ($outsourcing, $request) {
 
             $siklus = Siklus::where('is_active', 1)->firstOrFail();
-  
+
             foreach ($request->validated() as $tipePenilai => $penilaiUuid) {
 
                 // 1. Bobot skor
                 $bobotSkor = BobotSkor::where('kode_bobot', $tipePenilai)
                     ->firstOrFail();
 
-            
+
                 // 2. Tentukan penilai berdasarkan tipe
                 $penilaiUserId = match ($tipePenilai) {
                     'atasan', 'penerima_layanan1', 'penerima_layanan2' => MasterPegawai::where('uuid', $penilaiUuid)

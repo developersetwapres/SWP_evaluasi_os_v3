@@ -13,7 +13,7 @@ class SiklusSeeder extends Seeder
      */
     public function run(): void
     {
-               $data = [
+        $data = [
             [
                 'title' => 'Semester I tahun 2026',
                 'tanggal_mulai' => '2026-01-01',

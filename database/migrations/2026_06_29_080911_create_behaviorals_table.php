@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('indikator_id')->constrained('indikators')->onDelete('cascade')->onUpdate('cascade');
-            $table->string('behavioral', 255);
+            $table->text('behavioral', 255);
             $table->uuid('uuid')->unique();
             $table->integer('skor');
 

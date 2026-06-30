@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasUuid;
 use Database\Factories\IndikatorFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,13 @@ class Indikator extends Model
 {
     /** @use HasFactory<IndikatorFactory> */
     use HasFactory;
+    use HasUuid;
+
+
+    protected $casts = [
+        'example' => 'array',
+    ];
+
 
     // --------------- BelongsTo-----------------------
     public function aspek(): BelongsTo
