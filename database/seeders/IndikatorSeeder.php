@@ -12,6 +12,6 @@ class IndikatorSeeder extends Seeder
      */
     public function run(): void
     {
-        Indikator::factory()->count(8)->create();
+        Indikator::factory()->count(50)->create();
     }
 }

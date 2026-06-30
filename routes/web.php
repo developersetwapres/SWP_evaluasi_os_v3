@@ -23,7 +23,7 @@ Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
     Route::get('/dashboard/ranking-skor', [PenilaianController::class, 'ranking'])->name('os.ranking');
 
     Route::get('/dashboard/penugasan-peer', [PenugasanController::class, 'index'])->name('penugasan.index');
-    Route::post('/dashboard/penugasan-peer/store/{outsourcing:uuid}', [PenugasanController::class, 'store'])->name('penugasan.store');
+    Route::post('/dashboard/penugasan-peer/store', [PenugasanController::class, 'store'])->name('penugasan.store');
     Route::get('/dashboard/saran-perbaikan-outsourcing', [PenugasanController::class, 'saranPerbaikan'])->name('os.saranEvaluator');
 
     Route::get('/dashboard/user-management/{user}', [UserController::class, 'index'])->name('user.index');

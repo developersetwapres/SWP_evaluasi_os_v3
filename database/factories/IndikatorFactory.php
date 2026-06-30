@@ -22,6 +22,7 @@ class IndikatorFactory extends Factory
         return [
             'pilar_id' => Pilar::factory(),
             'jabatan_id' => Jabatan::factory(),
+            'title' => fake()->sentence(6),
             'defenisi' => fake()->sentence(12),
             'uuid' => fake()->uuid(),
             'example' => json_encode([

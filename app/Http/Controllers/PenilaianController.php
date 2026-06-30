@@ -7,6 +7,7 @@ use App\Http\Requests\StorePenilaianRequest;
 use App\Http\Requests\UpdatePenilaianRequest;
 use App\Models\Outsourcing;
 use App\Models\Penugasan;
+use App\Services\Penilaian\EvaluationEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -25,7 +26,7 @@ class PenilaianController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(Penugasan $penugasan): Response | RedirectResponse
+    public function create(Penugasan $penugasan, EvaluationEngineService $engine): Response | RedirectResponse
     {
         abort_if(!$penugasan->outsourcings, 404);
 
@@ -47,6 +48,7 @@ class PenilaianController extends Controller
             'uuidPenugasanPeer' => $penugasan->uuid,
             'tipePenilai' => $penugasan->tipe_penilai,
             'overallNotes' =>  $penugasan->catatan,
+            'evaluationData' => $engine->getEvaluationData($penugasan, $jabatanId),
         ];
 
         if ($penugasan->status === 'completed') {

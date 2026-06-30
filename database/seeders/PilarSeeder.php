@@ -12,6 +12,6 @@ class PilarSeeder extends Seeder
      */
     public function run(): void
     {
-        Pilar::factory()->count(5)->create();
+        Pilar::factory()->count(3)->create();
     }
 }

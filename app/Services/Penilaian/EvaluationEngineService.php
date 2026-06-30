@@ -2,7 +2,7 @@
 
 namespace App\Services\Penilaian;
 
-use App\Models\Aspek;
+use App\Models\Pilar;
 use Illuminate\Support\Collection;
 
 class EvaluationEngineService
@@ -10,7 +10,7 @@ class EvaluationEngineService
     public function calculate(Collection $penugasanCollection): array
     {
         $evaluators = [];
-        $globalAspek = [];
+        $globalPilar = [];
         $finalScore = 0;
 
         foreach ($penugasanCollection as $penugasan) {
@@ -23,11 +23,11 @@ class EvaluationEngineService
 
             foreach ($evaluatorResult['aspects'] as $aspek) {
 
-                $globalAspek[$aspek['id']]['title'] = $aspek['title'];
-                $globalAspek[$aspek['id']]['bobot'] = $aspek['bobot'];
+                $globalPilar[$aspek['id']]['title'] = $aspek['title'];
+                $globalPilar[$aspek['id']]['bobot'] = $aspek['bobot'];
 
                 // gunakan weightedScore PER evaluator (sudah termasuk bobot aspek)
-                $globalAspek[$aspek['id']]['nilai'][] =
+                $globalPilar[$aspek['id']]['nilai'][] =
                     $aspek['weightedScore'] * $evaluatorResult['bobot'];
             }
         }
@@ -36,7 +36,7 @@ class EvaluationEngineService
             'status' => $this->resolveStatus($evaluators),
             'finalScore' => round($finalScore, 2),
             'evaluators' => $evaluators,
-            'aspectsGlobal' => $this->calculateGlobalAspek($globalAspek),
+            'aspectsGlobal' => $this->calculateGlobalPilar($globalPilar),
         ];
     }
 
@@ -65,15 +65,15 @@ class EvaluationEngineService
             }
 
             $avg = array_sum($data['nilai']) / $countNilai;
-            $weightedAspek = $avg * $data['bobot'];
+            $weightedPilar = $avg * $data['bobot'];
 
-            $totalEvaluatorScore += $weightedAspek;
+            $totalEvaluatorScore += $weightedPilar;
 
             $aspekResults[] = [
                 'id' => $id,
                 'title' => $data['title'],
                 'averageScore' => round($avg, 2),
-                'weightedScore' => round($weightedAspek, 2),
+                'weightedScore' => round($weightedPilar, 2),
                 'bobot' => $data['bobot'],
             ];
         }
@@ -96,11 +96,11 @@ class EvaluationEngineService
         ];
     }
 
-    protected function calculateGlobalAspek(array $globalAspek): array
+    protected function calculateGlobalPilar(array $globalPilar): array
     {
         $result = [];
 
-        foreach ($globalAspek as $id => $data) {
+        foreach ($globalPilar as $id => $data) {
 
             $countNilai = count($data['nilai'] ?? []);
 
@@ -130,7 +130,7 @@ class EvaluationEngineService
         return $completed ? 'completed' : 'draft';
     }
 
-    public function calculateDetailPerAspek(
+    public function calculateDetailPerPilar(
         Collection $penugasanCollection,
         string $outsourcingUuid
     ): array {
@@ -139,14 +139,14 @@ class EvaluationEngineService
 
         $aspects = [];
 
-        foreach ($result['aspectsGlobal'] as $globalAspek) {
+        foreach ($result['aspectsGlobal'] as $globalPilar) {
 
             $evaluators = [];
 
             foreach ($result['evaluators'] as $evaluator) {
 
                 $found = collect($evaluator['aspects'])
-                    ->firstWhere('id', $globalAspek['id']);
+                    ->firstWhere('id', $globalPilar['id']);
 
                 if ($found) {
 
@@ -175,8 +175,8 @@ class EvaluationEngineService
             $total = collect($evaluators)->sum('weightedScore');
 
             $aspects[] = [
-                'id' => $globalAspek['id'],
-                'aspectTitle' => $globalAspek['title'],
+                'id' => $globalPilar['id'],
+                'aspectTitle' => $globalPilar['title'],
                 'evaluators' => $evaluators,
                 'total' => round($total, 2),
             ];
@@ -223,7 +223,7 @@ class EvaluationEngineService
 
     public function calculateSingleSummary($penilaian): array
     {
-        $aspects = Aspek::with(['kriteria', 'bobotSkor'])->get();
+        $aspects = Pilar::with(['kriteria', 'bobotSkor'])->get();
 
         $finalTotalScore = 0;
         $aspectResults = [];
@@ -264,25 +264,25 @@ class EvaluationEngineService
 
     public function getEvaluationData($penugasan, int $jabatanId)
     {
-        return Aspek::select(['id', 'title'])
+        return Pilar::select(['id', 'title'])
             ->with([
-                'kriteria' => fn($q) =>
+                'indikator' => fn($q) =>
                 $q->with([
                     'penilaian' => fn($qPenilaian) =>
                     $qPenilaian->where('penugasan_id', $penugasan->id),
 
-                    'indikators' => fn($q2) =>
-                    $q2->where('jabatan_id', $jabatanId)
-                        ->orWhere('jabatan_id', 16),
+                    // 'behavioral' => fn($q2) =>
+                    // $q2->where('jabatan_id', $jabatanId)
+                    //     ->orWhere('jabatan_id', 16),
                 ]),
             ])
             ->latest()
             ->get();
     }
 
-    public function getDetailByAspek($penilaian): array
+    public function getDetailByPilar($penilaian): array
     {
-        $aspects = Aspek::with(['kriteria', 'bobotSkor'])->get();
+        $aspects = Pilar::with(['kriteria', 'bobotSkor'])->get();
 
         $finalTotalScore = 0;
         $aspectResults = [];

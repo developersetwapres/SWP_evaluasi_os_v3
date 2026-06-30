@@ -12,6 +12,6 @@ class BehavioralSeeder extends Seeder
      */
     public function run(): void
     {
-        Behavioral::factory()->count(15)->create();
+        Behavioral::factory()->count(100)->create();
     }
 }
