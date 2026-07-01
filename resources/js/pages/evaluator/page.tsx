@@ -97,7 +97,8 @@ export default function EvaluatorPage({
                                             {user?.userable?.name}
                                         </CardTitle>
                                         <CardDescription className="text-xs text-green-100 md:text-sm">
-                                            {user?.is_ldap == '0'
+                                            {user?.userable_type ==
+                                            'App\Models\Outsourcing'
                                                 ? user?.userable?.jabatan
                                                       ?.nama_jabatan
                                                 : user?.userable?.jabatan}
