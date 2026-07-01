@@ -51,32 +51,43 @@ class MasterPegawaiSkwp extends Seeder
                 'jabatan' => 'Staf Khusus Wakil Presiden',
                 'biro' => 'KMX_0201',
             ],
+            [
+                'nama' => 'Muhammad Haris Perdana S.H., M.M',
+                'email' => 'muhammad.haris.perdana@set.wapresri.go.id',
+                'nip' => '20241021002',
+                'jabatan' => 'Wakil Sekretaris Pribadi Wakil Presiden',
+                'biro' => 'KMX_0201',
+            ],
         ];
 
         DB::transaction(function () use ($data) {
             foreach ($data as $value) {
-                MasterPegawai::create([
-                    'nip' => $value['nip'],
-                    'name' => $value['nama'],
-                    'image' => 'images/asn/' . $value['nip'] . '.jpg',
-                    'jabatan' => $value['jabatan'],
-                    'kode_instansi' => null,
-                    'kode_unit' => 02,
-                    'kode_deputi' => null,
-                    'kode_biro' => $value['biro'],
-                    'kode_bagian' => null,
-                    'kode_subbagian' => null,
-                ]);
+                $pegawai = MasterPegawai::updateOrCreate(
+                    ['nip' => $value['nip']], // kondisi pencarian
+                    [
+                        'name' => $value['nama'],
+                        'image' => 'images/asn/' . $value['nip'] . '.jpg',
+                        'jabatan' => $value['jabatan'],
+                        'kode_instansi' => null,
+                        'kode_unit' => 2,
+                        'kode_deputi' => null,
+                        'kode_biro' => $value['biro'],
+                        'kode_bagian' => null,
+                        'kode_subbagian' => null,
+                    ]
+                );
 
-                User::create([
-                    'email' => $value['email'],
-                    'nip' => $value['nip'],
-                    'password' => Hash::make($value['nip']),
-                    'role' => ['evaluator'],
-                    'userable_type' => MasterPegawai::class,
-                    'userable_id' => $value['nip'],
-                    'is_ldap' => false,
-                ]);
+                User::updateOrCreate(
+                    ['nip' => $value['nip']], // atau ['email' => $value['email']]
+                    [
+                        'email' => $value['email'],
+                        'password' => Hash::make($value['nip']),
+                        'role' => ['evaluator'],
+                        'userable_type' => MasterPegawai::class,
+                        'userable_id' => $pegawai->id,
+                        'is_ldap' => false,
+                    ]
+                );
             }
         });
     }
