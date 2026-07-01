@@ -135,6 +135,8 @@ export default function UserManagement({
         setIsDialogOpen(true);
     };
 
+    console.log(formData);
+
     const handleEdit = (user: any) => {
         setEditingUser(user);
         setFormData({
@@ -235,6 +237,7 @@ export default function UserManagement({
                 {
                     onSuccess: () => {
                         setFormData({ ...formData, image: imageUrl });
+                        console.log('Image uploaded successfully:', imageUrl);
                     },
                     onError: (err) => {
                         console.error('Image upload failed:', err);
