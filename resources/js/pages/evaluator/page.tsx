@@ -14,8 +14,6 @@ import { create } from '@/routes/penilaian';
 
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
-    Award,
-    Briefcase,
     Calendar,
     CheckCircle,
     ClipboardList,
@@ -32,6 +30,8 @@ export default function EvaluatorPage({
     siklusAktif,
 }: any) {
     const { auth } = usePage().props;
+    console.log(auth.user);
+
     const user = auth.user;
 
     const cleanup = useMobileNavigation();
@@ -44,7 +44,7 @@ export default function EvaluatorPage({
     return (
         <>
             <Head title="Evaluator" />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+            <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
                 {/* Header */}
                 <header className="border-b bg-white shadow-sm">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -198,7 +198,7 @@ export default function EvaluatorPage({
                                     {penugasanPeer?.map((employee: any) => (
                                         <Card
                                             key={employee.id}
-                                            className="group relative overflow-hidden border-0 bg-gradient-to-br from-white to-blue-50 pb-2 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                                            className="group relative overflow-hidden border-0 bg-linear-to-br from-white to-blue-50 pb-2 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                                         >
                                             {/* Status Badge - Floating */}
                                             <div className="absolute top-4 right-4 z-10">
@@ -254,7 +254,7 @@ export default function EvaluatorPage({
                                                     />
                                                 </div>
 
-                                                <h3 className="mb-1 overflow-hidden bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-xl font-bold text-ellipsis whitespace-nowrap text-transparent transition-all duration-300 group-hover:from-blue-600 group-hover:to-indigo-600">
+                                                <h3 className="mb-1 overflow-hidden bg-linear-to-r from-gray-800 to-blue-600 bg-clip-text text-xl font-bold text-ellipsis whitespace-nowrap text-transparent transition-all duration-300 group-hover:from-blue-600 group-hover:to-indigo-600">
                                                     {employee.outsourcings.name}
                                                 </h3>
 
@@ -276,8 +276,8 @@ export default function EvaluatorPage({
                                                     className={`mb-3 block w-full transform rounded-md py-2 text-sm font-semibold text-white shadow-lg transition-all duration-300 group-hover:scale-105 ${
                                                         employee.status ===
                                                         'completed'
-                                                            ? 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
-                                                            : 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
+                                                            ? 'bg-linear-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                                                            : 'bg-linear-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700'
                                                     }`}
                                                 >
                                                     <div className="flex items-center justify-center space-x-2">
@@ -301,13 +301,13 @@ export default function EvaluatorPage({
                                             </CardContent>
 
                                             {/* Hover Effect Overlay */}
-                                            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-blue-600/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
+                                            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-blue-600/10 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"></div>
                                         </Card>
                                     ))}
                                 </div>
 
                                 {penugasanPeer?.length === 0 && (
-                                    <Card className="border-0 bg-gradient-to-br from-gray-50 to-blue-50 py-16 text-center shadow-lg">
+                                    <Card className="border-0 bg-linear-to-br from-gray-50 to-blue-50 py-16 text-center shadow-lg">
                                         <CardContent>
                                             <div className="relative">
                                                 <div className="absolute inset-0 flex items-center justify-center opacity-10">

@@ -77,8 +77,6 @@ export default function UserManagement({
     const { flash } = usePage().props;
     const imageUrl = flash?.pathTemp ?? '';
 
-    console.log(initialUsers);
-
     const [users, setUsers] = useState(initialUsers);
     const [jumlahDinilai, setJumlahDinilai] = useState<string | null>('null');
     const [selectedUser, setSelectedUser] = useState<string | null>(null);

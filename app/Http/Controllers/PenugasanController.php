@@ -178,8 +178,6 @@ class PenugasanController extends Controller
 
     public function home(): Response
     {
-        $user = Auth::user();
-
         $data = [
             'penugasanPeer' => Auth::user()->penugasan()
                 ->select(['outsourcing_id', 'siklus_id', 'status', 'uuid', 'tipe_penilai'])

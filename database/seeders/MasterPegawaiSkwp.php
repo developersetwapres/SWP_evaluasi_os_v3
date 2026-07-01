@@ -84,7 +84,7 @@ class MasterPegawaiSkwp extends Seeder
                         'password' => Hash::make($value['nip']),
                         'role' => ['evaluator'],
                         'userable_type' => MasterPegawai::class,
-                        'userable_id' => $pegawai->id,
+                        'userable_id' => $value['nip'],
                         'is_ldap' => false,
                     ]
                 );
