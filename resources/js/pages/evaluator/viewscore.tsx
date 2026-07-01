@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { home } from '@/routes';
-import { Outsourcing } from '@/types';
+import type { Outsourcing } from '@/types/outsourcing';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, ClipboardCheck, FileText, UserCheck } from 'lucide-react';
 
@@ -23,13 +23,14 @@ export default function ViewScore({
     evaluator,
     evaluationData,
     overallNotes,
-    rekapPerAspek,
     tipePenilai,
 }: ViewScoreProps) {
+    console.log(overallNotes);
+
     return (
         <>
             <Head title="View Score" />
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+            <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
                 <header className="sticky top-0 z-10 border-b bg-white shadow-sm">
                     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center justify-between py-4">
@@ -152,17 +153,16 @@ export default function ViewScore({
                         <div className="space-y-5">
                             {/* Overall Summary Card - UPDATED to match evaluation-form.tsx concept */}
                             <ViewScoreComponent
-                                rekapPerAspek={rekapPerAspek}
                                 evaluationData={evaluationData}
                             />
 
                             {/* Overall Notes */}
                             {overallNotes && (
-                                <Card className="gap-0 border-l-4 border-l-yellow-500 py-4">
+                                <Card className="gap-0 border-l-4 border-l-yellow-500 py-2">
                                     <CardHeader className="bg-yellow-50 py-2">
-                                        <CardTitle className="flex items-center space-x-2 text-xl text-yellow-800">
+                                        <CardTitle className="flex items-center space-x-2 text-lg text-yellow-800">
                                             <FileText className="h-6 w-6" />
-                                            <span>Catatan Keseluruhan</span>
+                                            <span>Saran Perbaikan</span>
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6">

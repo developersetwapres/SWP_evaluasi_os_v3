@@ -46,10 +46,16 @@ class StorePenilaianRequest extends FormRequest
                 return;
             }
 
-            $expectedIndicatorIds = Indikator::where('jabatan_id', $penugasan->outsourcings->jabatan_id)
+            $kelompokJabatanId = $penugasan->outsourcings->jabatan?->kelompok_jabatan_id;
+
+            if (! $kelompokJabatanId) {
+                return;
+            }
+
+            $expectedIndicatorIds = Indikator::where('kelompok_jabatan_id', $kelompokJabatanId)
                 ->orderBy('id')
                 ->pluck('id')
-                ->map(fn (int $id): int => $id)
+                ->map(fn(int $id): int => $id)
                 ->all();
 
             if ($expectedIndicatorIds === []) {
@@ -58,7 +64,7 @@ class StorePenilaianRequest extends FormRequest
 
             $submittedIndicatorIds = collect($this->input('scores', []))
                 ->pluck('indicator_id')
-                ->map(fn (mixed $id): int => (int) $id)
+                ->map(fn(mixed $id): int => (int) $id)
                 ->sort()
                 ->values()
                 ->all();

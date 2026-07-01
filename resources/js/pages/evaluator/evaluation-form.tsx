@@ -48,7 +48,7 @@ type Pillar = {
     id: number;
     title: string;
     weight: number;
-    description: string;
+
     indicators: Indicator[];
 };
 
@@ -85,95 +85,6 @@ interface EvaluationFormProps {
     overallNotes?: string | null;
 }
 
-const fallbackBars: BehavioralOption[] = [
-    {
-        value: 4,
-        description: 'Fully meets criteria, no errors, ready to use',
-    },
-    {
-        value: 3,
-        description: 'Minor issues, still usable',
-    },
-    {
-        value: 2,
-        description: 'Needs revision',
-    },
-    {
-        value: 1,
-        description: 'Not usable / major issues',
-    },
-];
-
-const pillarBlueprints = [
-    {
-        title: 'Task Performance',
-        weight: 40,
-        description: 'Quality, speed, and readiness of day-to-day work output.',
-        indicators: [
-            {
-                title: 'Accuracy & Completeness',
-                description:
-                    'Work output is correct, complete, and ready for use without avoidable gaps.',
-            },
-            {
-                title: 'Timeliness',
-                description:
-                    'Assignments are completed within agreed deadlines and operational priorities.',
-            },
-            {
-                title: 'Information Availability',
-                description:
-                    'Required information, files, and status updates are available when needed.',
-            },
-        ],
-    },
-    {
-        title: 'Work Behavior',
-        weight: 40,
-        description: 'Reliability, discipline, and coordination while working.',
-        indicators: [
-            {
-                title: 'Priority Management',
-                description:
-                    'Able to distinguish urgent work, sequence tasks, and avoid preventable delays.',
-            },
-            {
-                title: 'Stability Under Pressure',
-                description:
-                    'Maintains work quality, focus, and communication during busy or difficult periods.',
-            },
-            {
-                title: 'Discipline',
-                description:
-                    'Consistently follows rules, attendance expectations, and agreed work procedures.',
-            },
-            {
-                title: 'Coordination',
-                description:
-                    'Coordinates clearly with users, supervisors, and peers to keep work moving.',
-            },
-        ],
-    },
-    {
-        title: 'Attitude & Service',
-        weight: 20,
-        description:
-            'Service mindset, trustworthiness, and professional conduct.',
-        indicators: [
-            {
-                title: 'Service Orientation',
-                description:
-                    'Responds helpfully, politely, and with attention to stakeholder needs.',
-            },
-            {
-                title: 'Integrity & Confidentiality',
-                description:
-                    'Acts honestly and protects sensitive information, documents, and access.',
-            },
-        ],
-    },
-];
-
 function readArray(value: unknown): any[] {
     return Array.isArray(value) ? value : [];
 }
@@ -191,7 +102,7 @@ function readPillars(evaluationData: unknown): any[] {
 }
 
 function normalizeBehavioralOptions(options: unknown): BehavioralOption[] {
-    const normalized = readArray(options)
+    return readArray(options)
         .map((option) => ({
             value: Number(option?.skor ?? option?.value),
             description: String(
@@ -205,50 +116,36 @@ function normalizeBehavioralOptions(options: unknown): BehavioralOption[] {
                 option.description.length > 0,
         )
         .sort((a, b) => b.value - a.value);
-
-    return normalized.length >= 4 ? normalized.slice(0, 4) : fallbackBars;
 }
 
 function normalizePillars(evaluationData: unknown): Pillar[] {
     const sourcePillars = readPillars(evaluationData);
     let globalNumber = 1;
 
-    return pillarBlueprints.map((blueprint, pillarIndex) => {
-        const sourcePillar = sourcePillars[pillarIndex] ?? {};
+    return sourcePillars.map((sourcePilar: any) => {
         const sourceIndicators = readArray(
-            sourcePillar.indikator ?? sourcePillar.kriteria,
+            sourcePilar.indikator ?? sourcePilar.kriteria,
         );
 
         return {
-            id: Number(sourcePillar.id ?? pillarIndex + 1),
-            title: blueprint.title,
+            id: Number(sourcePilar.id ?? 0),
+            title: String(sourcePilar.title ?? 'Untitled Pillar'),
             weight: Number(
-                sourcePillar.bobot_skor?.bobot ??
-                    sourcePillar.bobotSkor?.bobot ??
-                    blueprint.weight,
+                sourcePilar.bobot_skor?.bobot ??
+                    sourcePilar.bobotSkor?.bobot ??
+                    0,
             ),
-            description: blueprint.description,
-            indicators: blueprint.indicators.map(
-                (indicator, indicatorIndex) => {
-                    const sourceIndicator =
-                        sourceIndicators[indicatorIndex] ?? {};
-
-                    return {
-                        id: Number(sourceIndicator.id ?? globalNumber),
-                        globalNumber: globalNumber++,
-                        title: indicator.title,
-                        description:
-                            String(
-                                sourceIndicator.defenisi ??
-                                    sourceIndicator.description ??
-                                    '',
-                            ).trim() || indicator.description,
-                        options: normalizeBehavioralOptions(
-                            sourceIndicator.behavioral,
-                        ),
-                    };
-                },
-            ),
+            indicators: sourceIndicators.map((sourceIndicator: any) => ({
+                id: Number(sourceIndicator.id ?? globalNumber),
+                globalNumber: globalNumber++,
+                title: String(sourceIndicator.title ?? 'Untitled Indicator'),
+                description: String(
+                    sourceIndicator.defenisi ??
+                        sourceIndicator.description ??
+                        '',
+                ).trim(),
+                options: normalizeBehavioralOptions(sourceIndicator.behavioral),
+            })),
         };
     });
 }
@@ -291,35 +188,45 @@ function PersonSummaryCard({
     person: Person | (Outsourcing & { biro?: { nama_biro?: string } });
 }) {
     return (
-        <Card className="gap-3">
+        <Card className="gap-3 border-slate-200 bg-white shadow-sm transition-colors hover:shadow-md">
             <CardHeader className="pb-2">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sky-100 text-sky-700">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-sky-100 to-sky-200 text-sky-700 shadow-sm ring-1 ring-sky-100">
                         <Icon className="h-5 w-5" />
                     </div>
+
                     <div>
-                        <Badge variant="secondary">{label}</Badge>
-                        <CardTitle className="mt-2 text-xl">
+                        <Badge className="bg-slate-200 text-slate-800 hover:bg-slate-300">
+                            {label}
+                        </Badge>
+
+                        <CardTitle className="mt-2 text-lg font-semibold tracking-tight text-slate-900">
                             {person?.name ?? '-'}
                         </CardTitle>
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+
+            <CardContent className="ml-1 grid gap-3 text-sm sm:grid-cols-2">
                 <div className="flex items-center gap-2">
-                    <BriefcaseBusiness className="h-6 w-6 text-muted-foreground" />
+                    <BriefcaseBusiness className="h-6 w-6 text-slate-400" />
 
                     <div className="flex flex-col">
-                        <p className="text-muted-foreground">Jabatan</p>
-                        <p className="font-medium">{getJabatan(person)}</p>
+                        <p className="text-slate-500">Jabatan</p>
+                        <p className="font-medium text-slate-900">
+                            {getJabatan(person)}
+                        </p>
                     </div>
                 </div>
+
                 <div className="flex items-center gap-2">
-                    <BriefcaseBusiness className="h-6 w-6 text-muted-foreground" />
+                    <BriefcaseBusiness className="h-6 w-6 text-slate-400" />
 
                     <div className="flex flex-col">
-                        <p className="text-muted-foreground">Biro</p>
-                        <p className="font-medium">{getBiro(person)}</p>
+                        <p className="text-slate-500">Biro</p>
+                        <p className="font-medium text-slate-900">
+                            {getBiro(person)}
+                        </p>
                     </div>
                 </div>
             </CardContent>
@@ -433,22 +340,18 @@ function PilarSection({
     return (
         <section className="space-y-5">
             <div className="flex flex-col gap-4 rounded-md border bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-start gap-4">
+                <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-md bg-sky-100 text-sky-700">
                         <Layers3 className="h-5 w-5" />
                     </div>
-                    <div>
-                        <div className="flex flex-wrap items-center gap-2">
-                            <h2 className="text-2xl font-semibold">
-                                {pillar.title}
-                            </h2>
-                            <Badge className="bg-zinc-900 text-white hover:bg-zinc-900">
-                                {pillar.weight}%
-                            </Badge>
-                        </div>
-                        <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                            {pillar.description}
-                        </p>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-2xl font-semibold">
+                            {pillar.title}
+                        </h2>
+
+                        <Badge className="bg-zinc-900 text-white hover:bg-zinc-900">
+                            {pillar.weight}%
+                        </Badge>
                     </div>
                 </div>
                 <div className="rounded-md border bg-zinc-50 px-4 py-3 text-sm">
@@ -487,8 +390,6 @@ export default function EvaluationForm({
         () => normalizePillars(evaluationData),
         [evaluationData],
     );
-
-    console.log(evaluationData);
 
     const [currentStep, setCurrentStep] = useState(0);
     const [stepMessage, setStepMessage] = useState('');
@@ -613,17 +514,6 @@ export default function EvaluationForm({
                                 </div>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                            <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
-                                Beri nilai setiap indikator dari 1 hingga 4
-                                menggunakan deskripsi perilaku. Semua indikator
-                                wajib diisi; catatan bersifat opsional.
-                            </p>
-
-                            <div className="rounded-md border bg-white px-4 py-3 text-sm shadow-sm">
-                                Step {currentStep + 1} of {pillars.length}
-                            </div>
-                        </div>
                     </div>
 
                     <div className="grid gap-4 lg:grid-cols-2">
@@ -710,7 +600,7 @@ export default function EvaluationForm({
                                             <CardTitle>
                                                 Saran Perbaikan
                                             </CardTitle>
-                                            <CardDescription>
+                                            <CardDescription className="text-xs text-muted-foreground">
                                                 Optional
                                             </CardDescription>
                                         </div>
@@ -725,7 +615,7 @@ export default function EvaluationForm({
                                                 event.target.value,
                                             )
                                         }
-                                        placeholder="Add notes for this evaluation..."
+                                        placeholder="Tambahkan catatan untuk os yang dinilai..."
                                         className="min-h-32 resize-y bg-white"
                                     />
                                     {form.errors.notes && (

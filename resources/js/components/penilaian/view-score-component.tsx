@@ -13,7 +13,7 @@ import { CheckCircle, Info } from 'lucide-react';
 const getScoreClassification = (score: number) => {
     if (score <= 1) {
         return {
-            label: 'Needs Major Improvement',
+            label: 'Perlu Perbaikan Besar',
             color: 'bg-red-100 text-red-800 border-red-200',
             range: '1',
         };
@@ -21,7 +21,7 @@ const getScoreClassification = (score: number) => {
 
     if (score <= 2) {
         return {
-            label: 'Needs Revision',
+            label: 'Perlu Perbaikan',
             color: 'bg-orange-100 text-orange-800 border-orange-200',
             range: '2',
         };
@@ -29,20 +29,20 @@ const getScoreClassification = (score: number) => {
 
     if (score <= 3) {
         return {
-            label: 'Meets With Minor Issues',
+            label: 'Memenuhi Kriteria',
             color: 'bg-blue-100 text-blue-800 border-blue-200',
             range: '3',
         };
     }
 
     return {
-        label: 'Fully Meets Criteria',
+        label: 'Memenuhi Kriteria',
         color: 'bg-green-100 text-green-800 border-green-200',
         range: '4',
     };
 };
 
-export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
+export function ViewScoreComponent({ evaluationData }: any) {
     const getIndicators = (aspect: any) =>
         aspect.indikator ?? aspect.kriteria ?? [];
 
@@ -80,7 +80,7 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
 
     return (
         <>
-            <Card className="gap-0 bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+            <Card className="gap-0 bg-linear-to-r from-blue-500 to-indigo-600 text-white">
                 <CardHeader>
                     <CardTitle className="flex items-center space-x-3 text-2xl">
                         <div className="rounded-full bg-white/20 p-3">
@@ -89,50 +89,6 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                         <span>Review Penilaian Keseluruhan</span>
                     </CardTitle>
                 </CardHeader>
-                <CardContent>
-                    <div className="grid gap-6 md:grid-cols-3">
-                        {rekapPerAspek?.aspects?.map(
-                            (aspek: any, index: number) => {
-                                const nilaiAkhir = aspek.nilai * aspek.bobot;
-
-                                return (
-                                    <div key={index} className="text-center">
-                                        <div className="text-sm text-blue-100">
-                                            {aspek.title}
-                                        </div>
-
-                                        <div className="text-xs text-blue-100">
-                                            {aspek.nilai.toFixed(2)} x{' '}
-                                            {aspek.bobot * 100}%
-                                        </div>
-
-                                        <div className="mt-1 text-3xl font-extrabold tracking-tight">
-                                            {nilaiAkhir.toFixed(2)}
-                                        </div>
-                                    </div>
-                                );
-                            },
-                        )}
-
-                        <div className="text-center">
-                            <div className="text-sm text-blue-100">
-                                Skor Akhir
-                            </div>
-
-                            <div className="text-xs text-blue-100">
-                                {rekapPerAspek?.aspects
-                                    ?.map((a: any) =>
-                                        (a.nilai * a.bobot).toFixed(2),
-                                    )
-                                    .join(' + ')}
-                            </div>
-
-                            <div className="mt-1 text-3xl font-extrabold tracking-tight">
-                                {rekapPerAspek?.finalTotalScore?.toFixed(2)}
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
             </Card>
 
             {evaluationData.map((aspect: any, aspectIndex: number) => {
@@ -143,7 +99,7 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                         key={aspectIndex}
                         className="gap-4 border-l-4 border-l-blue-500"
                     >
-                        <CardHeader className="bg-gradient-to-r from-gray-50 to-blue-50">
+                        <CardHeader className="bg-linear-to-r from-gray-50 to-blue-50">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-xl font-bold text-white">
@@ -209,7 +165,7 @@ export function ViewScoreComponent({ rekapPerAspek, evaluationData }: any) {
                                                                     criterion.title
                                                                 }
                                                             </h4>
-                                                            <div className="mt-2 text-lg font-bold text-gray-900">
+                                                            <div className="text mt-1 font-bold text-gray-900">
                                                                 Nilai: {score}
                                                             </div>
                                                         </div>

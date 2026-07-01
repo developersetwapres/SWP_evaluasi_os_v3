@@ -20,7 +20,6 @@ import {
     CheckCircle,
     ClipboardList,
     Clock,
-    History,
     LogOut,
     User,
     Users,
@@ -28,8 +27,6 @@ import {
 
 export default function EvaluatorPage({
     penugasanPeer,
-    semesterHistory,
-    resultScoreHistory,
     typeUser,
     resultScore,
     siklusAktif,

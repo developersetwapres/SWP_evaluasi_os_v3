@@ -214,7 +214,7 @@ export default function PeerAssignment({
     return (
         <div className="space-y-6">
             {/* Header Card */}
-            <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+            <Card className="bg-linear-to-r from-indigo-500 to-purple-600 text-white">
                 <CardHeader>
                     <CardTitle className="text-2xl">
                         Penugasan Evaluator
