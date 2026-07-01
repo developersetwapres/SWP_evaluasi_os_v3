@@ -69,7 +69,7 @@ class MasterPegawaiSkwp extends Seeder
                         'image' => 'images/asn/' . $value['nip'] . '.jpg',
                         'jabatan' => $value['jabatan'],
                         'kode_instansi' => null,
-                        'kode_unit' => 2,
+                        'kode_unit' => '02',
                         'kode_deputi' => null,
                         'kode_biro' => $value['biro'],
                         'kode_bagian' => null,

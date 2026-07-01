@@ -77,7 +77,10 @@ export default function UserManagement({
     const { flash } = usePage().props;
     const imageUrl = flash?.pathTemp ?? '';
 
+    console.log(initialUsers);
+
     const [users, setUsers] = useState(initialUsers);
+    const [jumlahDinilai, setJumlahDinilai] = useState<string | null>('null');
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -117,7 +120,13 @@ export default function UserManagement({
 
         const matchesRole =
             selectedUser == null || user.is_active == selectedUser;
-        return matchesSearch && matchesRole;
+
+        const matchesJumlahDinilai =
+            jumlahDinilai == null || jumlahDinilai == '1'
+                ? user.jumlahDinilai > 0
+                : user;
+
+        return matchesSearch && matchesRole && matchesJumlahDinilai;
     });
 
     const handleAdd = () => {
@@ -134,8 +143,6 @@ export default function UserManagement({
         });
         setIsDialogOpen(true);
     };
-
-    console.log(formData);
 
     const handleEdit = (user: any) => {
         setEditingUser(user);
@@ -410,6 +417,28 @@ export default function UserManagement({
                                 className="pl-10"
                             />
                         </div>
+
+                        <Select
+                            value={jumlahDinilai || 'Semua Status'}
+                            onValueChange={(value) =>
+                                setJumlahDinilai(
+                                    value === 'Semua Data' ? null : value,
+                                )
+                            }
+                        >
+                            <SelectTrigger className="md:w-48">
+                                <SelectValue placeholder="Filter Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="Semua Status">
+                                    Semua Status
+                                </SelectItem>
+                                <SelectItem value={'1'}>Menilai</SelectItem>
+                                <SelectItem value={'0'}>
+                                    Tidak menilai
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
 
                         <Select
                             value={selectedUser || 'Semua Status'}
