@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\MasterPegawai;
 use App\Http\Requests\StoreMasterPegawaiRequest;
 use App\Http\Requests\UpdateMasterPegawaiRequest;
+use App\Services\Uploadfile\FotoUserService;
 
 class MasterPegawaiController extends Controller
 {
@@ -51,9 +52,22 @@ class MasterPegawaiController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateMasterPegawaiRequest $request, MasterPegawai $masterPegawai)
+    public function update(UpdateMasterPegawaiRequest $request, MasterPegawai $pegawai, FotoUserService $service)
     {
-        //
+        $finalImagePath = $service->moveImageFromTemp($request->image, 'asn');
+
+        $pegawai->update([
+            'name' => $request->name,
+            'jabatan' => $request->jabatan,
+            'kode_biro' => $request->unit_kerja,
+        ]);
+
+        if ($finalImagePath) {
+            $pegawai->update(['image' => $finalImagePath]);
+        }
+
+
+        return redirect()->back()->with('success', 'Data Outsourcing berhasil diperbarui.');
     }
 
     /**

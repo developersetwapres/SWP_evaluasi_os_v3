@@ -2,11 +2,9 @@
 
 namespace App\Services\Uploadfile;
 
-
 use App\Http\Requests\ImageUploadRequest;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 class FotoUserService
 {
@@ -56,6 +54,6 @@ class FotoUserService
             $temp->delete($allTempFiles);
         }
 
-        return 'images/' . $role . "/" . $imageUrlNew;
+        return 'images/' . $role . '/' . $imageUrlNew;
     }
 }

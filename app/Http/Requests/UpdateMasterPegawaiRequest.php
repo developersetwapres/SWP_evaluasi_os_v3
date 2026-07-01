@@ -12,7 +12,7 @@ class UpdateMasterPegawaiRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,27 @@ class UpdateMasterPegawaiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'name' => ['required', 'string', 'max:250'],
+            'jabatan' => ['nullable', 'string', 'max:250'],
+            'unit_kerja' => ['nullable', 'string', 'max:250', 'exists:biros,kode_biro'],
+            'image' => [
+                'nullable',
+                'string', // karena diproses moveImageFromTemp
+                'max:255',
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Nama outsourcing wajib diisi.',
+            'name.max' => 'Nama maksimal 250 karakter.',
+
+            'unit_kerja.max' => 'Kode unit kerja terlalu panjang.',
+            'unit_kerja.exists' => 'Unit kerja tidak valid.',
+
+            'image.max' => 'Path gambar terlalu panjang.',
         ];
     }
 }
