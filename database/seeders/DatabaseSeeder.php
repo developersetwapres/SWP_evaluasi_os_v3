@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             OutsourcingSeeder::class,
             MasterPegawaiSeeder::class,
             UserSeeder::class,
+            BiroSeeder::class,
             BobotSkorSeeder::class,
         ]);
     }

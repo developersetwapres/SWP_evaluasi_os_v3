@@ -252,7 +252,7 @@ export default function UserManagement({
         <AdminLayout>
             <div className="space-y-6">
                 {/* Header Card */}
-                <Card className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+                <Card className="bg-linear-to-r from-purple-500 to-indigo-600 text-white">
                     <CardHeader>
                         <CardTitle className="flex items-center space-x-2 text-2xl">
                             <UserCog className="h-6 w-6" />
@@ -302,7 +302,7 @@ export default function UserManagement({
                     <CardHeader>
                         {filteredUsers[0]?.type == 'pegawai' ? (
                             <div className="mb-2 grid grid-cols-1 gap-4 md:grid-cols-3">
-                                <Card className="border-l-4 border-l-cyan-500 bg-gradient-to-br from-cyan-50 to-white">
+                                <Card className="border-l-4 border-l-cyan-500 bg-linear-to-br from-cyan-50 to-white">
                                     <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">
                                             Pegawai Yang Menilai
@@ -316,7 +316,7 @@ export default function UserManagement({
                                     </CardContent>
                                 </Card>
 
-                                <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white">
+                                <Card className="border-l-4 border-l-purple-500 bg-linear-to-br from-purple-50 to-white">
                                     <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">
                                             Pegawai Tidak Menilai
@@ -330,7 +330,7 @@ export default function UserManagement({
                                     </CardContent>
                                 </Card>
 
-                                <Card className="border-l-4 border-l-rose-500 bg-gradient-to-br from-rose-50 to-white">
+                                <Card className="border-l-4 border-l-rose-500 bg-linear-to-br from-rose-50 to-white">
                                     <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">
                                             Total Pegawai
@@ -346,7 +346,7 @@ export default function UserManagement({
                             </div>
                         ) : (
                             <div className="mb-2 grid grid-cols-1 gap-4 md:grid-cols-3">
-                                <Card className="border-l-4 border-l-cyan-500 bg-gradient-to-br from-cyan-50 to-white">
+                                <Card className="border-l-4 border-l-cyan-500 bg-linear-to-br from-cyan-50 to-white">
                                     <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">
                                             Outsourcing Aktif
@@ -360,7 +360,7 @@ export default function UserManagement({
                                     </CardContent>
                                 </Card>
 
-                                <Card className="border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white">
+                                <Card className="border-l-4 border-l-purple-500 bg-linear-to-br from-purple-50 to-white">
                                     <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">
                                             Outsourcing Non Aktif
@@ -374,7 +374,7 @@ export default function UserManagement({
                                     </CardContent>
                                 </Card>
 
-                                <Card className="border-l-4 border-l-rose-500 bg-gradient-to-br from-rose-50 to-white">
+                                <Card className="border-l-4 border-l-rose-500 bg-linear-to-br from-rose-50 to-white">
                                     <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                                         <CardTitle className="text-sm font-medium text-slate-600">
                                             Total Outsourcing
@@ -705,7 +705,7 @@ export default function UserManagement({
 
                 {/* Add/Edit Dialog */}
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                    <DialogContent className="max-h-[80vh] gap-0.5 overflow-y-auto sm:max-w-[700px]">
+                    <DialogContent className="max-h-[80vh] gap-0.5 overflow-y-auto sm:max-w-175">
                         <DialogHeader>
                             <DialogTitle>
                                 {editingUser
@@ -987,7 +987,7 @@ export default function UserManagement({
                     open={isDialogAsnOpen}
                     onOpenChange={setIsDialogAsnOpen}
                 >
-                    <DialogContent className="max-h-[80vh] gap-0.5 overflow-y-auto sm:max-w-[700px]">
+                    <DialogContent className="max-h-[80vh] gap-0.5 overflow-y-auto sm:max-w-175">
                         <DialogHeader>
                             <DialogTitle>'Edit User Pegawai</DialogTitle>
                             <DialogDescription>

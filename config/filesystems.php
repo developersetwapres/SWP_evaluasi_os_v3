@@ -41,11 +41,19 @@ return [
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
-            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/').'/storage',
+            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/') . '/storage',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
         ],
+
+        'temp' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/temp'),
+            'url' => rtrim((string) env('APP_URL', 'http://localhost'), '/') . '/storage/temp',
+            'visibility' => 'public',
+        ],
+
 
         's3' => [
             'driver' => 's3',

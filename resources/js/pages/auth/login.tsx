@@ -33,7 +33,7 @@ export default function Login({ status, canResetPassword }: Props) {
                     <>
                         <div className="grid gap-6">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
+                                <Label htmlFor="email">Username</Label>
                                 <Input
                                     id="email"
                                     name="email"
@@ -41,7 +41,7 @@ export default function Login({ status, canResetPassword }: Props) {
                                     autoFocus
                                     tabIndex={1}
                                     autoComplete="email"
-                                    placeholder="email@example.com"
+                                    placeholder="NIP SSO / Username"
                                 />
                                 <InputError message={errors.email} />
                             </div>
@@ -91,12 +91,12 @@ export default function Login({ status, canResetPassword }: Props) {
                             </Button>
                         </div>
 
-                        <div className="text-center text-sm text-muted-foreground">
+                        {/* <div className="text-center text-sm text-muted-foreground">
                             Don't have an account?{' '}
                             <TextLink href={register()} tabIndex={5}>
                                 Sign up
                             </TextLink>
-                        </div>
+                        </div> */}
                     </>
                 )}
             </Form>
@@ -111,6 +111,6 @@ export default function Login({ status, canResetPassword }: Props) {
 }
 
 Login.layout = {
-    title: 'Log in to your account',
-    description: 'Enter your email and password below to log in',
+    title: 'Sistem Penilaian Kinerja',
+    description: 'Pegawai Outsourcing Setwapres',
 };
