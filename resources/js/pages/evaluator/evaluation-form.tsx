@@ -449,7 +449,7 @@ function OtherNotesSection({
                     </div>
                     <div>
                         <h2 className="text-2xl font-semibold">
-                            Catatan Lainnya
+                            Catatan Tambahan
                         </h2>
                         <p className="mt-1 text-sm text-muted-foreground">
                             Tambahkan konteks kualitatif untuk melengkapi skor
@@ -486,7 +486,7 @@ function OtherNotesSection({
                 />
 
                 <NotesTextareaCard
-                    title="Catatan Tambahan"
+                    title="Catatan Lainnya"
                     description="Optional"
                     value={form.data.notes}
                     onChange={(value) => form.setData('notes', value)}
@@ -494,6 +494,19 @@ function OtherNotesSection({
                     error={form.errors.notes}
                 />
             </div>
+
+            <Button
+                type="submit"
+                disabled={form.processing}
+                className="gap-2 bg-emerald-600 hover:bg-emerald-700"
+            >
+                {form.processing ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                ) : (
+                    <CheckCircle2 className="h-4 w-4" />
+                )}
+                Kirim Penilaian
+            </Button>
         </section>
     );
 }
@@ -808,6 +821,8 @@ export default function EvaluationForm({
     evaluationData,
     uuidPenugasanPeer,
     tipePenilai,
+    developmentArea = '',
+    observedStrengths = '',
     overallNotes = '',
 }: EvaluationFormProps) {
     const pillars = useMemo(
@@ -822,15 +837,18 @@ export default function EvaluationForm({
         evaluator_id: evaluator?.id ?? null,
         outsourcing_id: outsourcing?.id ?? null,
         scores: [],
+        development_area: developmentArea ?? '',
+        observed_strengths: observedStrengths ?? '',
         notes: overallNotes ?? '',
     });
 
-    const totalSteps = pillars.length + 2;
+    const noteStep = pillars.length + 1;
+    const totalSteps = noteStep + 1;
     const isGuideStep = currentStep === 0;
-    const isNoteStep = currentStep === 4;
+    const isNoteStep = currentStep === noteStep;
     const currentPillar = pillars[currentStep - 1];
     const progress = ((currentStep + 1) / totalSteps) * 100;
-    const isLastStep = currentStep === totalSteps - 1;
+
     const selectedScoreMap = useMemo(
         () =>
             new Map(
@@ -938,6 +956,7 @@ export default function EvaluationForm({
         });
     };
 
+    const isLastStep = currentStep === noteStep;
     return (
         <>
             <Head title="Evaluation Form" />
@@ -1051,7 +1070,7 @@ export default function EvaluationForm({
 
                             <button
                                 type="button"
-                                onClick={() => selectStep(4)}
+                                onClick={() => selectStep(noteStep)}
                                 className={`rounded-md border px-4 py-3 text-left text-sm transition ${
                                     isNoteStep
                                         ? 'border-sky-500 bg-sky-50 text-sky-950'
@@ -1123,23 +1142,7 @@ export default function EvaluationForm({
                                 Sebelumnya
                             </Button>
 
-                            {!isGuideStep && isLastStep ? (
-                                <Button
-                                    type="submit"
-                                    disabled={
-                                        form.processing ||
-                                        !allIndicatorsComplete
-                                    }
-                                    className="gap-2 bg-emerald-600 hover:bg-emerald-700"
-                                >
-                                    {form.processing ? (
-                                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <CheckCircle2 className="h-4 w-4" />
-                                    )}
-                                    Kirim Penilaian
-                                </Button>
-                            ) : (
+                            {(isGuideStep || currentStep != 4) && (
                                 <Button
                                     type="button"
                                     onClick={goToNextStep}
