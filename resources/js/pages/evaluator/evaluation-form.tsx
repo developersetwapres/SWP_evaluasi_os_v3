@@ -1,5 +1,27 @@
 'use client';
 
+import { Head, Link, useForm } from '@inertiajs/react';
+import {
+    AlertCircle,
+    ArrowLeft,
+    ArrowRight,
+    BookOpenCheck,
+    BriefcaseBusiness,
+    Building2,
+    CheckCircle2,
+    ClipboardCheck,
+    Eye,
+    FileText,
+    Layers3,
+    ListChecks,
+    LoaderCircle,
+    Scale,
+    ShieldCheck,
+    UserRound,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,21 +37,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { home } from '@/routes';
 import { store } from '@/routes/penilaian';
 import type { Outsourcing } from '@/types/outsourcing';
-import { Head, Link, useForm } from '@inertiajs/react';
-import {
-    AlertCircle,
-    ArrowLeft,
-    ArrowRight,
-    BriefcaseBusiness,
-    Building2,
-    CheckCircle2,
-    ClipboardCheck,
-    FileText,
-    Layers3,
-    LoaderCircle,
-    UserRound,
-} from 'lucide-react';
-import { FormEvent, useEffect, useMemo, useState } from 'react';
 
 type BehavioralOption = {
     value: number;
@@ -48,7 +55,6 @@ type Pillar = {
     id: number;
     title: string;
     weight: number;
-
     indicators: Indicator[];
 };
 
@@ -84,6 +90,61 @@ interface EvaluationFormProps {
     tipePenilai: string;
     overallNotes?: string | null;
 }
+
+const guidePillars = [
+    {
+        title: 'Task Performance',
+        subtitle: 'Hasil kerja sesuai tugas dan tanggung jawab',
+        meta: '3-4 indikator sesuai job family',
+        icon: ClipboardCheck,
+        className: 'border-sky-200 bg-sky-50 text-sky-900',
+    },
+    {
+        title: 'Work Behavior',
+        subtitle: 'Cara kerja dan proses kerja harian',
+        meta: '4 indikator',
+        icon: Layers3,
+        className: 'border-emerald-200 bg-emerald-50 text-emerald-900',
+    },
+    {
+        title: 'Attitude & Service',
+        subtitle: 'Sikap, profesionalisme, integritas, dan pelayanan',
+        meta: '2 indikator',
+        icon: ShieldCheck,
+        className: 'border-amber-200 bg-amber-50 text-amber-900',
+    },
+];
+
+const fillingGuidelines = [
+    'Bacalah setiap indikator dan pilihan perilaku BARS dengan saksama.',
+    'Pilih satu pilihan yang paling menggambarkan kondisi nyata tenaga alih daya selama bekerja.',
+    'Nilai berdasarkan pengamatan langsung dan pengalaman kerja, bukan asumsi, kedekatan pribadi, atau kesan umum.',
+    'Pertimbangkan konsistensi perilaku selama periode penilaian, bukan hanya satu kejadian tertentu.',
+    'Jika perilaku belum pernah diamati langsung, berikan penilaian secara hati-hati berdasarkan interaksi kerja yang paling relevan.',
+];
+
+const scoringAnchors = [
+    {
+        score: 4,
+        label: 'Sangat Sesuai',
+        description: 'Perilaku kerja konsisten memenuhi kriteria.',
+    },
+    {
+        score: 3,
+        label: 'Sesuai',
+        description: 'Perilaku kerja umumnya baik dengan isu minor.',
+    },
+    {
+        score: 2,
+        label: 'Perlu Perbaikan',
+        description: 'Perilaku kerja masih membutuhkan revisi atau arahan.',
+    },
+    {
+        score: 1,
+        label: 'Belum Sesuai',
+        description: 'Perilaku kerja belum memenuhi kriteria utama.',
+    },
+];
 
 function readArray(value: unknown): any[] {
     return Array.isArray(value) ? value : [];
@@ -220,7 +281,7 @@ function PersonSummaryCard({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    <BriefcaseBusiness className="h-6 w-6 text-slate-400" />
+                    <Building2 className="h-6 w-6 text-slate-400" />
 
                     <div className="flex flex-col">
                         <p className="text-slate-500">Biro</p>
@@ -273,7 +334,7 @@ function BehavioralScale({
                         />
                         <span className="grid gap-1">
                             <span className="font-semibold">
-                                Score {option.value}
+                                Skor {option.value}
                             </span>
                             <span className="text-sm leading-6 text-muted-foreground">
                                 {option.description}
@@ -324,6 +385,256 @@ function IndicatorCard({
     );
 }
 
+function AssessmentGuideSection() {
+    return (
+        <section className="space-y-5">
+            <Card className="overflow-hidden border-slate-200 bg-white pt-0 shadow-sm">
+                <div className="border-b bg-gradient-to-r from-sky-50 via-white to-emerald-50 p-6">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="flex gap-4">
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-sky-600 text-white shadow-sm">
+                                <BookOpenCheck className="h-6 w-6" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Badge className="bg-sky-100 text-sky-800 hover:bg-sky-100">
+                                    Panduan Penilaian
+                                </Badge>
+                                <div>
+                                    <h2 className="text-2xl font-semibold tracking-tight text-slate-950">
+                                        Pedoman sebelum memberikan nilai
+                                    </h2>
+                                    <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                                        Yth. Bapak/Ibu, terima kasih atas
+                                        kesediaan Bapak/Ibu untuk berpartisipasi
+                                        dalam Penilaian Kinerja Tenaga Alih Daya
+                                        (Outsourcing) di lingkungan Sekretariat
+                                        Wakil Presiden.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid gap-2 sm:grid-cols-3 lg:w-[28rem]">
+                            <div className="rounded-md border bg-white p-3 text-center shadow-sm">
+                                <p className="text-2xl font-bold text-sky-700">
+                                    3
+                                </p>
+                                <p className="text-xs text-slate-500">Pilar</p>
+                            </div>
+                            <div className="rounded-md border bg-white p-3 text-center shadow-sm">
+                                <p className="text-2xl font-bold text-emerald-700">
+                                    1-4
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    Skala BARS
+                                </p>
+                            </div>
+                            <div className="rounded-md border bg-white p-3 text-center shadow-sm">
+                                <p className="text-2xl font-bold text-amber-700">
+                                    100%
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                    Objektif
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <CardContent className="space-y-6 p-6">
+                    <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                        <div className="rounded-md border border-slate-200 bg-slate-50 p-5">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-sky-700 shadow-sm">
+                                    <Scale className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-slate-950">
+                                        Tujuan penilaian
+                                    </h3>
+                                    <p className="text-xs text-slate-500">
+                                        Dasar evaluasi dan pengembangan layanan
+                                    </p>
+                                </div>
+                            </div>
+
+                            <p className="mt-4 text-sm leading-7 text-slate-700">
+                                Penilaian ini bertujuan untuk memperoleh
+                                gambaran yang objektif mengenai kinerja tenaga
+                                alih daya sebagai dasar peningkatan kualitas
+                                layanan, pengembangan kompetensi, serta
+                                pengambilan keputusan dalam pengelolaan tenaga
+                                alih daya.
+                            </p>
+                        </div>
+
+                        <div className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-white text-emerald-700 shadow-sm">
+                                    <Eye className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <h3 className="font-semibold text-emerald-950">
+                                        Apa yang dinilai?
+                                    </h3>
+                                    <p className="text-xs text-emerald-700">
+                                        Perilaku kerja yang benar-benar
+                                        ditunjukkan
+                                    </p>
+                                </div>
+                            </div>
+
+                            <p className="mt-4 text-sm leading-7 text-emerald-950">
+                                Instrumen ini menilai perilaku kerja nyata
+                                selama tenaga alih daya menjalankan
+                                pekerjaannya. Jumlah indikator dapat berbeda
+                                antar job family karena disusun berdasarkan
+                                karakteristik dan tuntutan masing-masing
+                                pekerjaan.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-3 md:grid-cols-3">
+                        {guidePillars.map((pillar) => {
+                            const Icon = pillar.icon;
+
+                            return (
+                                <div
+                                    key={pillar.title}
+                                    className={`rounded-md border p-4 ${pillar.className}`}
+                                >
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-white/80 shadow-sm">
+                                            <Icon className="h-5 w-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold">
+                                                {pillar.title}
+                                            </h3>
+                                            <p className="mt-1 text-sm leading-6">
+                                                {pillar.subtitle}
+                                            </p>
+                                            <Badge
+                                                variant="outline"
+                                                className="mt-3 bg-white/60"
+                                            >
+                                                {pillar.meta}
+                                            </Badge>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
+                        <Card className="gap-3 border-slate-200 bg-gray-50 shadow-none">
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-violet-100 text-violet-700">
+                                        <ListChecks className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-lg">
+                                            Skala BARS
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Pilih satu perilaku paling sesuai
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent className="grid gap-2">
+                                {scoringAnchors.map((anchor) => (
+                                    <div
+                                        key={anchor.score}
+                                        className="flex items-start gap-3 rounded-md border bg-white p-3"
+                                    >
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-sm font-semibold text-white">
+                                            {anchor.score}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-950">
+                                                {anchor.label}
+                                            </p>
+                                            <p className="text-xs leading-5 text-slate-600">
+                                                {anchor.description}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+
+                        <Card className="gap-3 border-slate-200 bg-gray-50 shadow-none">
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-100 text-amber-700">
+                                        <ShieldCheck className="h-5 w-5" />
+                                    </div>
+                                    <div>
+                                        <CardTitle className="text-lg">
+                                            Petunjuk pengisian
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Gunakan pengamatan yang relevan dan
+                                            konsisten
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <ul className="grid gap-3">
+                                    {fillingGuidelines.map(
+                                        (guideline, index) => (
+                                            <li
+                                                key={guideline}
+                                                className="flex gap-3 rounded-md border bg-white p-3 text-sm leading-6 text-slate-700"
+                                            >
+                                                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-100 text-xs font-semibold text-amber-800">
+                                                    {index + 1}
+                                                </span>
+                                                <span>{guideline}</span>
+                                            </li>
+                                        ),
+                                    )}
+                                </ul>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="rounded-md border border-slate-200 bg-slate-950 p-5 text-white">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                            <ShieldCheck className="h-6 w-6 shrink-0 text-emerald-300" />
+                            <div className="space-y-2">
+                                <h3 className="font-semibold">
+                                    Kerahasiaan dan kontribusi
+                                </h3>
+                                <p className="text-sm leading-7 text-slate-200">
+                                    Seluruh informasi yang diberikan akan dijaga
+                                    kerahasiaannya dan hanya digunakan untuk
+                                    kepentingan pengelolaan, evaluasi, serta
+                                    pengembangan kinerja tenaga alih daya di
+                                    lingkungan Sekretariat Wakil Presiden.
+                                    Partisipasi dan penilaian objektif Bapak/Ibu
+                                    merupakan kontribusi berharga dalam
+                                    mendukung peningkatan kualitas layanan.
+                                </p>
+                                <p className="text-sm font-medium text-emerald-200">
+                                    Terima kasih atas waktu, perhatian, dan
+                                    partisipasi Bapak/Ibu.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        </section>
+    );
+}
+
 function PilarSection({
     pillar,
     scores,
@@ -356,7 +667,7 @@ function PilarSection({
                 </div>
                 <div className="rounded-md border bg-zinc-50 px-4 py-3 text-sm">
                     <span className="font-semibold">{completedIndicators}</span>{' '}
-                    of {pillar.indicators.length} selected
+                    dari {pillar.indicators.length} terpilih
                 </div>
             </div>
 
@@ -401,9 +712,11 @@ export default function EvaluationForm({
         notes: overallNotes ?? '',
     });
 
-    const currentPillar = pillars[currentStep];
-    const progress = ((currentStep + 1) / pillars.length) * 100;
-    const isLastStep = currentStep === pillars.length - 1;
+    const totalSteps = pillars.length + 1;
+    const isGuideStep = currentStep === 0;
+    const currentPillar = pillars[currentStep - 1];
+    const progress = ((currentStep + 1) / totalSteps) * 100;
+    const isLastStep = currentStep === totalSteps - 1;
     const selectedScoreMap = useMemo(
         () =>
             new Map(
@@ -415,19 +728,27 @@ export default function EvaluationForm({
         [form.data.scores],
     );
 
-    const currentStepComplete = currentPillar.indicators.every((indicator) =>
-        selectedScoreMap.has(indicator.id),
-    );
-
-    const allIndicatorsComplete = pillars.every((pillar) =>
+    const isPillarComplete = (pillar: Pillar) =>
         pillar.indicators.every((indicator) =>
             selectedScoreMap.has(indicator.id),
-        ),
+        );
+
+    const currentStepComplete =
+        isGuideStep ||
+        (currentPillar ? isPillarComplete(currentPillar) : false);
+
+    const allIndicatorsComplete = pillars.every((pillar) =>
+        isPillarComplete(pillar),
     );
+
+    const canOpenStep = (targetStep: number) =>
+        targetStep === 0 ||
+        pillars.slice(0, targetStep - 1).every((pillar) => {
+            return isPillarComplete(pillar);
+        });
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        setStepMessage('');
     }, [currentStep]);
 
     const setIndicatorScore = (indicatorId: number, value: number) => {
@@ -443,19 +764,41 @@ export default function EvaluationForm({
     };
 
     const goToPreviousStep = () => {
+        setStepMessage('');
         setCurrentStep((step) => Math.max(step - 1, 0));
     };
 
     const goToNextStep = () => {
+        if (isGuideStep) {
+            setStepMessage('');
+            setCurrentStep((step) => Math.min(step + 1, totalSteps - 1));
+
+            return;
+        }
+
         if (!currentStepComplete) {
             setStepMessage(
-                'Please select a BARS score for every indicator in this pillar.',
+                'Pilih skor BARS untuk setiap indikator pada pilar ini sebelum melanjutkan.',
             );
 
             return;
         }
 
-        setCurrentStep((step) => Math.min(step + 1, pillars.length - 1));
+        setStepMessage('');
+        setCurrentStep((step) => Math.min(step + 1, totalSteps - 1));
+    };
+
+    const selectStep = (targetStep: number) => {
+        if (targetStep <= currentStep || canOpenStep(targetStep)) {
+            setStepMessage('');
+            setCurrentStep(targetStep);
+
+            return;
+        }
+
+        setStepMessage(
+            'Selesaikan pilar sebelumnya terlebih dahulu sebelum membuka sesi ini.',
+        );
     };
 
     const submit = (event: FormEvent<HTMLFormElement>) => {
@@ -468,9 +811,9 @@ export default function EvaluationForm({
                 ),
             );
 
-            setCurrentStep(Math.max(firstIncompleteStep, 0));
+            setCurrentStep(Math.max(firstIncompleteStep + 1, 1));
             setStepMessage(
-                'Please complete all required indicator scores before submitting.',
+                'Lengkapi seluruh skor indikator yang wajib diisi sebelum mengirim penilaian.',
             );
 
             return;
@@ -491,12 +834,12 @@ export default function EvaluationForm({
                         <Link href={home.url()}>
                             <Button variant="ghost" className="gap-2">
                                 <ArrowLeft className="h-4 w-4" />
-                                Back
+                                Kembali
                             </Button>
                         </Link>
-                        {/* <Badge variant="outline" className="px-3 py-1">
+                        <Badge variant="outline" className="px-3 py-1">
                             {formatEvaluatorType(tipePenilai)}
-                        </Badge> */}
+                        </Badge>
                     </div>
                 </header>
 
@@ -536,20 +879,42 @@ export default function EvaluationForm({
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-3">
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                            <button
+                                type="button"
+                                onClick={() => selectStep(0)}
+                                className={`rounded-md border px-4 py-3 text-left text-sm transition ${
+                                    isGuideStep
+                                        ? 'border-sky-500 bg-sky-50 text-sky-950'
+                                        : 'border-border bg-white hover:border-sky-300'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="font-medium">
+                                        Panduan Penilaian
+                                    </span>
+                                    {currentStep > 0 && (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    )}
+                                </div>
+                                <span className="mt-1 block text-xs text-muted-foreground">
+                                    Baca sebelum menilai
+                                </span>
+                            </button>
+
                             {pillars.map((pillar, index) => {
-                                const active = index === currentStep;
-                                const complete = pillar.indicators.every(
-                                    (indicator) =>
-                                        selectedScoreMap.has(indicator.id),
-                                );
+                                const stepNumber = index + 1;
+                                const active = stepNumber === currentStep;
+                                const complete = isPillarComplete(pillar);
+                                const unlocked = canOpenStep(stepNumber);
 
                                 return (
                                     <button
                                         key={pillar.id}
                                         type="button"
-                                        onClick={() => setCurrentStep(index)}
-                                        className={`rounded-md border px-4 py-3 text-left text-sm transition ${
+                                        onClick={() => selectStep(stepNumber)}
+                                        disabled={!unlocked}
+                                        className={`rounded-md border px-4 py-3 text-left text-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${
                                             active
                                                 ? 'border-sky-500 bg-sky-50 text-sky-950'
                                                 : 'border-border bg-white hover:border-sky-300'
@@ -564,7 +929,7 @@ export default function EvaluationForm({
                                             )}
                                         </div>
                                         <span className="mt-1 block text-xs text-muted-foreground">
-                                            {pillar.weight}% weight
+                                            Bobot {pillar.weight}%
                                         </span>
                                     </button>
                                 );
@@ -576,20 +941,26 @@ export default function EvaluationForm({
                         {stepMessage && (
                             <Alert variant="destructive">
                                 <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Complete this section</AlertTitle>
+                                <AlertTitle>Lengkapi sesi ini</AlertTitle>
                                 <AlertDescription>
                                     {stepMessage}
                                 </AlertDescription>
                             </Alert>
                         )}
 
-                        <PilarSection
-                            pillar={currentPillar}
-                            scores={form.data.scores}
-                            onScoreChange={setIndicatorScore}
-                        />
+                        {isGuideStep ? (
+                            <AssessmentGuideSection />
+                        ) : (
+                            currentPillar && (
+                                <PilarSection
+                                    pillar={currentPillar}
+                                    scores={form.data.scores}
+                                    onScoreChange={setIndicatorScore}
+                                />
+                            )
+                        )}
 
-                        {isLastStep && (
+                        {!isGuideStep && isLastStep && (
                             <Card className="gap-3">
                                 <CardHeader>
                                     <div className="flex items-center gap-3">
@@ -630,10 +1001,12 @@ export default function EvaluationForm({
                         {Object.keys(form.errors).length > 0 && (
                             <Alert variant="destructive">
                                 <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Unable to submit</AlertTitle>
+                                <AlertTitle>
+                                    Penilaian belum dapat dikirim
+                                </AlertTitle>
                                 <AlertDescription>
-                                    Please review the required scores and try
-                                    again.
+                                    Periksa kembali skor wajib pada setiap
+                                    indikator.
                                 </AlertDescription>
                             </Alert>
                         )}
@@ -647,10 +1020,10 @@ export default function EvaluationForm({
                                 className="gap-2"
                             >
                                 <ArrowLeft className="h-4 w-4" />
-                                Previous
+                                Sebelumnya
                             </Button>
 
-                            {isLastStep ? (
+                            {!isGuideStep && isLastStep ? (
                                 <Button
                                     type="submit"
                                     disabled={
@@ -664,7 +1037,7 @@ export default function EvaluationForm({
                                     ) : (
                                         <CheckCircle2 className="h-4 w-4" />
                                     )}
-                                    Submit Evaluation
+                                    Kirim Penilaian
                                 </Button>
                             ) : (
                                 <Button
@@ -675,7 +1048,9 @@ export default function EvaluationForm({
                                     }
                                     className="gap-2"
                                 >
-                                    Next
+                                    {isGuideStep
+                                        ? 'Mulai Penilaian'
+                                        : 'Selanjutnya'}
                                     <ArrowRight className="h-4 w-4" />
                                 </Button>
                             )}
