@@ -19,6 +19,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'tipe_penilai',
     'status',
     'catatan',
+    'area_pengembangan',
+    'kekuatan_teramati',
 ])]
 
 class Penugasan extends Model

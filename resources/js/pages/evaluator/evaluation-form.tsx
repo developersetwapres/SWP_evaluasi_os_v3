@@ -1,6 +1,7 @@
 'use client';
 
 import { Head, Link, useForm } from '@inertiajs/react';
+import type { InertiaFormProps } from '@inertiajs/react';
 import {
     AlertCircle,
     ArrowLeft,
@@ -67,6 +68,8 @@ type EvaluationFormData = {
     evaluator_id: number | null;
     outsourcing_id: number | null;
     scores: ScorePayload[];
+    development_area: string;
+    observed_strengths: string;
     notes: string;
 };
 
@@ -88,6 +91,8 @@ interface EvaluationFormProps {
     evaluationData: unknown;
     uuidPenugasanPeer: string;
     tipePenilai: string;
+    developmentArea?: string | null;
+    observedStrengths?: string | null;
     overallNotes?: string | null;
 }
 
@@ -382,6 +387,114 @@ function IndicatorCard({
                 />
             </CardContent>
         </Card>
+    );
+}
+
+function NotesTextareaCard({
+    title,
+    description,
+    value,
+    placeholder,
+    error,
+    onChange,
+}: {
+    title: string;
+    description: string;
+    value: string;
+    placeholder: string;
+    error?: string;
+    onChange: (value: string) => void;
+}) {
+    return (
+        <Card className="gap-3">
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-100 text-amber-700">
+                        <FileText className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <CardTitle>{title}</CardTitle>
+                        <CardDescription className="text-xs text-muted-foreground">
+                            {description}
+                        </CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Textarea
+                    value={value}
+                    onChange={(event) => onChange(event.target.value)}
+                    placeholder={placeholder}
+                    className="min-h-32 resize-y bg-white"
+                />
+                {error && (
+                    <p className="mt-2 text-sm text-destructive">{error}</p>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+function OtherNotesSection({
+    form,
+}: {
+    form: InertiaFormProps<EvaluationFormData>;
+}) {
+    return (
+        <section className="space-y-5">
+            <div className="flex flex-col gap-4 rounded-md border bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-amber-100 text-amber-700">
+                        <FileText className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-2xl font-semibold">
+                            Catatan Lainnya
+                        </h2>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                            Tambahkan konteks kualitatif untuk melengkapi skor
+                            BARS.
+                        </p>
+                    </div>
+                </div>
+                <Badge variant="outline" className="w-fit bg-white">
+                    Optional
+                </Badge>
+            </div>
+
+            <div className="grid gap-4">
+                <NotesTextareaCard
+                    title="Area yang perlu dikembangkan"
+                    description="Optional"
+                    value={form.data.development_area}
+                    onChange={(value) =>
+                        form.setData('development_area', value)
+                    }
+                    placeholder="Tuliskan area atau kompetensi yang masih perlu dikembangkan..."
+                    error={form.errors.development_area}
+                />
+
+                <NotesTextareaCard
+                    title="Kekuatan yang teramati"
+                    description="Optional"
+                    value={form.data.observed_strengths}
+                    onChange={(value) =>
+                        form.setData('observed_strengths', value)
+                    }
+                    placeholder="Tuliskan kekuatan atau perilaku positif yang paling terlihat..."
+                    error={form.errors.observed_strengths}
+                />
+
+                <NotesTextareaCard
+                    title="Catatan Tambahan"
+                    description="Optional"
+                    value={form.data.notes}
+                    onChange={(value) => form.setData('notes', value)}
+                    placeholder="Tambahkan catatan untuk OS yang dinilai..."
+                    error={form.errors.notes}
+                />
+            </div>
+        </section>
     );
 }
 
@@ -879,7 +992,7 @@ export default function EvaluationForm({
                                 style={{ width: `${progress}%` }}
                             />
                         </div>
-                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
                             <button
                                 type="button"
                                 onClick={() => selectStep(0)}

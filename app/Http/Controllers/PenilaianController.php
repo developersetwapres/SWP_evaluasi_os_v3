@@ -52,6 +52,8 @@ class PenilaianController extends Controller
             'uuidPenugasanPeer' => $penugasan->uuid,
             'tipePenilai' => $penugasan->tipe_penilai,
             'overallNotes' => $penugasan->catatan,
+            'developmentArea' => $penugasan->area_pengembangan,
+            'observedStrengths' => $penugasan->kekuatan_teramati,
             'evaluationData' => $engine->getEvaluationData($penugasan, $jabatanId),
         ];
 
@@ -86,6 +88,8 @@ class PenilaianController extends Controller
 
             $penugasan->forceFill([
                 'catatan' => $validated['notes'] ?? null,
+                'area_pengembangan' => $validated['development_area'] ?? null,
+                'kekuatan_teramati' => $validated['observed_strengths'] ?? null,
                 'status' => 'completed',
             ])->save();
         });

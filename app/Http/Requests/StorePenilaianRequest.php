@@ -33,6 +33,8 @@ class StorePenilaianRequest extends FormRequest
             'scores' => ['required', 'array', 'min:1'],
             'scores.*.indicator_id' => ['required', 'integer', 'distinct', 'exists:indikators,id'],
             'scores.*.value' => ['required', 'integer', 'between:1,4'],
+            'development_area' => ['nullable', 'string', 'max:5000'],
+            'observed_strengths' => ['nullable', 'string', 'max:5000'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ];
     }
