@@ -156,7 +156,7 @@ class OutsourcingController extends Controller
         $result = $engine->calculate($penugasanCollection);
 
         return Inertia::render('admin/detail/nilai-akhir', [
-            'rekapAspekEvaluator' => [
+            'rekapPilarEvaluator' => [
                 'id' => $outsourcing->id,
                 'name' => $outsourcing->name,
                 'uuid' => $outsourcing->uuid,
@@ -166,7 +166,7 @@ class OutsourcingController extends Controller
 
                 'status' => $result['status'],
                 'finalTotalScore' => $result['finalScore'],
-                'aspekScores' => $result['aspectsGlobal'],
+                'pilarScores' => $result['aspectsGlobal'],
                 'evaluatorScores' => $result['evaluators'],
             ]
         ]);

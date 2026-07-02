@@ -61,7 +61,7 @@ export default function nilaiPerItemKriteria({
                         >
                             <User2 className="h-4 w-4" />
                             <span className="hidden sm:inline">
-                                Penerima Layanan
+                                Penerima Layanan 1
                             </span>
                         </Link>
 
@@ -84,7 +84,7 @@ export default function nilaiPerItemKriteria({
                         >
                             <User2 className="h-4 w-4" />
                             <span className="hidden sm:inline">
-                                Teman Setingkat
+                                Penerima Layanan 2
                             </span>
                         </Link>
                     </nav>

@@ -167,7 +167,7 @@ export default function ResultsRecapPage({
                                         </p>
                                         <Progress
                                             value={
-                                                (result.finalTotalScore / 100) *
+                                                (result.finalTotalScore / 4) *
                                                 100
                                             }
                                             className="mt-2 h-2"

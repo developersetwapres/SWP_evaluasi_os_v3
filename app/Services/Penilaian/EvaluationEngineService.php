@@ -18,18 +18,19 @@ class EvaluationEngineService
 
             $evaluatorResult = $this->calculateEvaluator($penugasan);
 
+
             $evaluators[] = $evaluatorResult;
 
             $finalScore += $evaluatorResult['weightedScore'];
 
-            foreach ($evaluatorResult['aspects'] as $aspek) {
+            foreach ($evaluatorResult['aspects'] as $pilar) {
 
-                $globalPilar[$aspek['id']]['title'] = $aspek['title'];
-                $globalPilar[$aspek['id']]['bobot'] = $aspek['bobot'];
+                $globalPilar[$pilar['id']]['title'] = $pilar['title'];
+                $globalPilar[$pilar['id']]['bobot'] = $pilar['bobot'];
 
-                // gunakan weightedScore PER evaluator (sudah termasuk bobot aspek)
-                $globalPilar[$aspek['id']]['nilai'][] =
-                    $aspek['weightedScore'] * $evaluatorResult['bobot'];
+                // gunakan weightedScore PER evaluator (sudah termasuk bobot pilar)
+                $globalPilar[$pilar['id']]['nilai'][] =
+                    $pilar['weightedScore'] * $evaluatorResult['bobot'];
             }
         }
 
@@ -43,25 +44,25 @@ class EvaluationEngineService
 
     protected function calculateEvaluator($penugasan): array
     {
-        $aspekData = [];
+        $pilarData = [];
         $totalEvaluatorScore = 0;
 
         foreach ($penugasan->penilaian as $penilaian) {
 
-            $aspek = $penilaian->indikator?->aspek;
+            $pilar = $penilaian->indikator?->pilar;
 
-            if (! $aspek) {
+            if (! $pilar) {
                 continue;
             }
 
-            $aspekData[$aspek->id]['title'] = $aspek->title;
-            $aspekData[$aspek->id]['bobot'] = $aspek->bobotSkor->bobot / 100;
-            $aspekData[$aspek->id]['nilai'][] = $penilaian->nilai;
+            $pilarData[$pilar->id]['title'] = $pilar->title;
+            $pilarData[$pilar->id]['bobot'] = $pilar->bobotSkor->bobot / 100;
+            $pilarData[$pilar->id]['nilai'][] = $penilaian->nilai;
         }
 
-        $aspekResults = [];
+        $pilarResults = [];
 
-        foreach ($aspekData as $id => $data) {
+        foreach ($pilarData as $id => $data) {
 
             $countNilai = count($data['nilai']);
 
@@ -74,7 +75,7 @@ class EvaluationEngineService
 
             $totalEvaluatorScore += $weightedPilar;
 
-            $aspekResults[] = [
+            $pilarResults[] = [
                 'id' => $id,
                 'title' => $data['title'],
                 'averageScore' => round($avg, 2),
@@ -85,7 +86,7 @@ class EvaluationEngineService
 
         $bobotEvaluator = $penugasan->bobotSkor->bobot / 100;
 
-        // konsisten: sum(avg × bobot_aspek) × bobot_evaluator
+        // konsisten: sum(avg × bobot_pilar) × bobot_evaluator
         $weightedFinal = $totalEvaluatorScore * $bobotEvaluator;
 
         return [
@@ -97,7 +98,7 @@ class EvaluationEngineService
             'weightedScore' => round($weightedFinal, 2),
             'status' => $penugasan->status,
             'notes' => $penugasan->catatan,
-            'aspects' => $aspekResults,
+            'aspects' => $pilarResults,
         ];
     }
 
@@ -195,26 +196,26 @@ class EvaluationEngineService
 
     public function calculateRawScore($penugasan): float
     {
-        $aspekData = [];
+        $pilarData = [];
 
         foreach ($penugasan->penilaian as $penilaian) {
 
-            $aspek = $penilaian->indikator?->aspek;
+            $pilar = $penilaian->indikator?->pilar;
 
-            if (! $aspek) {
+            if (! $pilar) {
                 continue;
             }
 
-            $aspekData[$aspek->id]['bobot'] =
-                $aspek->bobotSkor->bobot / 100;
+            $pilarData[$pilar->id]['bobot'] =
+                $pilar->bobotSkor->bobot / 100;
 
-            $aspekData[$aspek->id]['nilai'][] =
+            $pilarData[$pilar->id]['nilai'][] =
                 $penilaian->nilai;
         }
 
         $total = 0;
 
-        foreach ($aspekData as $data) {
+        foreach ($pilarData as $data) {
 
             $count = count($data['nilai']);
 
@@ -301,7 +302,7 @@ class EvaluationEngineService
         foreach ($aspects as $aspect) {
             $indikatorIds = $aspect->indikator->pluck('id');
 
-            // kumpulkan semua nilai indikator dalam 1 aspek
+            // kumpulkan semua nilai indikator dalam 1 pilar
             $nilai = collect();
             $bobot = optional($aspect->bobotSkor)->bobot;
 

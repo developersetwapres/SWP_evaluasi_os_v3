@@ -29,7 +29,7 @@ import { router } from '@inertiajs/react';
 import { BarChart3, Calculator, Users } from 'lucide-react';
 import { useState } from 'react';
 
-export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
+export default function nilaiAkhir({ rekapPilarEvaluator }: any) {
     const [isResetNilaiOpen, setIsResetNilaiOpen] = useState(false);
     const [selectedPenilaian, setSelectedPenilaian] = useState<any>(null);
 
@@ -55,7 +55,7 @@ export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
             <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
                 <div className="space-y-8">
                     <EmployeeNavigation
-                        employeeUuid={rekapAspekEvaluator.uuid}
+                        employeeUuid={rekapPilarEvaluator.uuid}
                     />
 
                     {/* Employee Profile Card */}
@@ -64,28 +64,28 @@ export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-6">
                                     <img
-                                        src={`/storage/${rekapAspekEvaluator?.image}`}
-                                        alt={rekapAspekEvaluator?.name}
+                                        src={`/storage/${rekapPilarEvaluator?.image}`}
+                                        alt={rekapPilarEvaluator?.name}
                                         className="h-24 w-24 rounded-full border-4 border-white shadow-lg"
                                     />
                                     <div>
                                         <CardTitle className="mb-2 text-3xl">
-                                            {rekapAspekEvaluator?.name}
+                                            {rekapPilarEvaluator?.name}
                                         </CardTitle>
                                         <CardDescription className="text-lg text-indigo-100">
-                                            {rekapAspekEvaluator?.jabatan} •{' '}
-                                            {rekapAspekEvaluator?.unit_kerja}
+                                            {rekapPilarEvaluator?.jabatan} •{' '}
+                                            {rekapPilarEvaluator?.unit_kerja}
                                         </CardDescription>
                                         <div className="mt-4 flex items-center space-x-4">
                                             <Badge
                                                 className={
-                                                    rekapAspekEvaluator?.status ===
+                                                    rekapPilarEvaluator?.status ===
                                                     'completed'
                                                         ? 'border-green-400 bg-green-500 text-white'
                                                         : 'border-yellow-400 bg-yellow-500 text-white'
                                                 }
                                             >
-                                                {rekapAspekEvaluator?.status ===
+                                                {rekapPilarEvaluator?.status ===
                                                 'completed'
                                                     ? 'Evaluasi Selesai'
                                                     : 'Dalam Progress'}
@@ -95,15 +95,15 @@ export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
                                 </div>
                                 <div className="text-right">
                                     <div className="mb-2 text-6xl font-bold">
-                                        {rekapAspekEvaluator?.finalTotalScore?.toFixed(
+                                        {rekapPilarEvaluator?.finalTotalScore?.toFixed(
                                             2,
                                         )}
                                     </div>
                                     <Badge
-                                        className={`${getScoreBadgeColor(rekapAspekEvaluator?.finalTotalScore)} border-2 px-4 py-2 text-lg`}
+                                        className={`${getScoreBadgeColor(rekapPilarEvaluator?.finalTotalScore)} border-2 px-4 py-2 text-lg`}
                                     >
                                         {getScoreLabel(
-                                            rekapAspekEvaluator?.finalTotalScore,
+                                            rekapPilarEvaluator?.finalTotalScore,
                                         )}
                                     </Badge>
                                     <p className="mt-2 text-indigo-100">
@@ -114,22 +114,22 @@ export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
                         </CardHeader>
                     </Card>
 
-                    {/* Rekap Aspek Berbobot */}
+                    {/* Rekap Pilar Berbobot */}
                     <Card className="gap-0 shadow-xl">
                         <CardHeader>
                             <CardTitle className="flex items-center space-x-3">
                                 <BarChart3 className="h-6 w-6" />
-                                <span>Rekap Nilai per Aspek</span>
+                                <span>Rekap Nilai per Pilar</span>
                             </CardTitle>
                             <CardDescription>
-                                Ringkasan nilai berbobot untuk setiap aspek
+                                Ringkasan nilai berbobot untuk setiap pilar
                                 penilaian dari semua evaluator
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="p-8">
                             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                                {rekapAspekEvaluator.aspekScores.map(
-                                    (aspek: any, index: any) => (
+                                {rekapPilarEvaluator.pilarScores.map(
+                                    (pilar: any, index: any) => (
                                         <div
                                             key={index}
                                             className="transform rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-400 to-blue-700 p-6 px-8 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
@@ -139,21 +139,21 @@ export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
                                                     <Calculator className="h-8 w-8" />
                                                 </div>
                                                 <h3 className="mb-2 text-xl font-bold">
-                                                    {aspek.title}
+                                                    {pilar.title}
                                                 </h3>
                                                 <div className="mb-4 inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur-sm">
                                                     Nilai Akhir
                                                 </div>
                                                 <div className="mb-4 rounded-4xl bg-white/10 p-4 backdrop-blur-sm">
                                                     <div className="mb-1 font-mono text-sm opacity-90">
-                                                        {aspek?.averageScore} ×{' '}
+                                                        {pilar?.averageScore} ×{' '}
                                                         {(
-                                                            aspek?.bobot * 100
+                                                            pilar?.bobot * 100
                                                         ).toFixed(0)}
                                                         % =
                                                     </div>
                                                     <div className="text-4xl font-bold">
-                                                        {aspek?.weightedScore.toFixed(
+                                                        {pilar?.weightedScore.toFixed(
                                                             2,
                                                         )}
                                                     </div>
@@ -183,7 +183,7 @@ export default function nilaiAkhir({ rekapAspekEvaluator }: any) {
                         </CardHeader>
                         <CardContent className="p-8">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                {rekapAspekEvaluator?.evaluatorScores.map(
+                                {rekapPilarEvaluator?.evaluatorScores.map(
                                     (evaluator: any, index: any) => {
                                         const evaluatorType =
                                             evaluator.type === 'atasan'
