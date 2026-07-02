@@ -9,6 +9,7 @@ use App\Models\BobotSkor;
 use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
 use App\Models\Siklus;
+use App\Services\Penilaian\SaranPerbaikanEvaluatorService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -188,5 +189,55 @@ class PenugasanController extends Controller
         ];
 
         return Inertia::render('evaluator/page', $data);
+    }
+
+    public function byOutsourcings(): Response
+    {
+        $outsourcings = app(Outsourcing::class)->byOutsourcings();
+
+        return Inertia::render('admin/statuspenilaian/ETXpenilaianByOutsourcing', [
+            'outsourcings' => $outsourcings,
+        ]);
+    }
+
+    public function byEvaluators(): Response
+    {
+        $evaluators = app(Penugasan::class)->byEvaluators();
+
+        return Inertia::render('admin/statuspenilaian/ETXpenilaianByEvaluator', [
+            'evaluators' => $evaluators,
+        ]);
+    }
+
+    public function statusPenilaian(): Response
+    {
+        $data = [
+            'byOutsourcings' => app(Outsourcing::class)->byOutsourcings(),
+            'byEvaluators' => app(Penugasan::class)->byEvaluators(),
+        ];
+
+        return Inertia::render('admin/statuspenilaian/page', $data);
+    }
+
+    public function reset(Penugasan $penugasan)
+    {
+        foreach ($penugasan->penilaian as $key => $penugasan) {
+            $penugasan->delete();
+        };
+
+        $penugasan->update([
+            'catatan' => null,
+            'status' => 'incomplete',
+        ]);
+    }
+
+
+    public function saranPerbaikan(SaranPerbaikanEvaluatorService $service): Response
+    {
+        $data = [
+            'Outsourcings' => $service->saran()
+        ];
+
+        return Inertia::render('admin/saranperbaikan/page', $data);
     }
 }

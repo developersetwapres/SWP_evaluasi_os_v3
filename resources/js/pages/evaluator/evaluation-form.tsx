@@ -96,29 +96,29 @@ interface EvaluationFormProps {
     overallNotes?: string | null;
 }
 
-const guidePillars = [
-    {
-        title: 'Task Performance',
-        subtitle: 'Hasil kerja sesuai tugas dan tanggung jawab',
-        meta: '3-4 indikator sesuai job family',
-        icon: ClipboardCheck,
-        className: 'border-sky-200 bg-sky-50 text-sky-900',
-    },
-    {
-        title: 'Work Behavior',
-        subtitle: 'Cara kerja dan proses kerja harian',
-        meta: '4 indikator',
-        icon: Layers3,
-        className: 'border-emerald-200 bg-emerald-50 text-emerald-900',
-    },
-    {
-        title: 'Attitude & Service',
-        subtitle: 'Sikap, profesionalisme, integritas, dan pelayanan',
-        meta: '2 indikator',
-        icon: ShieldCheck,
-        className: 'border-amber-200 bg-amber-50 text-amber-900',
-    },
-];
+// const guidePillars = [
+//     {
+//         title: 'Task Performance',
+//         subtitle: 'Hasil kerja sesuai tugas dan tanggung jawab',
+//         meta: '3-4 indikator sesuai job family',
+//         icon: ClipboardCheck,
+//         className: 'border-sky-200 bg-sky-50 text-sky-900',
+//     },
+//     {
+//         title: 'Work Behavior',
+//         subtitle: 'Cara kerja dan proses kerja harian',
+//         meta: '4 indikator',
+//         icon: Layers3,
+//         className: 'border-emerald-200 bg-emerald-50 text-emerald-900',
+//     },
+//     {
+//         title: 'Attitude & Service',
+//         subtitle: 'Sikap, profesionalisme, integritas, dan pelayanan',
+//         meta: '2 indikator',
+//         icon: ShieldCheck,
+//         className: 'border-amber-200 bg-amber-50 text-amber-900',
+//     },
+// ];
 
 const fillingGuidelines = [
     'Bacalah setiap indikator dan pilihan perilaku BARS dengan saksama.',
@@ -622,7 +622,7 @@ function AssessmentGuideSection() {
                         </div>
                     </div>
 
-                    <div className="grid gap-3 md:grid-cols-3">
+                    {/* <div className="grid gap-3 md:grid-cols-3">
                         {guidePillars.map((pillar) => {
                             const Icon = pillar.icon;
 
@@ -653,7 +653,7 @@ function AssessmentGuideSection() {
                                 </div>
                             );
                         })}
-                    </div>
+                    </div> */}
 
                     <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
                         <Card className="gap-3 border-slate-200 bg-gray-50 shadow-none">

@@ -1,5 +1,6 @@
 'use client';
 
+import exportToExcel from '@/components/penilaian/exportToExcel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +11,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import {
     Select,
     SelectContent,
@@ -18,13 +20,30 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AdminLayout from '@/layouts/app/app-adminkmz-layout';
+import { rekapaspekevaluator } from '@/routes/os';
+import { getScoreColor, getScoreLabel } from '@/utils/score';
 import { Link } from '@inertiajs/react';
 import { BarChart3, Download, Eye, Search } from 'lucide-react';
 import { useState } from 'react';
 
-export default function ResultsRecapPage() {
+export default function ResultsRecapPage({
+    evaluationResults,
+}: {
+    evaluationResults: any;
+}) {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterUnit, setFilterUnit] = useState('all');
+
+    const filteredResults = evaluationResults?.filter((result: any) => {
+        const matchesSearch = result.name
+            ?.toLowerCase()
+            .includes(searchTerm?.toLowerCase());
+
+        const matchesUnit = filterUnit === 'all';
+        return matchesSearch && matchesUnit;
+    });
+
+    const units = [...new Set(evaluationResults.map((r: any) => r.biro))];
 
     return (
         <div className="space-y-6">
@@ -71,26 +90,170 @@ export default function ResultsRecapPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua Unit</SelectItem>
+                                {units.map((unit, index) => (
+                                    <SelectItem key={index} value={unit}>
+                                        {unit}
+                                    </SelectItem>
+                                ))}
                             </SelectContent>
                         </Select>
-                        <Button className="flex items-center space-x-2">
+                        <Button
+                            className="flex items-center space-x-2"
+                            onClick={() => exportToExcel(filteredResults)}
+                        >
                             <Download className="h-4 w-4" />
                             <span>Export</span>
                         </Button>
                     </div>
 
                     {/* Results Grid */}
-                    <Card className="py-12 text-center">
-                        <CardContent>
-                            <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-                            <h3 className="mb-2 text-lg font-medium text-gray-900">
-                                Tidak ada hasil ditemukan
-                            </h3>
-                            <p className="text-gray-500">
-                                Coba ubah filter atau kata kunci pencarian
-                            </p>
-                        </CardContent>
-                    </Card>
+                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                        {filteredResults.map((result: any) => (
+                            <Card
+                                key={result.id}
+                                className="gap-0 transition-shadow hover:shadow-lg"
+                            >
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center space-x-3">
+                                            <img
+                                                src={
+                                                    `/storage/${result.image}` ||
+                                                    '/placeholder.svg'
+                                                }
+                                                alt={result.name}
+                                                className="h-12 w-12 rounded-full border-2 border-blue-100 object-cover"
+                                            />
+
+                                            <div>
+                                                <CardTitle className="text-lg">
+                                                    {result.name}
+                                                </CardTitle>
+                                                <CardDescription>
+                                                    {result.biro} •{' '}
+                                                    {result.jabatan}
+                                                </CardDescription>
+                                            </div>
+                                        </div>
+                                        <Badge
+                                            variant={
+                                                result.status === 'completed'
+                                                    ? 'default'
+                                                    : 'secondary'
+                                            }
+                                        >
+                                            {result.status === 'completed'
+                                                ? 'Selesai'
+                                                : 'Progress'}
+                                        </Badge>
+                                    </div>
+                                </CardHeader>
+
+                                <CardContent className="space-y-4">
+                                    {/* Weighted Overall Score */}
+                                    <div className="rounded-lg bg-gray-50 p-4 text-center">
+                                        <div
+                                            className={`text-3xl font-bold ${getScoreColor(result.finalTotalScore)}`}
+                                        >
+                                            {result?.finalTotalScore}
+                                        </div>
+                                        <p className="mt-1 text-sm text-gray-600">
+                                            Nilai Akhir
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {getScoreLabel(
+                                                result.finalTotalScore,
+                                            )}
+                                        </p>
+                                        <Progress
+                                            value={
+                                                (result.finalTotalScore / 100) *
+                                                100
+                                            }
+                                            className="mt-2 h-2"
+                                        />
+                                    </div>
+
+                                    {/* Evaluators */}
+                                    <div className="space-y-2">
+                                        <h4 className="text-sm font-medium">
+                                            Penilai (
+                                            {result?.evaluatorScores?.length}
+                                            ):
+                                        </h4>
+                                        <div className="space-y-1">
+                                            {result?.evaluatorScores?.map(
+                                                (
+                                                    evaluator: any,
+                                                    index: any,
+                                                ) => (
+                                                    <div
+                                                        key={index}
+                                                        className="flex items-center justify-between text-xs"
+                                                    >
+                                                        <span className="text-gray-600">
+                                                            {evaluator?.type ===
+                                                            'atasan'
+                                                                ? 'Atasan'
+                                                                : evaluator?.type ===
+                                                                    'penerima_layanan'
+                                                                  ? 'Penerima Layanan'
+                                                                  : 'Teman Setingkat'}
+                                                        </span>
+                                                        <div className="flex items-center space-x-2 font-mono">
+                                                            <span
+                                                                className={`font-medium ${getScoreColor(evaluator?.averageScore)}`}
+                                                            >
+                                                                {evaluator?.averageScore?.toFixed(
+                                                                    1,
+                                                                )}
+                                                            </span>
+                                                            <span>
+                                                                {' × '}{' '}
+                                                                {evaluator?.bobot *
+                                                                    100 +
+                                                                    '%'}
+                                                            </span>
+                                                            <span>
+                                                                {' = '}{' '}
+                                                                {
+                                                                    evaluator?.weightedScore
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <Link
+                                        href={rekapaspekevaluator.url(
+                                            result.uuid,
+                                        )}
+                                        className="flex w-full items-center justify-center gap-2 space-x-2 rounded-md border py-1.5 text-center text-sm font-medium whitespace-nowrap hover:bg-gray-100"
+                                    >
+                                        <Eye className="h-4 w-4" />
+                                        <span>Lihat Detail</span>
+                                    </Link>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </div>
+
+                    {filteredResults.length === 0 && (
+                        <Card className="py-12 text-center">
+                            <CardContent>
+                                <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                                <h3 className="mb-2 text-lg font-medium text-gray-900">
+                                    Tidak ada hasil ditemukan
+                                </h3>
+                                <p className="text-gray-500">
+                                    Coba ubah filter atau kata kunci pencarian
+                                </p>
+                            </CardContent>
+                        </Card>
+                    )}
                 </CardContent>
             </Card>
         </div>

@@ -129,8 +129,61 @@ class PenilaianController extends Controller
         //
     }
 
-    public function rekaphasil(): Response
+    public function rekaphasil(EvaluationEngineService $engine): Response
     {
-        return Inertia::render('admin/rekaphasil/page');
+        $evaluationResults = Outsourcing::with([
+            'penugasan.bobotSkor',
+            'penugasan.evaluators.userable',
+            'penugasan.penilaian.indikator.pilar.bobotSkor',
+            'biro',
+            'jabatan',
+        ])
+            ->where('is_active', 1)
+            ->orderBy('name', 'asc')
+            ->get()->map(function ($os) use ($engine) {
+
+                $result = $engine->calculate($os->penugasan);
+
+                $status = collect($result['evaluators'])
+                    ->pluck('status')
+                    ->every(fn($status) => $status === 'completed')
+                    ? 'completed'
+                    : 'progress';
+
+                return [
+                    'id' => $os->id,
+                    'nip' => $os->nip,
+                    'name' => $os->name,
+                    'uuid' => $os->uuid,
+                    'image' => $os->image,
+                    'biro' => $os->biro?->nama_biro,
+                    'jabatan' => $os->jabatan?->nama_jabatan,
+                    'status' => $status,
+
+                    'finalTotalScore' => $result['finalScore'],
+                    'evaluatorScores' => $result['evaluators'],
+                ];
+            });
+
+        return Inertia::render('admin/rekaphasil/page', [
+            'evaluationResults' => $evaluationResults,
+        ]);
+    }
+
+    public function ranking(EvaluationEngineService $engine): Response
+    {
+        $outsourcings = Outsourcing::with([
+            'jabatan',
+            'penugasan.penilaian.indikator.pilar.bobotSkor',
+            'penugasan.bobotSkor'
+        ])
+            ->where('is_active', true)
+            ->get();
+
+        $outsourcingData = $engine->calculateRankingByJabatan($outsourcings);
+
+        return Inertia::render('admin/ranking/page', [
+            'outsourcingData' => $outsourcingData
+        ]);
     }
 }

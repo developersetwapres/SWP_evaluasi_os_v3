@@ -36,8 +36,6 @@ export default function StatusPenilaian({
     byOutsourcings: any;
     byEvaluators: any;
 }) {
-    console.log(byOutsourcings);
-
     const [evaluatorFilter, setEvaluatorFilter] = useState<
         'all' | 'completed' | 'incomplete'
     >('all');
@@ -72,306 +70,292 @@ export default function StatusPenilaian({
     }, [byOutsourcings, outsourcingFilter]);
 
     return (
-        <AdminLayout>
-            <div className="space-y-6">
-                {/* Header Card */}
-                <Card className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
-                    <CardHeader>
-                        <CardTitle className="flex items-center space-x-2 text-2xl">
-                            <Users2 className="h-6 w-6" />
-                            <span>Status Penilaian</span>
-                        </CardTitle>
-                        <CardDescription className="text-purple-100">
-                            Rekap status penilaian oleh by evaluators dan by
-                            outsourcings.
-                        </CardDescription>
-                    </CardHeader>
-                </Card>
+        <div className="space-y-6">
+            {/* Header Card */}
+            <Card className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+                <CardHeader>
+                    <CardTitle className="flex items-center space-x-2 text-2xl">
+                        <Users2 className="h-6 w-6" />
+                        <span>Status Penilaian</span>
+                    </CardTitle>
+                    <CardDescription className="text-purple-100">
+                        Rekap status penilaian oleh by evaluators dan by
+                        outsourcings.
+                    </CardDescription>
+                </CardHeader>
+            </Card>
 
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                            <div>
-                                <CardTitle>Status Penilaian</CardTitle>
-                                <CardDescription>
-                                    Ringkasan status penilaian dalam dua format.
-                                </CardDescription>
-                            </div>
-
-                            <div className="flex gap-2 md:justify-end">
-                                <Link
-                                    className="flex items-center gap-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
-                                    href={evaluators.url()}
-                                >
-                                    <Download className="h-4 w-4" />
-                                    <span>Export by Evaluator</span>
-                                </Link>
-
-                                <Link
-                                    className="flex items-center gap-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
-                                    href={outsourcings.url()}
-                                >
-                                    <Download className="h-4 w-4" />
-                                    <span>Export by Outsourcing</span>
-                                </Link>
-                            </div>
+            <Card>
+                <CardHeader>
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div>
+                            <CardTitle>Status Penilaian</CardTitle>
+                            <CardDescription>
+                                Ringkasan status penilaian dalam dua format.
+                            </CardDescription>
                         </div>
-                    </CardHeader>
 
-                    <div className="p-4">
-                        <Tabs defaultValue="by-evaluator">
-                            <TabsList>
-                                <TabsTrigger
-                                    value="by-evaluator"
-                                    className="flex items-center gap-2"
-                                >
-                                    <User className="h-4 w-4" />
-                                    By Evaluator
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="by-outsourcing"
-                                    className="flex items-center gap-2"
-                                >
-                                    <Users2 className="h-4 w-4" />
-                                    By Outsourcing
-                                </TabsTrigger>
-                            </TabsList>
+                        <div className="flex gap-2 md:justify-end">
+                            <Link
+                                className="flex items-center gap-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
+                                href={evaluators.url()}
+                            >
+                                <Download className="h-4 w-4" />
+                                <span>Export by Evaluator</span>
+                            </Link>
 
-                            <TabsContent value="by-evaluator">
-                                <div className="mb-4 flex justify-end">
-                                    <div className="w-48">
-                                        <Select
-                                            value={evaluatorFilter}
-                                            onValueChange={(v) =>
-                                                setEvaluatorFilter(v as any)
-                                            }
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Filter Status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">
-                                                    Semua Status
-                                                </SelectItem>
-                                                <SelectItem value="completed">
-                                                    Completed
-                                                </SelectItem>
-                                                <SelectItem value="incomplete">
-                                                    Incomplete
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                            <Link
+                                className="flex items-center gap-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
+                                href={outsourcings.url()}
+                            >
+                                <Download className="h-4 w-4" />
+                                <span>Export by Outsourcing</span>
+                            </Link>
+                        </div>
+                    </div>
+                </CardHeader>
+
+                <div className="p-4">
+                    <Tabs defaultValue="by-evaluator">
+                        <TabsList>
+                            <TabsTrigger
+                                value="by-evaluator"
+                                className="flex items-center gap-2"
+                            >
+                                <User className="h-4 w-4" />
+                                By Evaluator
+                            </TabsTrigger>
+                            <TabsTrigger
+                                value="by-outsourcing"
+                                className="flex items-center gap-2"
+                            >
+                                <Users2 className="h-4 w-4" />
+                                By Outsourcing
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="by-evaluator">
+                            <div className="mb-4 flex justify-end">
+                                <div className="w-48">
+                                    <Select
+                                        value={evaluatorFilter}
+                                        onValueChange={(v) =>
+                                            setEvaluatorFilter(v as any)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Filter Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">
+                                                Semua Status
+                                            </SelectItem>
+                                            <SelectItem value="completed">
+                                                Completed
+                                            </SelectItem>
+                                            <SelectItem value="incomplete">
+                                                Incomplete
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
+                            </div>
 
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>No</TableHead>
-                                            <TableHead>Evaluator</TableHead>
-                                            <TableHead>Tipe Penilai</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>
-                                                Outsourcing Yang dinilai
-                                            </TableHead>
-                                            <TableHead>
-                                                Jabatan Yang dinilai
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredEvaluators.map(
-                                            (row: any, index: number) => (
-                                                <TableRow key={row.index}>
-                                                    <TableCell className="w-8">
-                                                        {index + 1}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {row.evaluator_name}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {row.tipe_penilai}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            className={
-                                                                row.status ===
-                                                                'completed'
-                                                                    ? 'bg-green-500 text-white'
-                                                                    : 'bg-red-500 text-white'
-                                                            }
-                                                        >
-                                                            {row.status}
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {row.outsourcing_name}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {
-                                                            row.outsourcing_jabatan
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>No</TableHead>
+                                        <TableHead>Evaluator</TableHead>
+                                        <TableHead>Tipe Penilai</TableHead>
+                                        <TableHead>Status</TableHead>
+                                        <TableHead>
+                                            Outsourcing Yang dinilai
+                                        </TableHead>
+                                        <TableHead>
+                                            Jabatan Yang dinilai
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredEvaluators.map(
+                                        (row: any, index: number) => (
+                                            <TableRow key={row.index}>
+                                                <TableCell className="w-8">
+                                                    {index + 1}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.evaluator_name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.tipe_penilai}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        className={
+                                                            row.status ===
+                                                            'completed'
+                                                                ? 'bg-green-500 text-white'
+                                                                : 'bg-red-500 text-white'
                                                         }
-                                                    </TableCell>
-                                                </TableRow>
-                                            ),
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </TabsContent>
+                                                    >
+                                                        {row.status}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.outsourcing_name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.outsourcing_jabatan}
+                                                </TableCell>
+                                            </TableRow>
+                                        ),
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TabsContent>
 
-                            <TabsContent value="by-outsourcing">
-                                <div className="mb-4 flex justify-end">
-                                    <div className="w-48">
-                                        <Select
-                                            value={outsourcingFilter}
-                                            onValueChange={(v) =>
-                                                setOutsourcingFilter(v as any)
-                                            }
-                                        >
-                                            <SelectTrigger className="w-full">
-                                                <SelectValue placeholder="Filter Status" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">
-                                                    Semua Status
-                                                </SelectItem>
-                                                <SelectItem value="completed">
-                                                    Completed
-                                                </SelectItem>
-                                                <SelectItem value="incomplete">
-                                                    Incomplete
-                                                </SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                        <TabsContent value="by-outsourcing">
+                            <div className="mb-4 flex justify-end">
+                                <div className="w-48">
+                                    <Select
+                                        value={outsourcingFilter}
+                                        onValueChange={(v) =>
+                                            setOutsourcingFilter(v as any)
+                                        }
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Filter Status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">
+                                                Semua Status
+                                            </SelectItem>
+                                            <SelectItem value="completed">
+                                                Completed
+                                            </SelectItem>
+                                            <SelectItem value="incomplete">
+                                                Incomplete
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
+                            </div>
 
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>No</TableHead>
-                                            <TableHead>Outsourcing</TableHead>
-                                            <TableHead>Jabatan</TableHead>
-                                            <TableHead>
-                                                Evaluator Atasan
-                                            </TableHead>
-                                            <TableHead>
-                                                Status Evaluator Atasan
-                                            </TableHead>
-                                            <TableHead>
-                                                Evaluator Penerima Layanan
-                                            </TableHead>
-                                            <TableHead>
-                                                Status Evaluator Penerima
-                                                Layanan
-                                            </TableHead>
-                                            <TableHead>
-                                                Evaluator Teman Setingkat
-                                            </TableHead>
-                                            <TableHead>
-                                                Status Evaluator Teman Setingkat
-                                            </TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredOutsourcings.map(
-                                            (row: any, index: number) => (
-                                                <TableRow key={index}>
-                                                    <TableCell className="w-8">
-                                                        {index + 1}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {row.outsourcing_name}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        {
-                                                            row.outsourcing_jabatan
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>No</TableHead>
+                                        <TableHead>Outsourcing</TableHead>
+                                        <TableHead>Jabatan</TableHead>
+                                        <TableHead>Evaluator Atasan</TableHead>
+                                        <TableHead>
+                                            Status Evaluator Atasan
+                                        </TableHead>
+                                        <TableHead>
+                                            Evaluator Penerima Layanan
+                                        </TableHead>
+                                        <TableHead>
+                                            Status Evaluator Penerima Layanan
+                                        </TableHead>
+                                        <TableHead>
+                                            Evaluator Teman Setingkat
+                                        </TableHead>
+                                        <TableHead>
+                                            Status Evaluator Teman Setingkat
+                                        </TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {filteredOutsourcings.map(
+                                        (row: any, index: number) => (
+                                            <TableRow key={index}>
+                                                <TableCell className="w-8">
+                                                    {index + 1}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.outsourcing_name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.outsourcing_jabatan}
+                                                </TableCell>
+                                                <TableCell>
+                                                    {row.evaluatorsAtasan.name}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        className={
+                                                            row.evaluatorsAtasan
+                                                                .status ===
+                                                            'completed'
+                                                                ? 'bg-green-500 text-white'
+                                                                : 'bg-red-500 text-white'
                                                         }
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    >
                                                         {
                                                             row.evaluatorsAtasan
-                                                                .name
+                                                                ?.status
                                                         }
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            className={
-                                                                row
-                                                                    .evaluatorsAtasan
-                                                                    .status ===
-                                                                'completed'
-                                                                    ? 'bg-green-500 text-white'
-                                                                    : 'bg-red-500 text-white'
-                                                            }
-                                                        >
-                                                            {
-                                                                row
-                                                                    .evaluatorsAtasan
-                                                                    ?.status
-                                                            }
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {
+                                                        row
+                                                            .evaluatorsPenerimaLayanan
+                                                            ?.name
+                                                    }
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        className={
+                                                            row
+                                                                .evaluatorsPenerimaLayanan
+                                                                ?.status ===
+                                                            'completed'
+                                                                ? 'bg-green-500 text-white'
+                                                                : 'bg-red-500 text-white'
+                                                        }
+                                                    >
                                                         {
                                                             row
                                                                 .evaluatorsPenerimaLayanan
-                                                                ?.name
+                                                                ?.status
                                                         }
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            className={
-                                                                row
-                                                                    .evaluatorsPenerimaLayanan
-                                                                    ?.status ===
-                                                                'completed'
-                                                                    ? 'bg-green-500 text-white'
-                                                                    : 'bg-red-500 text-white'
-                                                            }
-                                                        >
-                                                            {
-                                                                row
-                                                                    .evaluatorsPenerimaLayanan
-                                                                    ?.status
-                                                            }
-                                                        </Badge>
-                                                    </TableCell>
-                                                    <TableCell>
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {
+                                                        row
+                                                            .evaluatorsTemanSetingkat
+                                                            ?.name
+                                                    }
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge
+                                                        className={
+                                                            row
+                                                                .evaluatorsTemanSetingkat
+                                                                ?.status ===
+                                                            'completed'
+                                                                ? 'bg-green-500 text-white'
+                                                                : 'bg-red-500 text-white'
+                                                        }
+                                                    >
                                                         {
                                                             row
                                                                 .evaluatorsTemanSetingkat
-                                                                ?.name
+                                                                ?.status
                                                         }
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <Badge
-                                                            className={
-                                                                row
-                                                                    .evaluatorsTemanSetingkat
-                                                                    ?.status ===
-                                                                'completed'
-                                                                    ? 'bg-green-500 text-white'
-                                                                    : 'bg-red-500 text-white'
-                                                            }
-                                                        >
-                                                            {
-                                                                row
-                                                                    .evaluatorsTemanSetingkat
-                                                                    ?.status
-                                                            }
-                                                        </Badge>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ),
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </TabsContent>
-                        </Tabs>
-                    </div>
-                </Card>
-            </div>
-        </AdminLayout>
+                                                    </Badge>
+                                                </TableCell>
+                                            </TableRow>
+                                        ),
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TabsContent>
+                    </Tabs>
+                </div>
+            </Card>
+        </div>
     );
 }

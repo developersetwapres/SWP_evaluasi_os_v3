@@ -37,8 +37,6 @@ export default function rekapNilai({ peraspek }: any) {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-            <EmployeeHeader />
-
             <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
                 <div className="space-y-8">
                     {peraspek?.uuid && (

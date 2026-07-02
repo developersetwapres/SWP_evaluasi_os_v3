@@ -22,7 +22,7 @@ class Indikator extends Model
     ];
 
     // --------------- BelongsTo-----------------------
-    public function aspek(): BelongsTo
+    public function pilar(): BelongsTo
     {
         return $this->belongsTo(Pilar::class, 'pilar_id');
     }

@@ -18,8 +18,6 @@ export default function nilaiPerItemKriteria({
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-            <EmployeeHeader />
-
             <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
                 <div className="space-y-8">
                     <EmployeeNavigation employeeUuid={uuidOs} />
@@ -47,14 +45,14 @@ export default function nilaiPerItemKriteria({
                         <Link
                             href={nilaiPerkriteria.url({
                                 outsourcing: uuidOs,
-                                tipePenilai: 'penerima_layanan',
+                                tipePenilai: 'penerima_layanan1',
                             })}
                             className={cn(
                                 'flex items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
                                 isActive(
                                     nilaiPerkriteria.url({
                                         outsourcing: uuidOs,
-                                        tipePenilai: 'penerima_layanan',
+                                        tipePenilai: 'penerima_layanan1',
                                     }),
                                 )
                                     ? 'bg-background text-foreground shadow-sm'
@@ -70,14 +68,14 @@ export default function nilaiPerItemKriteria({
                         <Link
                             href={nilaiPerkriteria.url({
                                 outsourcing: uuidOs,
-                                tipePenilai: 'teman_setingkat',
+                                tipePenilai: 'penerima_layanan2',
                             })}
                             className={cn(
                                 'flex items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
                                 isActive(
                                     nilaiPerkriteria.url({
                                         outsourcing: uuidOs,
-                                        tipePenilai: 'teman_setingkat',
+                                        tipePenilai: 'penerima_layanan2',
                                     }),
                                 )
                                     ? 'bg-background text-foreground shadow-sm'

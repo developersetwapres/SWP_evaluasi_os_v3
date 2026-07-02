@@ -8,8 +8,13 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Http\Requests\UpdateOutsourcingRequest;
+use App\Models\Jabatan;
+use App\Models\Pilar;
+use App\Services\Penilaian\EvaluationEngineService;
 use App\Services\Uploadfile\FotoUserService;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class OutsourcingController extends Controller
 {
@@ -131,5 +136,109 @@ class OutsourcingController extends Controller
     public function destroy(Outsourcing $outsourcing)
     {
         //
+    }
+
+    public function nilaiAkhir(
+        Outsourcing $outsourcing,
+        EvaluationEngineService $engine
+    ): Response {
+
+        $outsourcing->load([
+            'penugasan.bobotSkor',
+            'penugasan.evaluators.userable',
+            'penugasan.penilaian.indikator.pilar.bobotSkor',
+            'jabatan',
+            'biro',
+        ]);
+
+        $penugasanCollection = $outsourcing->penugasan;
+
+        $result = $engine->calculate($penugasanCollection);
+
+        return Inertia::render('admin/detail/nilai-akhir', [
+            'rekapAspekEvaluator' => [
+                'id' => $outsourcing->id,
+                'name' => $outsourcing->name,
+                'uuid' => $outsourcing->uuid,
+                'image' => $outsourcing->image,
+                'jabatan' => $outsourcing->jabatan?->nama_jabatan,
+                'unit_kerja' => $outsourcing->biro?->nama_biro,
+
+                'status' => $result['status'],
+                'finalTotalScore' => $result['finalScore'],
+                'aspekScores' => $result['aspectsGlobal'],
+                'evaluatorScores' => $result['evaluators'],
+            ]
+        ]);
+    }
+
+    public function rekapNilai(
+        Outsourcing $outsourcing,
+        EvaluationEngineService $engine
+    ): Response {
+
+        $outsourcing->load([
+            'penugasan.bobotSkor',
+            'penugasan.evaluators.userable',
+            'penugasan.penilaian.indikator.pilar.bobotSkor',
+        ]);
+
+        $data = [
+            'peraspek' => $engine->calculateDetailPerPilar(
+                $outsourcing->penugasan,
+                $outsourcing->uuid
+            )
+        ];
+
+        return Inertia::render('admin/detail/rekap-nilai', $data);
+    }
+
+    public function catatanEvaluator(Outsourcing $outsourcing): Response
+    {
+
+        $data = [
+            'penugasans' => $outsourcing->penugasan->load('evaluators.userable'),
+            'uuidOs' => $outsourcing->uuid,
+        ];
+
+        return Inertia::render('admin/detail/catatan-evaluator', $data);
+    }
+
+    public function nilaiPerkriteria(Outsourcing $outsourcing, EvaluationEngineService $engine, $tipePenilai = 'atasan'): Response
+    {
+
+        $penugasan = $outsourcing->penugasan->firstWhere('tipe_penilai', $tipePenilai);
+
+        if (!$penugasan) {
+            return Inertia::render('admin/detail/nilai-perkriteria', [
+                'rekapPerAspek' => null,
+                'evaluationData' => [],
+                'uuidOs' => $outsourcing->uuid,
+            ]);
+        }
+
+        $kelompokJabatanId = Jabatan::find($outsourcing->jabatan_id)?->kelompok_jabatan_id;
+
+        $data = [
+            'rekapPerAspek' => $engine->calculateSingleSummary($penugasan->penilaian),
+
+            'evaluationData' => Pilar::select(['id', 'title'])
+                ->with([
+                    'bobotSkor:id,bobot',
+                    'indikator' => fn($query) => $query
+                        ->where('kelompok_jabatan_id', $kelompokJabatanId)
+                        ->orderBy('id')
+                        ->with([
+                            'behavioral' => fn($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
+                            'penilaian' => fn($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
+                        ]),
+                ])
+                ->orderBy('id')
+                ->get(),
+
+            'uuidOs' => $outsourcing->uuid,
+        ];
+
+        return Inertia::render('admin/detail/nilai-perkriteria', $data);
     }
 }
