@@ -71,6 +71,8 @@ class PenilaianController extends Controller
     {
         $validated = $request->validated();
 
+        dd('ok');
+
         DB::transaction(function () use ($penugasan, $validated): void {
             foreach ($validated['scores'] as $score) {
                 $penilaian = Penilaian::firstOrNew([

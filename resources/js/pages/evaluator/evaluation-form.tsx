@@ -502,7 +502,7 @@ function AssessmentGuideSection() {
     return (
         <section className="space-y-5">
             <Card className="overflow-hidden border-slate-200 bg-white pt-0 shadow-sm">
-                <div className="border-b bg-gradient-to-r from-sky-50 via-white to-emerald-50 p-6">
+                <div className="border-b bg-linear-to-r from-sky-50 via-white to-emerald-50 p-6">
                     <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                         <div className="flex gap-4">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-sky-600 text-white shadow-sm">
@@ -825,8 +825,9 @@ export default function EvaluationForm({
         notes: overallNotes ?? '',
     });
 
-    const totalSteps = pillars.length + 1;
+    const totalSteps = pillars.length + 2;
     const isGuideStep = currentStep === 0;
+    const isNoteStep = currentStep === 4;
     const currentPillar = pillars[currentStep - 1];
     const progress = ((currentStep + 1) / totalSteps) * 100;
     const isLastStep = currentStep === totalSteps - 1;
@@ -1047,6 +1048,28 @@ export default function EvaluationForm({
                                     </button>
                                 );
                             })}
+
+                            <button
+                                type="button"
+                                onClick={() => selectStep(4)}
+                                className={`rounded-md border px-4 py-3 text-left text-sm transition ${
+                                    isNoteStep
+                                        ? 'border-sky-500 bg-sky-50 text-sky-950'
+                                        : 'border-border bg-white hover:border-sky-300'
+                                }`}
+                            >
+                                <div className="flex items-center justify-between gap-3">
+                                    <span className="font-medium">
+                                        Catatan Tambahan
+                                    </span>
+                                    {currentStep > 0 && (
+                                        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                    )}
+                                </div>
+                                <span className="mt-1 block text-xs text-muted-foreground">
+                                    Berikan catatan jika ada
+                                </span>
+                            </button>
                         </div>
                     </div>
 
@@ -1063,6 +1086,8 @@ export default function EvaluationForm({
 
                         {isGuideStep ? (
                             <AssessmentGuideSection />
+                        ) : isNoteStep ? (
+                            <OtherNotesSection form={form} />
                         ) : (
                             currentPillar && (
                                 <PilarSection
@@ -1071,44 +1096,6 @@ export default function EvaluationForm({
                                     onScoreChange={setIndicatorScore}
                                 />
                             )
-                        )}
-
-                        {!isGuideStep && isLastStep && (
-                            <Card className="gap-3">
-                                <CardHeader>
-                                    <div className="flex items-center gap-3">
-                                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-100 text-amber-700">
-                                            <FileText className="h-5 w-5" />
-                                        </div>
-                                        <div>
-                                            <CardTitle>
-                                                Saran Perbaikan
-                                            </CardTitle>
-                                            <CardDescription className="text-xs text-muted-foreground">
-                                                Optional
-                                            </CardDescription>
-                                        </div>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <Textarea
-                                        value={form.data.notes}
-                                        onChange={(event) =>
-                                            form.setData(
-                                                'notes',
-                                                event.target.value,
-                                            )
-                                        }
-                                        placeholder="Tambahkan catatan untuk os yang dinilai..."
-                                        className="min-h-32 resize-y bg-white"
-                                    />
-                                    {form.errors.notes && (
-                                        <p className="mt-2 text-sm text-destructive">
-                                            {form.errors.notes}
-                                        </p>
-                                    )}
-                                </CardContent>
-                            </Card>
                         )}
 
                         {Object.keys(form.errors).length > 0 && (
