@@ -16,6 +16,8 @@ interface ViewScoreProps {
     overallNotes: string;
     rekapPerAspek: any;
     tipePenilai: string;
+    developmentArea: string;
+    observedStrengths: string;
 }
 
 export default function ViewScore({
@@ -24,6 +26,8 @@ export default function ViewScore({
     evaluationData,
     overallNotes,
     tipePenilai,
+    developmentArea,
+    observedStrengths,
 }: ViewScoreProps) {
     console.log(overallNotes);
 
@@ -51,7 +55,7 @@ export default function ViewScore({
                     <div className="space-y-8">
                         <div className="grid gap-8 md:grid-cols-2">
                             {/* Evaluator Card */}
-                            <Card className="relative gap-1 overflow-hidden border-0 bg-gradient-to-br from-green-500 to-emerald-600 pb-0 text-white shadow-2xl">
+                            <Card className="relative gap-1 overflow-hidden border-0 bg-linear-to-br from-green-500 to-emerald-600 pb-0 text-white shadow-2xl">
                                 <div className="absolute top-0 right-0 h-32 w-32 translate-x-16 -translate-y-16 rounded-full bg-white/10"></div>
                                 <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-12 translate-y-12 rounded-full bg-white/10"></div>
 
@@ -65,7 +69,16 @@ export default function ViewScore({
                                                 PENILAI
                                             </Badge>
                                             <CardTitle className="mt-1 text-sm text-green-100">
-                                                Yang Memberikan Penilaian
+                                                Yang memberikan penilaian
+                                                sebagai{' '}
+                                                {tipePenilai == 'atasan'
+                                                    ? 'Atasan'
+                                                    : tipePenilai ==
+                                                            'penerima_layanan1' ||
+                                                        tipePenilai ==
+                                                            'penerima_layanan2'
+                                                      ? 'Penerima Layanan'
+                                                      : 'Teman Setingkat'}
                                             </CardTitle>
                                         </div>
                                     </div>
@@ -89,22 +102,11 @@ export default function ViewScore({
                                             ? evaluator?.jabatan?.nama_jabatan
                                             : evaluator?.jabatan}
                                     </p>
-
-                                    <div className="mt-3">
-                                        <Badge className="border-white/30 bg-white/20 px-4 py-2 text-sm font-semibold text-white">
-                                            {tipePenilai == 'atasan'
-                                                ? 'Atasan'
-                                                : tipePenilai ==
-                                                    'penerima_layanan'
-                                                  ? 'Penerima Layanan'
-                                                  : 'Teman Setingkat'}
-                                        </Badge>
-                                    </div>
                                 </CardContent>
                             </Card>
 
                             {/* outsourcing Card */}
-                            <Card className="relative gap-1 overflow-hidden border-0 bg-gradient-to-br from-blue-500 to-indigo-600 pb-0 text-white shadow-2xl">
+                            <Card className="relative gap-1 overflow-hidden border-0 bg-linear-to-br from-blue-500 to-indigo-600 pb-0 text-white shadow-2xl">
                                 <div className="absolute top-0 right-0 h-32 w-32 translate-x-16 -translate-y-16 rounded-full bg-white/10"></div>
                                 <div className="absolute bottom-0 left-0 h-24 w-24 -translate-x-12 translate-y-12 rounded-full bg-white/10"></div>
 
@@ -118,7 +120,7 @@ export default function ViewScore({
                                                 YANG DINILAI
                                             </Badge>
                                             <CardTitle className="mt-1 text-sm text-blue-100">
-                                                Pegawai yang Sedang Dievaluasi
+                                                Pegawai yang sedang dievaluasi
                                             </CardTitle>
                                         </div>
                                     </div>
@@ -138,14 +140,9 @@ export default function ViewScore({
                                         {outsourcing.name}
                                     </h3>
                                     <p className="text-lg font-medium text-blue-100">
-                                        {outsourcing.jabatan.nama_jabatan}
+                                        {outsourcing.jabatan.nama_jabatan} •{' '}
+                                        {outsourcing?.biro?.nama_biro}
                                     </p>
-
-                                    <div className="mt-3">
-                                        <Badge className="border-white/30 bg-white/20 px-4 py-2 text-sm font-semibold text-white">
-                                            {outsourcing?.biro?.nama_biro}
-                                        </Badge>
-                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
@@ -156,13 +153,49 @@ export default function ViewScore({
                                 evaluationData={evaluationData}
                             />
 
+                            {observedStrengths && (
+                                <Card className="gap-0 border-l-4 border-l-yellow-500 py-2">
+                                    <CardHeader className="bg-yellow-50 py-2">
+                                        <CardTitle className="flex items-center space-x-2 text-lg text-yellow-800">
+                                            <FileText className="h-6 w-6" />
+                                            <span>Kekuatan yang teramati</span>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-6">
+                                        <div className="rounded-lg border border-yellow-200 bg-white p-4">
+                                            <p className="leading-relaxed text-gray-800">
+                                                {observedStrengths}
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
+                            {developmentArea && (
+                                <Card className="gap-0 border-l-4 border-l-yellow-500 py-2">
+                                    <CardHeader className="bg-yellow-50 py-2">
+                                        <CardTitle className="flex items-center space-x-2 text-lg text-yellow-800">
+                                            <FileText className="h-6 w-6" />
+                                            <span>
+                                                Area yang perlu dikembangkan
+                                            </span>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="p-6">
+                                        <div className="rounded-lg border border-yellow-200 bg-white p-4">
+                                            <p className="leading-relaxed text-gray-800">
+                                                {developmentArea}
+                                            </p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                             {/* Overall Notes */}
                             {overallNotes && (
                                 <Card className="gap-0 border-l-4 border-l-yellow-500 py-2">
                                     <CardHeader className="bg-yellow-50 py-2">
                                         <CardTitle className="flex items-center space-x-2 text-lg text-yellow-800">
                                             <FileText className="h-6 w-6" />
-                                            <span>Saran Perbaikan</span>
+                                            <span>Catatan Lainnya</span>
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="p-6">

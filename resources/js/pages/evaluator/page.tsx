@@ -294,10 +294,15 @@ export default function EvaluatorPage({
 
                                                 <span className="text-xs text-gray-600">
                                                     Nilai sebagai{' '}
-                                                    {employee.tipe_penilai?.replace(
-                                                        /_/g,
-                                                        ' ',
-                                                    )}
+                                                    {employee.tipe_penilai ==
+                                                    'atasan'
+                                                        ? 'Atasan'
+                                                        : employee.tipe_penilai ==
+                                                                'penerima_layanan1' ||
+                                                            employee.tipe_penilai ==
+                                                                'penerima_layanan2'
+                                                          ? 'Penerima Layanan'
+                                                          : 'Teman Setingkat'}
                                                 </span>
                                             </CardContent>
 

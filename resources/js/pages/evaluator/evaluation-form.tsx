@@ -970,8 +970,11 @@ export default function EvaluationForm({
                                 Kembali
                             </Button>
                         </Link>
-                        <Badge variant="outline" className="px-3 py-1">
-                            {formatEvaluatorType(tipePenilai)}
+                        <Badge
+                            variant="outline"
+                            className="border-orange-300 px-3 py-1"
+                        >
+                            Penilai sebagai {formatEvaluatorType(tipePenilai)}
                         </Badge>
                     </div>
                 </header>
