@@ -196,7 +196,9 @@ export default function ResultsRecapPage({
                                                             'atasan'
                                                                 ? 'Atasan'
                                                                 : evaluator?.type ===
-                                                                    'penerima_layanan'
+                                                                        'penerima_layanan1' ||
+                                                                    evaluator?.type ===
+                                                                        'penerima_layanan2'
                                                                   ? 'Penerima Layanan'
                                                                   : 'Teman Setingkat'}
                                                         </span>
