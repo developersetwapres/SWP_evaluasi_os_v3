@@ -45,7 +45,7 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/status-penilaian-by-evaluators', [PenugasanController::class, 'byEvaluators'])->name('penugasan.evaluators');
     Route::get('/dashboard/status-penilaian-by-outsourcing', [PenugasanController::class, 'byOutsourcings'])->name('penugasan.outsourcings');
 
-    Route::post('/dashboard/penugasan-peer/reset/{Penugasan:uuid}', [PenugasanController::class, 'reset'])->name('penugasan.reset');
+    Route::post('/dashboard/penugasan-peer/reset/{penugasan:uuid}', [PenugasanController::class, 'reset'])->name('penugasan.reset');
 
     Route::post('/upload-temp-image', [FotoUserService::class, 'uploadTempImage'])->name('upload.tempImage');
 });

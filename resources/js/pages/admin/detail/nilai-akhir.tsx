@@ -29,13 +29,25 @@ import { router } from '@inertiajs/react';
 import { BarChart3, Calculator, Users } from 'lucide-react';
 import { useState } from 'react';
 
-export default function nilaiAkhir({ rekapPilarEvaluator }: any) {
+export default function nilaiAkhir({
+    name,
+    uuid,
+    image,
+    jabatan,
+    unit_kerja,
+    status,
+    finalTotalScore,
+    pilarScores,
+    evaluatorScores,
+}: any) {
     const [isResetNilaiOpen, setIsResetNilaiOpen] = useState(false);
     const [selectedPenilaian, setSelectedPenilaian] = useState<any>(null);
 
     const handleResetNilai = () => {
         setIsResetNilaiOpen(false);
         setSelectedPenilaian(null);
+
+        console.log(selectedPenilaian.uuidPenugasan);
 
         router.post(
             reset.url(selectedPenilaian.uuidPenugasan),
@@ -54,9 +66,7 @@ export default function nilaiAkhir({ rekapPilarEvaluator }: any) {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
                 <div className="space-y-8">
-                    <EmployeeNavigation
-                        employeeUuid={rekapPilarEvaluator.uuid}
-                    />
+                    <EmployeeNavigation employeeUuid={uuid} />
 
                     {/* Employee Profile Card */}
                     <Card className="bg-gradient-to-r from-purple-400 to-purple-600 text-white">
@@ -64,29 +74,26 @@ export default function nilaiAkhir({ rekapPilarEvaluator }: any) {
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center space-x-6">
                                     <img
-                                        src={`/storage/${rekapPilarEvaluator?.image}`}
-                                        alt={rekapPilarEvaluator?.name}
+                                        src={`/storage/${image}`}
+                                        alt={name}
                                         className="h-24 w-24 rounded-full border-4 border-white shadow-lg"
                                     />
                                     <div>
                                         <CardTitle className="mb-2 text-3xl">
-                                            {rekapPilarEvaluator?.name}
+                                            {name}
                                         </CardTitle>
                                         <CardDescription className="text-lg text-indigo-100">
-                                            {rekapPilarEvaluator?.jabatan} •{' '}
-                                            {rekapPilarEvaluator?.unit_kerja}
+                                            {jabatan} • {unit_kerja}
                                         </CardDescription>
                                         <div className="mt-4 flex items-center space-x-4">
                                             <Badge
                                                 className={
-                                                    rekapPilarEvaluator?.status ===
-                                                    'completed'
+                                                    status === 'completed'
                                                         ? 'border-green-400 bg-green-500 text-white'
                                                         : 'border-yellow-400 bg-yellow-500 text-white'
                                                 }
                                             >
-                                                {rekapPilarEvaluator?.status ===
-                                                'completed'
+                                                {status === 'completed'
                                                     ? 'Evaluasi Selesai'
                                                     : 'Dalam Progress'}
                                             </Badge>
@@ -95,16 +102,12 @@ export default function nilaiAkhir({ rekapPilarEvaluator }: any) {
                                 </div>
                                 <div className="text-right">
                                     <div className="mb-2 text-6xl font-bold">
-                                        {rekapPilarEvaluator?.finalTotalScore?.toFixed(
-                                            2,
-                                        )}
+                                        {finalTotalScore?.toFixed(2)}
                                     </div>
                                     <Badge
-                                        className={`${getScoreBadgeColor(rekapPilarEvaluator?.finalTotalScore)} border-2 px-4 py-2 text-lg`}
+                                        className={`${getScoreBadgeColor(finalTotalScore)} border-2 px-4 py-2 text-lg`}
                                     >
-                                        {getScoreLabel(
-                                            rekapPilarEvaluator?.finalTotalScore,
-                                        )}
+                                        {getScoreLabel(finalTotalScore)}
                                     </Badge>
                                     <p className="mt-2 text-indigo-100">
                                         Nilai Akhir Penilaian
@@ -128,43 +131,41 @@ export default function nilaiAkhir({ rekapPilarEvaluator }: any) {
                         </CardHeader>
                         <CardContent className="p-8">
                             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                                {rekapPilarEvaluator.pilarScores.map(
-                                    (pilar: any, index: any) => (
-                                        <div
-                                            key={index}
-                                            className="transform rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-400 to-blue-700 p-6 px-8 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-                                        >
-                                            <div className="text-center">
-                                                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
-                                                    <Calculator className="h-8 w-8" />
+                                {pilarScores.map((pilar: any, index: any) => (
+                                    <div
+                                        key={index}
+                                        className="transform rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-400 to-blue-700 p-6 px-8 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                                    >
+                                        <div className="text-center">
+                                            <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                                                <Calculator className="h-8 w-8" />
+                                            </div>
+                                            <h3 className="mb-2 text-xl font-bold">
+                                                {pilar.title}
+                                            </h3>
+                                            <div className="mb-4 inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur-sm">
+                                                Nilai Akhir
+                                            </div>
+                                            <div className="mb-4 rounded-4xl bg-white/10 p-4 backdrop-blur-sm">
+                                                <div className="mb-1 font-mono text-sm opacity-90">
+                                                    {pilar?.averageScore} ×{' '}
+                                                    {(
+                                                        pilar?.bobot * 100
+                                                    ).toFixed(0)}
+                                                    % =
                                                 </div>
-                                                <h3 className="mb-2 text-xl font-bold">
-                                                    {pilar.title}
-                                                </h3>
-                                                <div className="mb-4 inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur-sm">
-                                                    Nilai Akhir
+                                                <div className="text-4xl font-bold">
+                                                    {pilar?.weightedScore.toFixed(
+                                                        2,
+                                                    )}
                                                 </div>
-                                                <div className="mb-4 rounded-4xl bg-white/10 p-4 backdrop-blur-sm">
-                                                    <div className="mb-1 font-mono text-sm opacity-90">
-                                                        {pilar?.averageScore} ×{' '}
-                                                        {(
-                                                            pilar?.bobot * 100
-                                                        ).toFixed(0)}
-                                                        % =
-                                                    </div>
-                                                    <div className="text-4xl font-bold">
-                                                        {pilar?.weightedScore.toFixed(
-                                                            2,
-                                                        )}
-                                                    </div>
-                                                    <div className="mt-1 text-xs opacity-75">
-                                                        Dari semua evaluator
-                                                    </div>
+                                                <div className="mt-1 text-xs opacity-75">
+                                                    Dari semua evaluator
                                                 </div>
                                             </div>
                                         </div>
-                                    ),
-                                )}
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>
@@ -183,13 +184,15 @@ export default function nilaiAkhir({ rekapPilarEvaluator }: any) {
                         </CardHeader>
                         <CardContent className="p-8">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                                {rekapPilarEvaluator?.evaluatorScores.map(
+                                {evaluatorScores.map(
                                     (evaluator: any, index: any) => {
                                         const evaluatorType =
                                             evaluator.type === 'atasan'
                                                 ? 'Atasan'
                                                 : evaluator.type ===
-                                                    'penerima_layanan'
+                                                        'penerima_layanan1' ||
+                                                    evaluator.type ===
+                                                        'penerima_layanan2'
                                                   ? 'Penerima Layanan'
                                                   : 'Rekan Kerja';
 

@@ -151,25 +151,22 @@ class OutsourcingController extends Controller
             'biro',
         ]);
 
-        $penugasanCollection = $outsourcing->penugasan;
+        $result = $engine->calculate($outsourcing->penugasan);
 
-        $result = $engine->calculate($penugasanCollection);
+        $data = [
+            'name' => $outsourcing->name,
+            'uuid' => $outsourcing->uuid,
+            'image' => $outsourcing->image,
+            'jabatan' => $outsourcing->jabatan?->nama_jabatan,
+            'unit_kerja' => $outsourcing->biro?->nama_biro,
 
-        return Inertia::render('admin/detail/nilai-akhir', [
-            'rekapPilarEvaluator' => [
-                'id' => $outsourcing->id,
-                'name' => $outsourcing->name,
-                'uuid' => $outsourcing->uuid,
-                'image' => $outsourcing->image,
-                'jabatan' => $outsourcing->jabatan?->nama_jabatan,
-                'unit_kerja' => $outsourcing->biro?->nama_biro,
+            'status' => $result['status'],
+            'finalTotalScore' => $result['finalScore'],
+            'pilarScores' => $result['aspectsGlobal'],
+            'evaluatorScores' => $result['evaluators'],
+        ];
 
-                'status' => $result['status'],
-                'finalTotalScore' => $result['finalScore'],
-                'pilarScores' => $result['aspectsGlobal'],
-                'evaluatorScores' => $result['evaluators'],
-            ]
-        ]);
+        return Inertia::render('admin/detail/nilai-akhir', $data);
     }
 
     public function rekapNilai(
