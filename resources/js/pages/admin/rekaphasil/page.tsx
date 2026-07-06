@@ -43,12 +43,14 @@ export default function ResultsRecapPage({
         return matchesSearch && matchesUnit;
     });
 
-    const units = [...new Set(evaluationResults.map((r: any) => r.biro))];
+    const units = [
+        ...new Set((evaluationResults ?? []).map((r: any) => r.biro)),
+    ] as string[];
 
     return (
         <div className="space-y-6">
             {/* Header Card */}
-            <Card className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white">
+            <Card className="bg-linear-to-r from-purple-500 to-indigo-600 text-white">
                 <CardHeader>
                     <CardTitle className="flex items-center space-x-2 text-2xl">
                         <BarChart3 className="h-6 w-6" />
@@ -90,8 +92,11 @@ export default function ResultsRecapPage({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">Semua Unit</SelectItem>
-                                {units.map((unit, index) => (
-                                    <SelectItem key={index} value={unit}>
+                                {units.map((unit: string, index: number) => (
+                                    <SelectItem
+                                        key={`${unit}-${index}`}
+                                        value={unit}
+                                    >
                                         {unit}
                                     </SelectItem>
                                 ))}
@@ -99,10 +104,21 @@ export default function ResultsRecapPage({
                         </Select>
                         <Button
                             className="flex items-center space-x-2"
-                            onClick={() => exportToExcel(filteredResults)}
+                            onClick={() =>
+                                exportToExcel(filteredResults, 'summary')
+                            }
                         >
                             <Download className="h-4 w-4" />
-                            <span>Export</span>
+                            <span>Export Rekap Hasil</span>
+                        </Button>
+                        <Button
+                            className="flex items-center space-x-2"
+                            onClick={() =>
+                                exportToExcel(filteredResults, 'row')
+                            }
+                        >
+                            <Download className="h-4 w-4" />
+                            <span>Export by Row</span>
                         </Button>
                     </div>
 

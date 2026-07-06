@@ -251,17 +251,13 @@ export default function StatusPenilaian({
                                         <TableHead>
                                             Status Evaluator Atasan
                                         </TableHead>
+                                        <TableHead>Evaluator PL 1</TableHead>
                                         <TableHead>
-                                            Evaluator Penerima Layanan
+                                            Status Evaluator PL 1
                                         </TableHead>
+                                        <TableHead>Evaluator PL 2</TableHead>
                                         <TableHead>
-                                            Status Evaluator Penerima Layanan
-                                        </TableHead>
-                                        <TableHead>
-                                            Evaluator Teman Setingkat
-                                        </TableHead>
-                                        <TableHead>
-                                            Status Evaluator Teman Setingkat
+                                            Status Evaluator PL 2
                                         </TableHead>
                                     </TableRow>
                                 </TableHeader>

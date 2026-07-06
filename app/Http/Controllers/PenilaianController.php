@@ -11,7 +11,6 @@ use App\Services\Penilaian\EvaluationEngineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -137,7 +136,7 @@ class PenilaianController extends Controller
             'penugasan.evaluators.userable',
             'penugasan.penilaian.indikator.pilar.bobotSkor',
             'biro',
-            'jabatan',
+            'jabatan.kelompokJabatan',
         ])
             ->where('is_active', 1)
             ->orderBy('name', 'asc')
@@ -147,7 +146,7 @@ class PenilaianController extends Controller
 
                 $status = collect($result['evaluators'])
                     ->pluck('status')
-                    ->every(fn($status) => $status === 'completed')
+                    ->every(fn ($status) => $status === 'completed')
                     ? 'completed'
                     : 'progress';
 
@@ -163,6 +162,7 @@ class PenilaianController extends Controller
 
                     'finalTotalScore' => $result['finalScore'],
                     'evaluatorScores' => $result['evaluators'],
+                    'exportData' => $engine->buildExportRows($os),
                 ];
             });
 
@@ -176,7 +176,7 @@ class PenilaianController extends Controller
         $outsourcings = Outsourcing::with([
             'jabatan',
             'penugasan.penilaian.indikator.pilar.bobotSkor',
-            'penugasan.bobotSkor'
+            'penugasan.bobotSkor',
         ])
             ->where('is_active', true)
             ->get();
@@ -184,7 +184,7 @@ class PenilaianController extends Controller
         $outsourcingData = $engine->calculateRankingByJabatan($outsourcings);
 
         return Inertia::render('admin/ranking/page', [
-            'outsourcingData' => $outsourcingData
+            'outsourcingData' => $outsourcingData,
         ]);
     }
 }

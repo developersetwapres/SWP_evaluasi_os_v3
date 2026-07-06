@@ -3,8 +3,10 @@
 namespace App\Services\Penilaian;
 
 use App\Models\Jabatan;
+use App\Models\Outsourcing;
 use App\Models\Pilar;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class EvaluationEngineService
 {
@@ -17,7 +19,6 @@ class EvaluationEngineService
         foreach ($penugasanCollection as $penugasan) {
 
             $evaluatorResult = $this->calculateEvaluator($penugasan);
-
 
             $evaluators[] = $evaluatorResult;
 
@@ -58,6 +59,11 @@ class EvaluationEngineService
             $pilarData[$pilar->id]['title'] = $pilar->title;
             $pilarData[$pilar->id]['bobot'] = $pilar->bobotSkor->bobot / 100;
             $pilarData[$pilar->id]['nilai'][] = $penilaian->nilai;
+            $pilarData[$pilar->id]['indicators'][] = [
+                'indicatorId' => $penilaian->indikator_id,
+                'indicatorTitle' => $penilaian->indikator?->title,
+                'value' => $penilaian->nilai !== null ? (float) $penilaian->nilai : null,
+            ];
         }
 
         $pilarResults = [];
@@ -81,6 +87,7 @@ class EvaluationEngineService
                 'averageScore' => round($avg, 2),
                 'weightedScore' => round($weightedPilar, 2),
                 'bobot' => $data['bobot'],
+                'indicators' => $data['indicators'] ?? [],
             ];
         }
 
@@ -92,7 +99,7 @@ class EvaluationEngineService
         return [
             'type' => $penugasan->tipe_penilai,
             'uuidPenugasan' => $penugasan->uuid,
-            'evaluatorName' => $penugasan->evaluators?->userable?->name,
+            'evaluatorName' => $penugasan->evaluators?->userable?->name ?? $penugasan->evaluators?->name,
             'averageScore' => round($totalEvaluatorScore, 2),
             'bobot' => $bobotEvaluator,
             'weightedScore' => round($weightedFinal, 2),
@@ -131,9 +138,108 @@ class EvaluationEngineService
     private function resolveStatus(array $evaluators): string
     {
         $completed = collect($evaluators)
-            ->every(fn($e) => $e['status'] === 'completed');
+            ->every(fn ($e) => $e['status'] === 'completed');
 
         return $completed ? 'completed' : 'draft';
+    }
+
+    /**
+     * @return array{
+     *     kelompokJabatanId: int|null,
+     *     kelompokJabatan: string,
+     *     columns: list<string>,
+     *     rows: list<array<string, mixed>>
+     * }
+     */
+    public function buildExportRows(Outsourcing $outsourcing): array
+    {
+        $outsourcing->loadMissing('jabatan.kelompokJabatan');
+
+        $kelompokJabatanId = $outsourcing->jabatan?->kelompok_jabatan_id;
+        $kelompokJabatanName = $outsourcing->jabatan?->kelompokJabatan?->nama_kelompok ?? 'Tanpa Kelompok';
+
+        $indicatorColumns = $this->buildIndicatorColumnsForKelompok($kelompokJabatanId);
+
+        $baseColumns = [
+            'Nama Outsourcing',
+            'Jabatan Outsourcing',
+            'Kelompok Jabatan Outsourcing',
+        ];
+
+        $allColumns = array_merge(
+            $baseColumns,
+            array_column($indicatorColumns, 'columnName'),
+        );
+
+        $penugasanCollection = $outsourcing->penugasan()->get();
+        $rows = [];
+
+        foreach ($penugasanCollection as $penugasan) {
+            $penilaianMap = DB::table('penilaians')
+                ->where('penugasan_id', $penugasan->id)
+                ->pluck('nilai', 'indikator_id');
+
+            $row = [
+                'Nama Outsourcing' => $outsourcing->name,
+                'Jabatan Outsourcing' => $outsourcing->jabatan?->nama_jabatan ?? '',
+                'Kelompok Jabatan Outsourcing' => $kelompokJabatanName,
+            ];
+
+            foreach ($indicatorColumns as $column) {
+                $nilai = $penilaianMap->get($column['indikatorId']);
+                $row[$column['columnName']] = $nilai !== null ? (float) $nilai : 0;
+            }
+
+            $rows[] = $row;
+        }
+
+        return [
+            'kelompokJabatanId' => $kelompokJabatanId,
+            'kelompokJabatan' => $kelompokJabatanName,
+            'columns' => $allColumns,
+            'rows' => $rows,
+        ];
+    }
+
+    /**
+     * @return list<array{indikatorId: int, columnName: string}>
+     */
+    protected function buildIndicatorColumnsForKelompok(?int $kelompokJabatanId): array
+    {
+        if ($kelompokJabatanId === null) {
+            return [];
+        }
+
+        $columns = [];
+        $pilarOrder = 0;
+
+        $pilars = Pilar::query()
+            ->orderBy('id')
+            ->with([
+                'indikator' => fn ($query) => $query
+                    ->where('kelompok_jabatan_id', $kelompokJabatanId)
+                    ->orderBy('id'),
+            ])
+            ->get();
+
+        foreach ($pilars as $pilar) {
+            if ($pilar->indikator->isEmpty()) {
+                continue;
+            }
+
+            $pilarOrder++;
+            $indicatorOrder = 0;
+
+            foreach ($pilar->indikator as $indikator) {
+                $indicatorOrder++;
+                $columns[] = [
+                    'indikatorId' => $indikator->id,
+                    'columnName' => sprintf('Nilai P%d - I.%d', $pilarOrder, $indicatorOrder),
+                ];
+            }
+        }
+
+        return $columns;
     }
 
     public function calculateDetailPerPilar(
@@ -245,8 +351,8 @@ class EvaluationEngineService
             $nilai = $penilaian
                 ->whereIn('indikator_id', $indikatorIds)
                 ->pluck('nilai')
-                ->filter(fn($n) => $n !== null)
-                ->map(fn($n) => (float) $n);
+                ->filter(fn ($n) => $n !== null)
+                ->map(fn ($n) => (float) $n);
 
             if ($nilai->isEmpty() || ! $aspect->bobotSkor) {
                 continue;
@@ -275,17 +381,17 @@ class EvaluationEngineService
     public function getEvaluationData($penugasan, int $jabatanId)
     {
         // Get kelompok_jabatan_id from jabatan
-        $kelompokJabatanId = Jabatan::find($jabatanId)?->kelompok_jabatan_id;
+        $kelompokJabatanId = Jabatan::find($jabatanId, ['id', 'kelompok_jabatan_id'])?->kelompok_jabatan_id;
 
         return Pilar::select(['id', 'title', 'bobot_skor_id'])
             ->with([
                 'bobotSkor:id,bobot',
-                'indikator' => fn($query) => $query
+                'indikator' => fn ($query) => $query
                     ->where('kelompok_jabatan_id', $kelompokJabatanId)
                     ->orderBy('id')
                     ->with([
-                        'behavioral' => fn($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
-                        'penilaian' => fn($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
+                        'behavioral' => fn ($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
+                        'penilaian' => fn ($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
                     ]),
             ])
             ->orderBy('id')
@@ -309,7 +415,7 @@ class EvaluationEngineService
             $penilaian
                 ->whereIn('indikator_id', $indikatorIds)
                 ->each(
-                    fn($p) => $p->nilai !== null
+                    fn ($p) => $p->nilai !== null
                         ? $nilai->push((float) $p->nilai)
                         : null
                 );
