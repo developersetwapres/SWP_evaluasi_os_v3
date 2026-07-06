@@ -32,6 +32,8 @@ Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
     Route::get('/dashboard/rekap-nilai/{outsourcing:uuid}', [OutsourcingController::class, 'rekapNilai'])->name('os.detailperaspek');
     Route::get('/dashboard/catatan-evaluator/{outsourcing:uuid}', [OutsourcingController::class, 'catatanEvaluator'])->name('os.catatanEvaluator');
     Route::get('/dashboard/nilai-perkriteria/{outsourcing:uuid}/{tipePenilai?}', [OutsourcingController::class, 'nilaiPerkriteria'])->name('os.nilaiPerkriteria');
+
+    Route::get('/dashboard/nilai-mentahan', [OutsourcingController::class, 'exportNilaiMentahan'])->name('os.exportMentahan');
 });
 
 Route::middleware(['auth', 'verified', 'role:administrator'])->group(function () {

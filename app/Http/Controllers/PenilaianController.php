@@ -132,9 +132,9 @@ class PenilaianController extends Controller
     public function rekaphasil(EvaluationEngineService $engine): Response
     {
         $evaluationResults = Outsourcing::with([
-            'penugasan.bobotSkor',
-            'penugasan.evaluators.userable',
-            'penugasan.penilaian.indikator.pilar.bobotSkor',
+            'penugasanAktif.bobotSkor',
+            'penugasanAktif.evaluators.userable',
+            'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
             'biro',
             'jabatan.kelompokJabatan',
         ])
@@ -142,11 +142,11 @@ class PenilaianController extends Controller
             ->orderBy('name', 'asc')
             ->get()->map(function ($os) use ($engine) {
 
-                $result = $engine->calculate($os->penugasan);
+                $result = $engine->calculate($os->penugasanAktif);
 
                 $status = collect($result['evaluators'])
                     ->pluck('status')
-                    ->every(fn ($status) => $status === 'completed')
+                    ->every(fn($status) => $status === 'completed')
                     ? 'completed'
                     : 'progress';
 
@@ -162,7 +162,6 @@ class PenilaianController extends Controller
 
                     'finalTotalScore' => $result['finalScore'],
                     'evaluatorScores' => $result['evaluators'],
-                    'exportData' => $engine->buildExportRows($os),
                 ];
             });
 
@@ -175,8 +174,8 @@ class PenilaianController extends Controller
     {
         $outsourcings = Outsourcing::with([
             'jabatan',
-            'penugasan.penilaian.indikator.pilar.bobotSkor',
-            'penugasan.bobotSkor',
+            'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
+            'penugasanAktif.bobotSkor',
         ])
             ->where('is_active', true)
             ->get();

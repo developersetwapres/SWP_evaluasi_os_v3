@@ -42,12 +42,8 @@ class Outsourcing extends Model
 
     public function penugasan(): HasMany
     {
-        return $this->hasMany(Penugasan::class, 'outsourcing_id')
-            ->whereHas('siklus', function ($q) {
-                $q->where('is_active', 1);
-            });
+        return $this->hasMany(Penugasan::class, 'outsourcing_id');
     }
-
 
 
     public function user(): MorphOne

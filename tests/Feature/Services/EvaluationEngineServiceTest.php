@@ -104,16 +104,16 @@ it('builds detailed export rows with pilar and indicator values', function () {
             'Nama Outsourcing',
             'Jabatan Outsourcing',
             'Kelompok Jabatan Outsourcing',
-            'Nilai P1 - I.1',
-            'Nilai P1 - I.2',
-            'Nilai P2 - I.1',
+            'Pilar 1 - I.1',
+            'Pilar 1 - I.2',
+            'Pilar 2 - I.1',
         ])
         ->and($exportData['rows'])->toHaveCount(1)
         ->and($exportData['rows'][0]['Nama Outsourcing'])->toBe($outsourcing->name)
         ->and($exportData['rows'][0]['Kelompok Jabatan Outsourcing'])->toBe('Kelompok A')
-        ->and($exportData['rows'][0]['Nilai P1 - I.1'])->toBe(4.0)
-        ->and($exportData['rows'][0]['Nilai P1 - I.2'])->toBe(3.5)
-        ->and($exportData['rows'][0]['Nilai P2 - I.1'])->toBe(0);
+        ->and($exportData['rows'][0]['Pilar 1 - I.1'])->toBe(4.0)
+        ->and($exportData['rows'][0]['Pilar 1 - I.2'])->toBe(3.5)
+        ->and($exportData['rows'][0]['Pilar 2 - I.1'])->toBe(0);
 })->uses(TestCase::class);
 
 it('builds different indicator columns per kelompok jabatan', function () {

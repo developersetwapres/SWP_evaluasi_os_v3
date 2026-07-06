@@ -238,4 +238,11 @@ class OutsourcingController extends Controller
 
         return Inertia::render('admin/detail/nilai-perkriteria', $data);
     }
+
+    public function exportNilaiMentahan(EvaluationEngineService $engine): Response
+    {
+        return Inertia::render('exportexcel/exportToExcelMentahan', [
+            'evaluationResults' => $engine->buildExportRows()
+        ]);
+    }
 }

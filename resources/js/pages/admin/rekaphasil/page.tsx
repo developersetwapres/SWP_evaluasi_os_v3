@@ -20,7 +20,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import AdminLayout from '@/layouts/app/app-adminkmz-layout';
-import { rekapaspekevaluator } from '@/routes/os';
+import { exportMentahan, rekapaspekevaluator } from '@/routes/os';
 import { getScoreColor, getScoreLabel } from '@/utils/score';
 import { Link } from '@inertiajs/react';
 import { BarChart3, Download, Eye, Search } from 'lucide-react';
@@ -104,22 +104,19 @@ export default function ResultsRecapPage({
                         </Select>
                         <Button
                             className="flex items-center space-x-2"
-                            onClick={() =>
-                                exportToExcel(filteredResults, 'summary')
-                            }
+                            onClick={() => exportToExcel(filteredResults)}
                         >
                             <Download className="h-4 w-4" />
                             <span>Export Rekap Hasil</span>
                         </Button>
-                        <Button
-                            className="flex items-center space-x-2"
-                            onClick={() =>
-                                exportToExcel(filteredResults, 'row')
-                            }
+
+                        <Link
+                            className="flex items-center gap-2 space-x-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
+                            href={exportMentahan.url()}
                         >
                             <Download className="h-4 w-4" />
                             <span>Export by Row</span>
-                        </Button>
+                        </Link>
                     </div>
 
                     {/* Results Grid */}
