@@ -74,40 +74,4 @@ class Outsourcing extends Model
     {
         return $this->jabatan?->nama_jabatan;
     }
-
-    public function byOutsourcings()
-    {
-        return $this->with([
-            'penugasan.evaluators.userable',
-        ])
-            ->orderBy('name', 'asc')
-            ->where('is_active', 1)
-            ->get()
-            ->map(function ($os) {
-
-                return [
-                    'outsourcing_name' => $os->name,
-                    'outsourcing_image' => $os->image,
-                    'outsourcing_jabatan' => optional($os->jabatan)->nama_jabatan,
-                    'evaluatorsAtasan' => [
-                        'name' => $os->penugasan->firstWhere('tipe_penilai', 'atasan')?->evaluators?->userable?->name,
-                        'image' => $os->penugasan->firstWhere('tipe_penilai', 'atasan')?->evaluators?->userable?->image,
-                        'uuid' => $os->penugasan->firstWhere('tipe_penilai', 'atasan')?->evaluators?->userable?->uuid,
-                        'status' => $os->penugasan->firstWhere('tipe_penilai', 'atasan')?->status,
-                    ],
-                    'evaluatorsTemanSetingkat' => [
-                        'name' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan2')?->evaluators?->userable?->name,
-                        'image' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan2')?->evaluators?->userable?->image,
-                        'uuid' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan2')?->evaluators?->userable?->uuid,
-                        'status' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan2')?->status,
-                    ],
-                    'evaluatorsPenerimaLayanan' => [
-                        'name' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan1')?->evaluators?->userable?->name,
-                        'image' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan1')?->evaluators?->userable?->image,
-                        'uuid' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan1')?->evaluators?->userable?->uuid,
-                        'status' => $os->penugasan->firstWhere('tipe_penilai', 'penerima_layanan1')?->status,
-                    ],
-                ];
-            });
-    }
 }

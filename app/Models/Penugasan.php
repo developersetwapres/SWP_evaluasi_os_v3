@@ -29,15 +29,6 @@ class Penugasan extends Model
     use HasFactory;
     use HasUuid;
 
-    protected $with = [
-        'bobotSkor',
-        'siklus',
-        'outsourcings',
-        'evaluators',
-
-        'penilaian',
-    ];
-
 
     //------------------------ BelongsTo------------------------------
     public function bobotSkor(): BelongsTo
@@ -67,31 +58,5 @@ class Penugasan extends Model
     public function penilaian(): HasMany
     {
         return $this->hasMany(Penilaian::class, 'penugasan_id');
-    }
-
-
-    public static function byEvaluators()
-    {
-        return self::select(['siklus_id', 'status', 'outsourcing_id', 'penilai_id', 'tipe_penilai'])
-            ->whereHas('siklus', fn($q) => $q->where('is_active', 1))
-            ->withOnly([
-                'outsourcings:id,name,uuid,image,jabatan_id,nip',
-                'evaluators.userable',
-            ])
-            ->get()
-            ->map(function ($item) {
-                $userable = $item->evaluators?->userable;
-
-                return [
-                    'outsourcing_name' => $item->outsourcings->name,
-                    'outsourcing_image' => $item->outsourcings->image,
-                    'outsourcing_jabatan' => optional($item->outsourcings->jabatan)->nama_jabatan,
-                    'tipe_penilai' => $item->tipe_penilai,
-                    'status' => $item->status,
-                    'evaluator_name' => $userable?->name,
-                    'evaluator_image' => $userable?->image,
-                    'evaluator_uuid' => $userable?->uuid,
-                ];
-            });
     }
 }

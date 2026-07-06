@@ -2,16 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Penugasan;
+use App\Http\Resources\EvaluatorHomeAssignmentResource;
+use App\Http\Resources\EvaluatorOptionResource;
+use App\Http\Resources\PenugasanAssignmentOutsourcingResource;
+use App\Http\Resources\StatusPenilaianByEvaluatorResource;
+use App\Http\Resources\StatusPenilaianByOutsourcingResource;
 use App\Http\Requests\StorePenugasanRequest;
 use App\Http\Requests\UpdatePenugasanRequest;
 use App\Models\BobotSkor;
 use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
+use App\Models\Penugasan;
 use App\Models\Siklus;
+use App\Services\Penugasan\PenugasanDashboardService;
 use App\Services\Penilaian\SaranPerbaikanEvaluatorService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,76 +28,26 @@ class PenugasanController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(PenugasanDashboardService $service): Response
     {
-        $siklus = Siklus::where('is_active', 1)->first();
+        $siklus = $service->activeSiklus();
 
-
-        if (!$siklus) {
-            ['message' => 'Tidak ada siklus aktif'];
+        if (! $siklus) {
+            return Inertia::render('admin/penugasan/page', [
+                'outsourcing' => [],
+                'evaluators' => [],
+                'message' => 'Tidak ada siklus aktif',
+            ]);
         }
 
-        $outsourcings = Outsourcing::where('is_active', 1)
-            ->with([
-                'penugasan' => fn($q) =>
-                $q->where('siklus_id', $siklus->id)->with('evaluators.userable'),
-                'biro',
-                'jabatan'
-            ])
-            ->orderBy('name', 'asc')
-            ->get()
-            ->map(function ($os) {
-
-                $evaluators = [
-                    'atasan' => ['name' => null, 'jabatan' => null, 'uuid' => null],
-                    'penerima_layanan1' => ['name' => null, 'jabatan' => null, 'uuid' => null],
-                    'penerima_layanan2' => ['name' => null, 'jabatan' => null, 'uuid' => null],
-                ];
-
-                foreach ($os->penugasan as $p) {
-                    if (! array_key_exists($p->tipe_penilai, $evaluators)) {
-                        continue;
-                    }
-
-                    if ($evaluators[$p->tipe_penilai]['name'] !== null) {
-                        continue;
-                    }
-
-                    $userable = $p->evaluators?->userable;
-
-                    if (! $userable) {
-                        continue;
-                    }
-
-                    $evaluators[$p->tipe_penilai] = [
-                        'name' => $userable->name,
-                        'uuid' => $userable->uuid,
-                        'jabatan' => method_exists($userable, 'displayJabatan')
-                            ? $userable->displayJabatan()
-                            : null,
-                    ];
-                }
-
-                return [
-                    'uuid' => $os->uuid,
-                    'image' => $os->image,
-                    'name' => $os->name,
-                    'jabatan' => $os->jabatan?->nama_jabatan,
-                    'biro' => $os->biro?->nama_biro,
-                    'nama_jabatan' => $os->jabatan?->nama_jabatan,
-                    'evaluators' => $evaluators,
-                ];
-            });
-
         $data = [
-            'outsourcing' =>  $outsourcings,
-            'evaluators' => MasterPegawai::select(['name', 'jabatan', 'kode_biro', 'uuid'])
-                ->where('kode_unit', '02')
-                ->with('biro')
-                ->orderBy('name', 'asc')
-                ->get()
+            'outsourcing' => PenugasanAssignmentOutsourcingResource::collection(
+                $service->assignmentOutsourcings($siklus)
+            )->resolve(),
+            'evaluators' => EvaluatorOptionResource::collection(
+                $service->evaluatorOptions()
+            )->resolve(),
         ];
-
 
         return Inertia::render('admin/penugasan/page', $data);
     }
@@ -105,29 +63,41 @@ class PenugasanController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StorePenugasanRequest $request, Outsourcing $outsourcing)
+    public function store(StorePenugasanRequest $request, Outsourcing $outsourcing): RedirectResponse
     {
         DB::transaction(function () use ($outsourcing, $request) {
 
             $siklus = Siklus::where('is_active', 1)->firstOrFail();
+            $validated = $request->validated();
+            $tipePenilais = array_keys($validated);
 
-            foreach ($request->validated() as $tipePenilai => $penilaiUuid) {
+            $bobotSkors = BobotSkor::select(['id', 'kode_bobot'])
+                ->whereIn('kode_bobot', $tipePenilais)
+                ->get()
+                ->keyBy('kode_bobot');
 
-                // 1. Bobot skor
-                $bobotSkor = BobotSkor::where('kode_bobot', $tipePenilai)
-                    ->firstOrFail();
+            $penilaiUserIds = MasterPegawai::select(['id', 'nip', 'name', 'uuid'])
+                ->whereIn('uuid', array_values($validated))
+                ->with('user:id,userable_id,userable_type')
+                ->get()
+                ->keyBy('uuid')
+                ->map(function (MasterPegawai $pegawai): int {
+                    if (! $pegawai->user) {
+                        throw ValidationException::withMessages([
+                            'penilai' => "Pegawai {$pegawai->name} belum memiliki akun evaluator.",
+                        ]);
+                    }
 
+                    return $pegawai->user->id;
+                });
 
-                // 2. Tentukan penilai berdasarkan tipe
-                $penilaiUserId = match ($tipePenilai) {
-                    'atasan', 'penerima_layanan1', 'penerima_layanan2' => MasterPegawai::where('uuid', $penilaiUuid)
-                        ->with('user')
-                        ->firstOrFail()
-                        ->user
-                        ->id,
-                };
+            foreach ($validated as $tipePenilai => $penilaiUuid) {
+                if (! $bobotSkors->has($tipePenilai)) {
+                    throw ValidationException::withMessages([
+                        $tipePenilai => "Bobot untuk tipe penilai {$tipePenilai} belum dikonfigurasi.",
+                    ]);
+                }
 
-                // 3. Simpan penugasan
                 Penugasan::updateOrCreate(
                     [
                         'siklus_id'      => $siklus->id,
@@ -135,8 +105,8 @@ class PenugasanController extends Controller
                         'tipe_penilai'   => $tipePenilai,
                     ],
                     [
-                        'penilai_id'    => $penilaiUserId,
-                        'bobot_skor_id' => $bobotSkor->id,
+                        'penilai_id'    => $penilaiUserIds->get($penilaiUuid),
+                        'bobot_skor_id' => $bobotSkors->get($tipePenilai)->id,
                     ]
                 );
             }
@@ -177,58 +147,62 @@ class PenugasanController extends Controller
         //
     }
 
-    public function home(): Response
+    public function home(PenugasanDashboardService $service): Response
     {
+        $siklus = $service->activeSiklus();
+
         $data = [
-            'penugasanPeer' => Auth::user()->penugasan()
-                ->select(['outsourcing_id', 'siklus_id', 'status', 'uuid', 'tipe_penilai'])
-                ->whereHas('siklus', fn($q) => $q->where('is_active', true))
-                ->with(['siklus', 'outsourcings'])
-                ->get(),
-            'siklusAktif' => 'Semester I tahun 2026'
+            'penugasanPeer' => EvaluatorHomeAssignmentResource::collection(
+                $service->evaluatorHomeAssignments(Auth::user())
+            )->resolve(),
+            'siklusAktif' => $siklus?->title ?? 'Tidak ada siklus aktif',
         ];
 
         return Inertia::render('evaluator/page', $data);
     }
 
-    public function byOutsourcings(): Response
+    public function byOutsourcings(PenugasanDashboardService $service): Response
     {
-        $outsourcings = app(Outsourcing::class)->byOutsourcings();
-
         return Inertia::render('admin/statuspenilaian/ETXpenilaianByOutsourcing', [
-            'outsourcings' => $outsourcings,
+            'outsourcings' => StatusPenilaianByOutsourcingResource::collection(
+                $service->statusByOutsourcings()
+            )->resolve(),
         ]);
     }
 
-    public function byEvaluators(): Response
+    public function byEvaluators(PenugasanDashboardService $service): Response
     {
-        $evaluators = app(Penugasan::class)->byEvaluators();
-
         return Inertia::render('admin/statuspenilaian/ETXpenilaianByEvaluator', [
-            'evaluators' => $evaluators,
+            'evaluators' => StatusPenilaianByEvaluatorResource::collection(
+                $service->statusByEvaluators()
+            )->resolve(),
         ]);
     }
 
-    public function statusPenilaian(): Response
+    public function statusPenilaian(PenugasanDashboardService $service): Response
     {
         $data = [
-            'byOutsourcings' => app(Outsourcing::class)->byOutsourcings(),
-            'byEvaluators' => app(Penugasan::class)->byEvaluators(),
+            'byOutsourcings' => StatusPenilaianByOutsourcingResource::collection(
+                $service->statusByOutsourcings()
+            )->resolve(),
+            'byEvaluators' => StatusPenilaianByEvaluatorResource::collection(
+                $service->statusByEvaluators()
+            )->resolve(),
         ];
 
         return Inertia::render('admin/statuspenilaian/page', $data);
     }
 
-    public function reset(Penugasan $penugasan)
+    public function reset(Penugasan $penugasan): RedirectResponse
     {
-        foreach ($penugasan->penilaian as $key => $penugasan) {
-            $penugasan->delete();
-        };
+        $penugasan->penilaian()->delete();
 
         $penugasan->update([
             'catatan' => null,
             'status' => 'incomplete',
         ]);
+
+        return back()->with('success', 'Penugasan berhasil direset.');
     }
 
 
