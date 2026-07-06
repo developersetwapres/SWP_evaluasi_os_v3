@@ -216,6 +216,8 @@ class PenugasanController extends Controller
             'byEvaluators' => app(Penugasan::class)->byEvaluators(),
         ];
 
+        dd(app(Penugasan::class)->byOutsourcings());
+
         return Inertia::render('admin/statuspenilaian/page', $data);
     }
 
