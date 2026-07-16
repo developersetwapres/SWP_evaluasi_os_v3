@@ -104,14 +104,14 @@ export default function nilaiAkhir({
                                     <div className="mb-2 text-6xl font-bold">
                                         {finalTotalScore?.toFixed(2)}
                                     </div>
-                                    <Badge
+                                    {/* <Badge
                                         className={`${getScoreBadgeColor(finalTotalScore)} border-2 px-4 py-2 text-lg`}
                                     >
                                         {getScoreLabel(finalTotalScore)}
-                                    </Badge>
-                                    <p className="mt-2 text-indigo-100">
+                                    </Badge> */}
+                                    {/* <p className="mt-2 text-indigo-100">
                                         Nilai Akhir Penilaian
-                                    </p>
+                                    </p> */}
                                 </div>
                             </div>
                         </CardHeader>
@@ -144,7 +144,8 @@ export default function nilaiAkhir({
                                                 {pilar.title}
                                             </h3>
                                             <div className="mb-4 inline-block rounded-full bg-white/20 px-3 py-1 text-sm font-medium backdrop-blur-sm">
-                                                Nilai Akhir
+                                                {/* Nilai Akhir */}
+                                                Nilai
                                             </div>
                                             <div className="mb-4 rounded-4xl bg-white/10 p-4 backdrop-blur-sm">
                                                 <div className="mb-1 font-mono text-sm opacity-90">
@@ -175,11 +176,13 @@ export default function nilaiAkhir({
                         <CardHeader>
                             <CardTitle className="flex items-center space-x-3">
                                 <Users className="h-5 w-5" />
-                                <span>Rekap Nilai Akhir per Evaluator</span>
+                                {/* <span>Rekap Nilai Akhir per Evaluator</span> */}
+                                <span>Rekap per Evaluator</span>
                             </CardTitle>
                             <CardDescription>
-                                Hasil akhir penilaian dari setiap evaluator
-                                setelah dikalikan dengan bobot masing-masing
+                                {/* Hasil akhir penilaian dari setiap evaluator */}
+                                Hasil penilaian dari setiap evaluator setelah
+                                dikalikan dengan bobot masing-masing
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="p-8">

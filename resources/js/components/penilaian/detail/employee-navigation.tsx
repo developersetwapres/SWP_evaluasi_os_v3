@@ -23,7 +23,8 @@ export function EmployeeNavigation({ employeeUuid }: EmployeeNavigationProps) {
     const nav = [
         {
             link: rekapaspekevaluator.url(employeeUuid),
-            title: 'Nilai Akhir',
+            title: 'Hasil Evaluasi',
+            // title: 'Nilai Akhir',
             icon: FileText,
         },
         {

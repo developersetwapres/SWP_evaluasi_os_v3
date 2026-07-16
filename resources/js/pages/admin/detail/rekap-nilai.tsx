@@ -154,7 +154,8 @@ export default function rekapNilai({ peraspek }: any) {
                                                         </div>
                                                         <div className="mt-1 text-xs text-green-500">
                                                             Kontribusi ke nilai
-                                                            akhir
+                                                            by Evaluator
+                                                            {/* akhir */}
                                                         </div>
                                                     </div>
                                                 </div>
