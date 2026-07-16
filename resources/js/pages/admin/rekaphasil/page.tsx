@@ -170,14 +170,14 @@ export default function ResultsRecapPage({
                                         >
                                             {result?.finalTotalScore}
                                         </div>
-                                        <p className="mt-1 text-sm text-gray-600">
+                                        {/* <p className="mt-1 text-sm text-gray-600">
                                             Nilai Akhir
                                         </p>
                                         <p className="text-xs text-gray-500">
                                             {getScoreLabel(
                                                 result.finalTotalScore,
                                             )}
-                                        </p>
+                                        </p> */}
                                         <Progress
                                             value={
                                                 (result.finalTotalScore / 4) *
