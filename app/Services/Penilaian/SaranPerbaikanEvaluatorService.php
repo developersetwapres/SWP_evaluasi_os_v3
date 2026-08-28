@@ -15,7 +15,7 @@ class SaranPerbaikanEvaluatorService
         ])->get();
 
         foreach ($jabatans as $jabatan) {
-            $saran = [];
+            $evaluators = [];
 
             foreach ($jabatan->outsourcings->where('is_active', 1) as $os) {
 
@@ -25,20 +25,22 @@ class SaranPerbaikanEvaluatorService
                         'image' => $p->evaluators?->userable?->image,
                         'tipe_penilai' => $p->tipe_penilai,
                         'catatan' => $p->catatan,
+                        'area_pengembangan' => $p->area_pengembangan,
+                        'kekuatan_teramati' => $p->kekuatan_teramati,
                     ];
                 });
 
-                $saran[] = [
+                $evaluators[] = [
                     'name' => $os->name,
                     'image' => $os->image,
                     'penugasan' => $penugasan->values(),
                 ];
             }
 
-            if (!empty($saran)) {
+            if (!empty($evaluators)) {
                 $result[] = [
                     'jabatan' => $jabatan->nama_jabatan,
-                    'saran' => $saran,
+                    'evaluators' => $evaluators,
                 ];
             }
         }
