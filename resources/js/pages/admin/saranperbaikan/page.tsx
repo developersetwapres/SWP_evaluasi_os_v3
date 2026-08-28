@@ -1,15 +1,5 @@
 'use client';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 import {
     BriefcaseBusiness,
     CheckCircle2,
@@ -21,6 +11,17 @@ import {
     UsersRound,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 type FeedbackValue = string | null | undefined;
 
@@ -110,6 +111,67 @@ const hasAnyFeedback = (feedback: Penugasan) =>
         normalizeFeedback(feedback.area_pengembangan) ||
         normalizeFeedback(feedback.catatan),
     );
+
+const exportFeedbackToExcel = (entries: PersonEntry[]) => {
+    const workbook = XLSX.utils.book_new();
+    const entriesByPosition = new Map<string, PersonEntry[]>();
+    const usedSheetNames = new Set<string>();
+
+    entries.forEach((person) => {
+        const positionEntries = entriesByPosition.get(person.jabatan) || [];
+
+        positionEntries.push(person);
+        entriesByPosition.set(person.jabatan, positionEntries);
+    });
+
+    entriesByPosition.forEach((positionEntries, position) => {
+        const rows = positionEntries
+            .flatMap((person) =>
+                person.penugasan.map((reviewer) => ({
+                    'Nama OS': person.name,
+                    'Jabatan OS': person.jabatan,
+                    'Nama Evaluator': reviewer.nama?.trim() || '-',
+                    'Type Evaluator': formatEvaluatorType(
+                        reviewer.tipe_penilai,
+                    ),
+                    'Kekuatan Teramati':
+                        normalizeFeedback(reviewer.kekuatan_teramati) || '-',
+                    'Area Pengembangan':
+                        normalizeFeedback(reviewer.area_pengembangan) || '-',
+                    Catatan: normalizeFeedback(reviewer.catatan) || '-',
+                })),
+            )
+            .map((row, index) => ({ No: index + 1, ...row }));
+
+        const worksheet = XLSX.utils.json_to_sheet(rows, {
+            header: [
+                'No',
+                'Nama OS',
+                'Jabatan OS',
+                'Nama Evaluator',
+                'Type Evaluator',
+                'Kekuatan Teramati',
+                'Area Pengembangan',
+                'Catatan',
+            ],
+        });
+        const baseSheetName =
+            position.replace(/[\\/?*:[\]]/g, '-').trim() || 'Tanpa Jabatan';
+        let sheetName = baseSheetName.slice(0, 31);
+        let suffix = 2;
+
+        while (usedSheetNames.has(sheetName)) {
+            const suffixText = ` (${suffix})`;
+            sheetName = `${baseSheetName.slice(0, 31 - suffixText.length)}${suffixText}`;
+            suffix += 1;
+        }
+
+        usedSheetNames.add(sheetName);
+        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    });
+
+    XLSX.writeFile(workbook, 'umpan-balik-outsourcing.xlsx');
+};
 
 const feedbackStyles: Record<
     FeedbackTone,
@@ -447,6 +509,7 @@ export default function SaranPerbaikan({
                     <div className="flex shrink-0 flex-col items-end gap-6">
                         <Button
                             type="button"
+                            onClick={() => exportFeedbackToExcel(entries)}
                             className="gap-2 rounded-xl bg-[#217346] px-4 py-2.5 font-semibold text-white shadow-sm transition-all hover:bg-[#185c37] hover:shadow-md"
                         >
                             <FileSpreadsheet className="h-4 w-4" />
