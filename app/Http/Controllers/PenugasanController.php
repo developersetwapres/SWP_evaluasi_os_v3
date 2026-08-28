@@ -2,20 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePenugasanRequest;
+use App\Http\Requests\UpdatePenugasanRequest;
 use App\Http\Resources\EvaluatorHomeAssignmentResource;
 use App\Http\Resources\EvaluatorOptionResource;
 use App\Http\Resources\PenugasanAssignmentOutsourcingResource;
 use App\Http\Resources\StatusPenilaianByEvaluatorResource;
 use App\Http\Resources\StatusPenilaianByOutsourcingResource;
-use App\Http\Requests\StorePenugasanRequest;
-use App\Http\Requests\UpdatePenugasanRequest;
 use App\Models\BobotSkor;
+use App\Models\Jabatan;
 use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
 use App\Models\Penugasan;
 use App\Models\Siklus;
-use App\Services\Penugasan\PenugasanDashboardService;
 use App\Services\Penilaian\SaranPerbaikanEvaluatorService;
+use App\Services\Penugasan\PenugasanDashboardService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -100,12 +101,12 @@ class PenugasanController extends Controller
 
                 Penugasan::updateOrCreate(
                     [
-                        'siklus_id'      => $siklus->id,
+                        'siklus_id' => $siklus->id,
                         'outsourcing_id' => $outsourcing->id,
-                        'tipe_penilai'   => $tipePenilai,
+                        'tipe_penilai' => $tipePenilai,
                     ],
                     [
-                        'penilai_id'    => $penilaiUserIds->get($penilaiUuid),
+                        'penilai_id' => $penilaiUserIds->get($penilaiUuid),
                         'bobot_skor_id' => $bobotSkors->get($tipePenilai)->id,
                     ]
                 );
@@ -205,12 +206,21 @@ class PenugasanController extends Controller
         return back()->with('success', 'Penugasan berhasil direset.');
     }
 
-
     public function saranPerbaikan(SaranPerbaikanEvaluatorService $service): Response
     {
+        // Get jabatan_id from query parameter if provided
+        $jabatanId = request()->input('jabatan_id') ? (int) request()->input('jabatan_id') : null;
+
         $data = [
-            'Outsourcings' => $service->saran()
+            'Outsourcings' => $service->saran($jabatanId),
         ];
+
+        // Get all available jabatan for dropdown options
+        $allJabatan = Jabatan::select('id', 'nama_jabatan')
+            ->orderBy('nama_jabatan', 'asc')
+            ->get();
+
+        $data['allJabatan'] = $allJabatan;
 
         return Inertia::render('admin/saranperbaikan/page', $data);
     }

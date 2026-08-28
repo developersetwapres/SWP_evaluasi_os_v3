@@ -4,6 +4,7 @@ import {
     BriefcaseBusiness,
     CheckCircle2,
     FileSpreadsheet,
+    Loader2,
     MessageSquareText,
     Sparkles,
     Target,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
+import { router } from '@inertiajs/react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -43,11 +45,18 @@ type Evaluator = {
 
 type OutsourcingGroup = {
     jabatan?: string | null;
+    jabatan_id?: string | number | null;
     evaluators?: Evaluator[];
+};
+
+type Jabatan = {
+    id: string | number;
+    nama_jabatan: string;
 };
 
 type SaranPerbaikanProps = {
     Outsourcings?: OutsourcingGroup[];
+    allJabatan?: Jabatan[];
 };
 
 type PersonEntry = {
@@ -403,8 +412,19 @@ function PersonCard({ person }: { person: PersonEntry }) {
 
 export default function SaranPerbaikan({
     Outsourcings = [],
+    allJabatan = [],
 }: SaranPerbaikanProps) {
+    const [isLoading, setIsLoading] = useState(false);
+
     const positions = useMemo(() => {
+        if (Array.isArray(allJabatan) && allJabatan.length > 0) {
+            return allJabatan.map((jabatan) => ({
+                value: String(jabatan.id),
+                label: jabatan.nama_jabatan,
+            }));
+        }
+
+        // Fallback: extract from current data
         if (!Array.isArray(Outsourcings)) return [];
 
         const uniquePositions = new Map<string, string>();
@@ -421,24 +441,11 @@ export default function SaranPerbaikan({
             value,
             label,
         }));
-    }, [Outsourcings]);
+    }, [allJabatan, Outsourcings]);
 
-    const [selectedPosition, setSelectedPosition] = useState('');
-
-    useEffect(() => {
-        if (positions.length === 0) {
-            setSelectedPosition('');
-            return;
-        }
-
-        const selectedStillExists = positions.some(
-            (position) => position.value === selectedPosition,
-        );
-
-        if (!selectedPosition || !selectedStillExists) {
-            setSelectedPosition(positions[0].value);
-        }
-    }, [positions, selectedPosition]);
+    const defaultJabatanId = positions?.[0]?.value ?? '';
+    const [selectedJabatanId, setSelectedJabatanId] =
+        useState(defaultJabatanId);
 
     const entries = useMemo<PersonEntry[]>(() => {
         if (!Array.isArray(Outsourcings)) return [];
@@ -463,17 +470,23 @@ export default function SaranPerbaikan({
         });
     }, [Outsourcings]);
 
-    const filteredEntries = useMemo(() => {
-        if (!selectedPosition) return entries;
+    const filteredEntries = entries;
 
-        return entries.filter(
-            (person) => slugify(person.jabatan) === selectedPosition,
-        );
-    }, [entries, selectedPosition]);
-
-    const selectedPositionLabel =
-        positions.find((position) => position.value === selectedPosition)
+    const selectedJabatanLabel =
+        positions.find((position) => position.value === selectedJabatanId)
             ?.label || 'Semua Jabatan';
+
+    const handleJabatanChange = (jabatanId: string) => {
+        setSelectedJabatanId(jabatanId);
+        setIsLoading(true);
+
+        // Fetch data dengan jabatan_id
+        router.visit(`/admin/saran-perbaikan?jabatan_id=${jabatanId}`, {
+            onFinish: () => {
+                setIsLoading(false);
+            },
+        });
+    };
 
     const totalReviewers = filteredEntries.reduce(
         (total, person) => total + person.penugasan.length,
@@ -546,26 +559,31 @@ export default function SaranPerbaikan({
                             Pilih Jabatan
                         </label>
 
-                        <Select
-                            value={selectedPosition}
-                            onValueChange={setSelectedPosition}
-                            disabled={positions.length === 0}
-                        >
-                            <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-slate-50/80 px-3.5 shadow-none focus:ring-2 focus:ring-sky-500/20 dark:border-slate-800 dark:bg-slate-900">
-                                <SelectValue placeholder="Pilih Jabatan Outsourcing" />
-                            </SelectTrigger>
+                        <div className="flex items-center gap-2">
+                            <Select
+                                value={selectedJabatanId}
+                                onValueChange={handleJabatanChange}
+                                disabled={positions.length === 0 || isLoading}
+                            >
+                                <SelectTrigger className="h-11 w-full rounded-xl border-slate-200 bg-slate-50/80 px-3.5 shadow-none focus:ring-2 focus:ring-sky-500/20 dark:border-slate-800 dark:bg-slate-900">
+                                    <SelectValue placeholder="Pilih Jabatan Outsourcing" />
+                                </SelectTrigger>
 
-                            <SelectContent>
-                                {positions.map((position) => (
-                                    <SelectItem
-                                        key={position.value}
-                                        value={position.value}
-                                    >
-                                        {position.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                                <SelectContent>
+                                    {positions.map((position) => (
+                                        <SelectItem
+                                            key={position.value}
+                                            value={position.value}
+                                        >
+                                            {position.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {isLoading && (
+                                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex min-w-0 items-center gap-3 rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-900/70">
@@ -578,7 +596,7 @@ export default function SaranPerbaikan({
                                 Ditampilkan
                             </p>
                             <p className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200">
-                                {selectedPositionLabel}
+                                {selectedJabatanLabel}
                             </p>
                         </div>
                     </div>

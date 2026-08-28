@@ -6,19 +6,25 @@ use App\Models\Jabatan;
 
 class SaranPerbaikanEvaluatorService
 {
-    public function saran()
+    public function saran(?int $jabatanId = null)
     {
         $result = [];
 
-        $jabatans = Jabatan::with([
+        $query = Jabatan::with([
             'outsourcings.penugasan.evaluators.userable',
-        ])->get();
+        ]);
+
+        // Filter by jabatan_id if provided
+        if ($jabatanId !== null) {
+            $query->where('id', $jabatanId);
+        }
+
+        $jabatans = $query->get();
 
         foreach ($jabatans as $jabatan) {
             $evaluators = [];
 
             foreach ($jabatan->outsourcings->where('is_active', 1) as $os) {
-
                 $penugasan = $os->penugasan->map(function ($p) {
                     return [
                         'nama' => $p->evaluators?->userable?->name,
@@ -37,9 +43,10 @@ class SaranPerbaikanEvaluatorService
                 ];
             }
 
-            if (!empty($evaluators)) {
+            if (! empty($evaluators)) {
                 $result[] = [
                     'jabatan' => $jabatan->nama_jabatan,
+                    'jabatan_id' => $jabatan->id,
                     'evaluators' => $evaluators,
                 ];
             }
