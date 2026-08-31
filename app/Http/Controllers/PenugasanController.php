@@ -217,12 +217,13 @@ class PenugasanController extends Controller
 
         $jabatanId = $request->filled('jabatan_id')
             ? $request->integer('jabatan_id')
-            : Jabatan::where('kode_jabatan', 'PENGEMUDI')->value('id');
+            : Jabatan::where('kode_jabatan', 'DESAINER_GRAFIS')->value('id');
 
         return Inertia::render('admin/saranperbaikan/page', [
             'Outsourcings' => $service->saran($jabatanId),
 
             'allJabatan' => Jabatan::select('id', 'nama_jabatan')
+                ->whereNot('kode_jabatan', 'UMUM')
                 ->orderBy('nama_jabatan')
                 ->get(),
 

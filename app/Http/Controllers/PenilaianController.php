@@ -189,6 +189,7 @@ class PenilaianController extends Controller
         $outsourcingData = $engine->calculateRankingByJabatan($outsourcings);
 
         $allJabatan = Jabatan::select('id', 'nama_jabatan')
+            ->whereNot('kode_jabatan', 'UMUM')
             ->orderBy('nama_jabatan', 'asc')
             ->get();
 
