@@ -1,5 +1,6 @@
 'use client';
 
+import { Link, router } from '@inertiajs/react';
 import {
     BriefcaseBusiness,
     CheckCircle2,
@@ -11,9 +12,7 @@ import {
     UserRoundCheck,
     UsersRound,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import * as XLSX from 'xlsx';
-import { router } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -24,7 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { saranEvaluator } from '@/routes/os';
+import { exportSaranEvaluator, saranEvaluator } from '@/routes/os';
 
 type FeedbackValue = string | null | undefined;
 
@@ -79,17 +78,23 @@ const slugify = (value: string) =>
         .replace(/(^-|-$)/g, '');
 
 const normalizeFeedback = (value: FeedbackValue) => {
-    if (!value) return null;
+    if (!value) {
+        return null;
+    }
 
     const normalized = value.trim();
 
-    if (!normalized || normalized === '-') return null;
+    if (!normalized || normalized === '-') {
+        return null;
+    }
 
     return normalized;
 };
 
 const getInitials = (name?: string | null) => {
-    if (!name) return 'U';
+    if (!name) {
+        return 'U';
+    }
 
     return name
         .trim()
@@ -102,13 +107,17 @@ const getInitials = (name?: string | null) => {
 };
 
 const getImageSrc = (image?: string | null) => {
-    if (!image) return undefined;
+    if (!image) {
+        return undefined;
+    }
 
     return `/storage/${image}`;
 };
 
 const formatEvaluatorType = (value?: string | null) => {
-    if (!value) return 'Penilai';
+    if (!value) {
+        return 'Penilai';
+    }
 
     return value
         .replace(/_/g, ' ')
@@ -122,67 +131,6 @@ const hasAnyFeedback = (feedback: Penugasan) =>
         normalizeFeedback(feedback.area_pengembangan) ||
         normalizeFeedback(feedback.catatan),
     );
-
-const exportFeedbackToExcel = (entries: PersonEntry[]) => {
-    const workbook = XLSX.utils.book_new();
-    const entriesByPosition = new Map<string, PersonEntry[]>();
-    const usedSheetNames = new Set<string>();
-
-    entries.forEach((person) => {
-        const positionEntries = entriesByPosition.get(person.jabatan) || [];
-
-        positionEntries.push(person);
-        entriesByPosition.set(person.jabatan, positionEntries);
-    });
-
-    entriesByPosition.forEach((positionEntries, position) => {
-        const rows = positionEntries
-            .flatMap((person) =>
-                person.penugasan.map((reviewer) => ({
-                    'Nama OS': person.name,
-                    'Jabatan OS': person.jabatan,
-                    'Nama Evaluator': reviewer.nama?.trim() || '-',
-                    'Type Evaluator': formatEvaluatorType(
-                        reviewer.tipe_penilai,
-                    ),
-                    'Kekuatan Teramati':
-                        normalizeFeedback(reviewer.kekuatan_teramati) || '-',
-                    'Area Pengembangan':
-                        normalizeFeedback(reviewer.area_pengembangan) || '-',
-                    Catatan: normalizeFeedback(reviewer.catatan) || '-',
-                })),
-            )
-            .map((row, index) => ({ No: index + 1, ...row }));
-
-        const worksheet = XLSX.utils.json_to_sheet(rows, {
-            header: [
-                'No',
-                'Nama OS',
-                'Jabatan OS',
-                'Nama Evaluator',
-                'Type Evaluator',
-                'Kekuatan Teramati',
-                'Area Pengembangan',
-                'Catatan',
-            ],
-        });
-        const baseSheetName =
-            position.replace(/[\\/?*:[\]]/g, '-').trim() || 'Tanpa Jabatan';
-        let sheetName = baseSheetName.slice(0, 31);
-        let suffix = 2;
-
-        while (usedSheetNames.has(sheetName)) {
-            const suffixText = ` (${suffix})`;
-            sheetName = `${baseSheetName.slice(0, 31 - suffixText.length)}${suffixText}`;
-            suffix += 1;
-        }
-
-        usedSheetNames.add(sheetName);
-        XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-    });
-
-    XLSX.writeFile(workbook, 'umpan-balik-outsourcing.xlsx');
-};
 
 const feedbackStyles: Record<
     FeedbackTone,
@@ -428,14 +376,18 @@ export default function SaranPerbaikan({
         }
 
         // Fallback: extract from current data
-        if (!Array.isArray(Outsourcings)) return [];
+        if (!Array.isArray(Outsourcings)) {
+            return [];
+        }
 
         const uniquePositions = new Map<string, string>();
 
         Outsourcings.forEach((group) => {
             const jabatan = group?.jabatan?.trim();
 
-            if (!jabatan) return;
+            if (!jabatan) {
+                return;
+            }
 
             uniquePositions.set(slugify(jabatan), jabatan);
         });
@@ -451,7 +403,9 @@ export default function SaranPerbaikan({
     );
 
     const entries = useMemo<PersonEntry[]>(() => {
-        if (!Array.isArray(Outsourcings)) return [];
+        if (!Array.isArray(Outsourcings)) {
+            return [];
+        }
 
         return Outsourcings.flatMap((group) => {
             const jabatan = group?.jabatan?.trim() || 'Tanpa Jabatan';
@@ -482,7 +436,7 @@ export default function SaranPerbaikan({
         setIsLoading(true);
 
         // Fetch data dengan jabatan_id
-        router.visit(saranEvaluator.url() + `?jabatan_id=${jabatanId}`, {
+        router.visit(saranEvaluator({ query: { jabatan_id: jabatanId } }), {
             onFinish: () => {
                 setIsLoading(false);
             },
@@ -522,12 +476,13 @@ export default function SaranPerbaikan({
                     {/* Kanan */}
                     <div className="flex shrink-0 flex-col items-end gap-6">
                         <Button
-                            type="button"
-                            onClick={() => exportFeedbackToExcel(entries)}
+                            asChild
                             className="gap-2 rounded-xl bg-[#217346] px-4 py-2.5 font-semibold text-white shadow-sm transition-all hover:bg-[#185c37] hover:shadow-md"
                         >
-                            <FileSpreadsheet className="h-4 w-4" />
-                            Export
+                            <Link href={exportSaranEvaluator()}>
+                                <FileSpreadsheet className="h-4 w-4" />
+                                Export
+                            </Link>
                         </Button>
 
                         <div className="flex gap-2">

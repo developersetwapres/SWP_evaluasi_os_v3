@@ -1,5 +1,8 @@
 'use client';
 
+import { Link, router } from '@inertiajs/react';
+import { BarChart3, Download, Eye, Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import exportToExcel from '@/components/penilaian/exportToExcel';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,33 +22,59 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import AdminLayout from '@/layouts/app/app-adminkmz-layout';
+import { dashboard } from '@/routes';
 import { exportMentahan, rekapaspekevaluator } from '@/routes/os';
-import { getScoreColor, getScoreLabel } from '@/utils/score';
-import { Link } from '@inertiajs/react';
-import { BarChart3, Download, Eye, Search } from 'lucide-react';
-import { useState } from 'react';
+import { getScoreColor } from '@/utils/score';
+
+type RecapFilters = {
+    search: string;
+    kodeBiro: string | null;
+};
+
+type Unit = {
+    kodeBiro: string;
+    namaBiro: string | null;
+};
 
 export default function ResultsRecapPage({
     evaluationResults,
+    filters,
+    units,
 }: {
     evaluationResults: any;
+    filters: RecapFilters;
+    units: Unit[];
 }) {
-    const [searchTerm, setSearchTerm] = useState('');
-    const [filterUnit, setFilterUnit] = useState('all');
+    const [searchTerm, setSearchTerm] = useState(filters.search);
+    const [filterUnit, setFilterUnit] = useState(filters.kodeBiro ?? 'all');
+    const results = evaluationResults ?? [];
 
-    const filteredResults = evaluationResults?.filter((result: any) => {
-        const matchesSearch = result.name
-            ?.toLowerCase()
-            .includes(searchTerm?.toLowerCase());
+    const visitWithFilters = (nextSearch: string, nextKodeBiro: string) => {
+        router.get(
+            dashboard.url({
+                query: {
+                    search: nextSearch || null,
+                    kode_biro: nextKodeBiro === 'all' ? null : nextKodeBiro,
+                },
+            }),
+            {},
+            {
+                only: ['evaluationResults', 'filters', 'units'],
+                preserveScroll: true,
+                replace: true,
+            },
+        );
+    };
 
-        const matchesUnit = filterUnit === 'all';
-        return matchesSearch && matchesUnit;
-    });
+    useEffect(() => {
+        const searchTimeout = window.setTimeout(() => {
+            if (searchTerm !== filters.search) {
+                visitWithFilters(searchTerm, filterUnit);
+            }
+        }, 300);
 
-    const units = [
-        ...new Set((evaluationResults ?? []).map((r: any) => r.biro)),
-    ] as string[];
+        return () => window.clearTimeout(searchTimeout);
+    }, [filterUnit, filters.search, searchTerm]);
 
     return (
         <div className="space-y-6">
@@ -85,26 +114,31 @@ export default function ResultsRecapPage({
                         </div>
                         <Select
                             value={filterUnit}
-                            onValueChange={setFilterUnit}
+                            onValueChange={(nextKodeBiro) => {
+                                setFilterUnit(nextKodeBiro);
+                                visitWithFilters(searchTerm, nextKodeBiro);
+                            }}
                         >
                             <SelectTrigger className="w-full sm:w-48">
                                 <SelectValue placeholder="Filter Unit" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">Semua Unit</SelectItem>
-                                {units.map((unit: string, index: number) => (
+                                <SelectItem value="all">
+                                    Semua Unit Kerja
+                                </SelectItem>
+                                {units.map((unit) => (
                                     <SelectItem
-                                        key={`${unit}-${index}`}
-                                        value={unit}
+                                        key={unit.kodeBiro}
+                                        value={unit.kodeBiro}
                                     >
-                                        {unit}
+                                        {unit.namaBiro ?? unit.kodeBiro}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
                         <Button
                             className="flex items-center space-x-2"
-                            onClick={() => exportToExcel(filteredResults)}
+                            onClick={() => exportToExcel(results)}
                         >
                             <Download className="h-4 w-4" />
                             <span>Export Rekap Hasil</span>
@@ -121,7 +155,7 @@ export default function ResultsRecapPage({
 
                     {/* Results Grid */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredResults.map((result: any) => (
+                        {results.map((result: any) => (
                             <Card
                                 key={result.id}
                                 className="gap-0 transition-shadow hover:shadow-lg"
@@ -131,8 +165,9 @@ export default function ResultsRecapPage({
                                         <div className="flex items-center space-x-3">
                                             <img
                                                 src={
-                                                    `/storage/${result.image}` ||
-                                                    '/placeholder.svg'
+                                                    result.image
+                                                        ? `/storage/${result.image}`
+                                                        : '/placeholder.svg'
                                                 }
                                                 alt={result.name}
                                                 className="h-12 w-12 rounded-full border-2 border-blue-100 object-cover"
@@ -256,7 +291,7 @@ export default function ResultsRecapPage({
                         ))}
                     </div>
 
-                    {filteredResults.length === 0 && (
+                    {results.length === 0 && (
                         <Card className="py-12 text-center">
                             <CardContent>
                                 <BarChart3 className="mx-auto mb-4 h-12 w-12 text-gray-400" />

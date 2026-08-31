@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FilterRekapHasilRequest;
 use App\Http\Requests\StorePenilaianRequest;
 use App\Http\Requests\UpdatePenilaianRequest;
+use App\Models\Biro;
 use App\Models\Jabatan;
 use App\Models\Outsourcing;
 use App\Models\Penilaian;
 use App\Models\Penugasan;
 use App\Services\Penilaian\EvaluationEngineService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -131,16 +134,44 @@ class PenilaianController extends Controller
         //
     }
 
-    public function rekaphasil(EvaluationEngineService $engine): Response
-    {
-        $evaluationResults = Outsourcing::with([
-            'penugasanAktif.bobotSkor',
-            'penugasanAktif.evaluators.userable',
-            'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
-            'biro',
-            'jabatan',
-        ])
+    public function rekaphasil(
+        FilterRekapHasilRequest $request,
+        EvaluationEngineService $engine
+    ): Response {
+        $filters = $request->validated();
+        $search = trim($filters['search'] ?? '');
+        $kodeBiro = $filters['kode_biro'] ?? null;
+
+        $evaluationResults = Outsourcing::query()
+            ->select([
+                'id',
+                'uuid',
+                'nip',
+                'name',
+                'image',
+                'jabatan_id',
+                'kode_biro',
+            ])
+            ->with([
+                'penugasanAktif.bobotSkor',
+                'penugasanAktif.evaluators.userable',
+                'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
+                'biro',
+                'jabatan',
+            ])
             ->where('is_active', true)
+            ->when($kodeBiro, function (Builder $query, string $kodeBiro): void {
+                $query->where('kode_biro', $kodeBiro);
+            })
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $query) use ($search): void {
+                    $query
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhereHas('biro', function (Builder $query) use ($search): void {
+                            $query->where('nama_biro', 'like', "%{$search}%");
+                        });
+                });
+            })
             ->orderBy('name', 'asc')
             ->get()
             ->map(function ($os) use ($engine) {
@@ -165,8 +196,31 @@ class PenilaianController extends Controller
                 ];
             });
 
+        $units = Biro::query()
+            ->select('kode_biro', 'nama_biro')
+            ->whereIn(
+                'kode_biro',
+                Outsourcing::query()
+                    ->where('is_active', true)
+                    ->whereNotNull('kode_biro')
+                    ->select('kode_biro')
+                    ->distinct()
+            )
+            ->orderBy('nama_biro', 'asc')
+            ->get()
+            ->map(fn (Biro $biro): array => [
+                'kodeBiro' => $biro->kode_biro,
+                'namaBiro' => $biro->nama_biro,
+            ])
+            ->values();
+
         return Inertia::render('admin/rekaphasil/page', [
             'evaluationResults' => $evaluationResults,
+            'filters' => [
+                'search' => $search,
+                'kodeBiro' => $kodeBiro,
+            ],
+            'units' => $units,
         ]);
     }
 

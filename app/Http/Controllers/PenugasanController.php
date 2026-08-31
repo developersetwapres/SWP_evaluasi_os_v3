@@ -230,4 +230,12 @@ class PenugasanController extends Controller
             'selectedJabatanId' => (string) $jabatanId,
         ]);
     }
+
+    public function exportSaranPerbaikan(
+        SaranPerbaikanEvaluatorService $service
+    ): Response {
+        return Inertia::render('exportexcel/exportSaranPerbaikan', [
+            'outsourcings' => $service->saran(),
+        ]);
+    }
 }

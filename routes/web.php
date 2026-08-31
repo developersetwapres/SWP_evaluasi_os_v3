@@ -1,13 +1,12 @@
 <?php
 
+use App\Http\Controllers\MasterPegawaiController;
 use App\Http\Controllers\OutsourcingController;
 use App\Http\Controllers\PenilaianController;
 use App\Http\Controllers\PenugasanController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\MasterPegawaiController;
 use App\Services\Uploadfile\FotoUserService;
 use Illuminate\Support\Facades\Route;
-
 
 Route::middleware(['auth', 'verified', 'role:evaluator'])->group(function () {
     Route::get('/', [PenugasanController::class, 'home'])->name('home');
@@ -17,13 +16,13 @@ Route::middleware(['auth', 'verified', 'role:evaluator'])->group(function () {
     Route::post('/penilaian/store/{penugasan:uuid}', [PenilaianController::class, 'store'])->name('penilaian.store');
 });
 
-
 Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
     Route::get('/dashboard', [PenilaianController::class, 'rekaphasil'])->name('dashboard');
     Route::get('/dashboard/ranking-skor', [PenilaianController::class, 'ranking'])->name('os.ranking');
 
     Route::get('/dashboard/penugasan-peer', [PenugasanController::class, 'index'])->name('penugasan.index');
     Route::post('/dashboard/penugasan-peer/store/{outsourcing:uuid}', [PenugasanController::class, 'store'])->name('penugasan.store');
+    Route::get('/dashboard/saran-perbaikan-outsourcing/export', [PenugasanController::class, 'exportSaranPerbaikan'])->name('os.exportSaranEvaluator');
     Route::get('/dashboard/saran-perbaikan-outsourcing', [PenugasanController::class, 'saranPerbaikan'])->name('os.saranEvaluator');
 
     Route::get('/dashboard/user-management/{user}', [UserController::class, 'index'])->name('user.index');
@@ -52,4 +51,4 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::post('/upload-temp-image', [FotoUserService::class, 'uploadTempImage'])->name('upload.tempImage');
 });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';
