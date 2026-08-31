@@ -24,6 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { saranEvaluator } from '@/routes/os';
 
 type FeedbackValue = string | null | undefined;
 
@@ -57,6 +58,7 @@ type Jabatan = {
 type SaranPerbaikanProps = {
     Outsourcings?: OutsourcingGroup[];
     allJabatan?: Jabatan[];
+    selectedJabatanId?: string;
 };
 
 type PersonEntry = {
@@ -413,6 +415,7 @@ function PersonCard({ person }: { person: PersonEntry }) {
 export default function SaranPerbaikan({
     Outsourcings = [],
     allJabatan = [],
+    selectedJabatanId: initialSelectedJabatanId,
 }: SaranPerbaikanProps) {
     const [isLoading, setIsLoading] = useState(false);
 
@@ -443,9 +446,9 @@ export default function SaranPerbaikan({
         }));
     }, [allJabatan, Outsourcings]);
 
-    const defaultJabatanId = positions?.[0]?.value ?? '';
-    const [selectedJabatanId, setSelectedJabatanId] =
-        useState(defaultJabatanId);
+    const [selectedJabatanId, setSelectedJabatanId] = useState(
+        initialSelectedJabatanId ?? positions?.[0]?.value ?? '',
+    );
 
     const entries = useMemo<PersonEntry[]>(() => {
         if (!Array.isArray(Outsourcings)) return [];
@@ -470,8 +473,6 @@ export default function SaranPerbaikan({
         });
     }, [Outsourcings]);
 
-    const filteredEntries = entries;
-
     const selectedJabatanLabel =
         positions.find((position) => position.value === selectedJabatanId)
             ?.label || 'Semua Jabatan';
@@ -481,14 +482,14 @@ export default function SaranPerbaikan({
         setIsLoading(true);
 
         // Fetch data dengan jabatan_id
-        router.visit(`/admin/saran-perbaikan?jabatan_id=${jabatanId}`, {
+        router.visit(saranEvaluator.url() + `?jabatan_id=${jabatanId}`, {
             onFinish: () => {
                 setIsLoading(false);
             },
         });
     };
 
-    const totalReviewers = filteredEntries.reduce(
+    const totalReviewers = entries.reduce(
         (total, person) => total + person.penugasan.length,
         0,
     );
@@ -532,7 +533,7 @@ export default function SaranPerbaikan({
                         <div className="flex gap-2">
                             <div className="min-w-28 rounded-2xl border border-white/80 bg-white/75 px-4 py-3 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/70">
                                 <p className="text-xl font-bold text-slate-950 dark:text-white">
-                                    {filteredEntries.length}
+                                    {entries.length}
                                 </p>
                                 <p className="mt-0.5 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                                     Pegawai
@@ -602,9 +603,9 @@ export default function SaranPerbaikan({
                     </div>
                 </div>
             </section>
-            {filteredEntries.length > 0 ? (
-                <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-                    {filteredEntries.map((person) => (
+            {entries.length > 0 ? (
+                <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    {entries.map((person) => (
                         <PersonCard key={person.id} person={person} />
                     ))}
                 </section>

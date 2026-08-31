@@ -18,6 +18,7 @@ use App\Models\Siklus;
 use App\Services\Penilaian\SaranPerbaikanEvaluatorService;
 use App\Services\Penugasan\PenugasanDashboardService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -206,22 +207,26 @@ class PenugasanController extends Controller
         return back()->with('success', 'Penugasan berhasil direset.');
     }
 
-    public function saranPerbaikan(SaranPerbaikanEvaluatorService $service): Response
-    {
-        // Get jabatan_id from query parameter if provided
-        $jabatanId = request()->input('jabatan_id') ? (int) request()->input('jabatan_id') : null;
+    public function saranPerbaikan(
+        SaranPerbaikanEvaluatorService $service,
+        Request $request
+    ): Response {
+        $request->validate([
+            'jabatan_id' => ['nullable', 'integer', 'exists:jabatans,id'],
+        ]);
 
-        $data = [
+        $jabatanId = $request->filled('jabatan_id')
+            ? $request->integer('jabatan_id')
+            : Jabatan::where('kode_jabatan', 'PENGEMUDI')->value('id');
+
+        return Inertia::render('admin/saranperbaikan/page', [
             'Outsourcings' => $service->saran($jabatanId),
-        ];
 
-        // Get all available jabatan for dropdown options
-        $allJabatan = Jabatan::select('id', 'nama_jabatan')
-            ->orderBy('nama_jabatan', 'asc')
-            ->get();
+            'allJabatan' => Jabatan::select('id', 'nama_jabatan')
+                ->orderBy('nama_jabatan')
+                ->get(),
 
-        $data['allJabatan'] = $allJabatan;
-
-        return Inertia::render('admin/saranperbaikan/page', $data);
+            'selectedJabatanId' => (string) $jabatanId,
+        ]);
     }
 }

@@ -3,12 +3,9 @@
 namespace App\Services\Penilaian;
 
 use App\Models\Jabatan;
-use App\Models\KelompokJabatan;
-use App\Models\Outsourcing;
 use App\Models\Penugasan;
 use App\Models\Pilar;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class EvaluationEngineService
 {
@@ -139,10 +136,17 @@ class EvaluationEngineService
 
     private function resolveStatus(array $evaluators): string
     {
-        $completed = collect($evaluators)
-            ->every(fn($e) => $e['status'] === 'completed');
+        $evaluators = collect($evaluators);
 
-        return $completed ? 'completed' : 'draft';
+        if ($evaluators->isEmpty()) {
+            return 'draft';
+        }
+
+        return $evaluators->every(
+            fn($evaluator) => $evaluator['status'] === 'completed'
+        )
+            ? 'completed'
+            : 'draft';
     }
 
     /**
@@ -434,31 +438,34 @@ class EvaluationEngineService
 
     public function calculateRankingByJabatan(Collection $outsourcings): array
     {
-
-        dd($outsourcings);
         $result = [];
 
         foreach ($outsourcings as $outsourcing) {
+            $penugasan = $outsourcing->penugasanAktif;
 
-            if ($outsourcing->penugasan->isEmpty()) {
+            if (!$penugasan || $penugasan->isEmpty()) {
                 continue;
             }
 
-            $calc = $this->calculate($outsourcing->penugasan);
+            $calc = $this->calculate($penugasan);
 
             $evaluators = collect($calc['evaluators']);
 
-            $atasan = $evaluators->firstWhere('type', 'atasan')['weightedScore'] ?? 0;
-            $penerima = $evaluators->firstWhere('type', 'penerima_layanan')['weightedScore'] ?? 0;
-            $teman = $evaluators->firstWhere('type', 'teman_setingkat')['weightedScore'] ?? 0;
+            $atasan = $evaluators->firstWhere('type', 'atasan');
+            $penerima = $evaluators->firstWhere('type', 'penerima_layanan1');
+            $teman = $evaluators->firstWhere('type', 'penerima_layanan2');
+
+            $atasanScore = $atasan['weightedScore'] ?? 0;
+            $penerimaScore = $penerima['weightedScore'] ?? 0;
+            $temanScore = $teman['weightedScore'] ?? 0;
 
             $jabatan = $outsourcing->jabatan?->nama_jabatan ?? 'Tanpa Jabatan';
 
             $result[$jabatan][] = [
                 'nama' => $outsourcing->name,
-                'atasan' => round($atasan, 2),
-                'penerima_layanan' => round($penerima, 2),
-                'teman' => round($teman, 2),
+                'atasan' => round($atasanScore, 2),
+                'penerima_layanan' => round($penerimaScore, 2),
+                'teman' => round($temanScore, 2),
                 'total' => round($calc['finalScore'], 2),
             ];
         }
@@ -466,7 +473,6 @@ class EvaluationEngineService
         $final = [];
 
         foreach ($result as $jabatan => $items) {
-
             $sorted = collect($items)
                 ->sortByDesc('total')
                 ->values()
@@ -478,7 +484,7 @@ class EvaluationEngineService
 
             $final[] = [
                 'jabatan' => $jabatan,
-                'ranking' => $sorted->values(),
+                'ranking' => $sorted,
             ];
         }
 

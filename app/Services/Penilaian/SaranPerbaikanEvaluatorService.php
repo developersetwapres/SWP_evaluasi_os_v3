@@ -6,25 +6,28 @@ use App\Models\Jabatan;
 
 class SaranPerbaikanEvaluatorService
 {
-    public function saran(?int $jabatanId = null)
+    public function saran(?int $jabatanId = null): array
     {
-        $result = [];
+        $query = Jabatan::query()
+            ->with([
+                'outsourcings' => function ($query) {
+                    $query->where('is_active', true);
+                },
+                'outsourcings.penugasan.evaluators.userable',
+            ]);
 
-        $query = Jabatan::with([
-            'outsourcings.penugasan.evaluators.userable',
-        ]);
-
-        // Filter by jabatan_id if provided
         if ($jabatanId !== null) {
-            $query->where('id', $jabatanId);
+            $query->whereKey($jabatanId);
         }
 
         $jabatans = $query->get();
 
+        $result = [];
+
         foreach ($jabatans as $jabatan) {
             $evaluators = [];
 
-            foreach ($jabatan->outsourcings->where('is_active', 1) as $os) {
+            foreach ($jabatan->outsourcings as $os) {
                 $penugasan = $os->penugasan->map(function ($p) {
                     return [
                         'nama' => $p->evaluators?->userable?->name,

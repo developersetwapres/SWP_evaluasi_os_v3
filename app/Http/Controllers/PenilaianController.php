@@ -10,6 +10,7 @@ use App\Models\Penilaian;
 use App\Models\Penugasan;
 use App\Services\Penilaian\EvaluationEngineService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -137,19 +138,13 @@ class PenilaianController extends Controller
             'penugasanAktif.evaluators.userable',
             'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
             'biro',
-            'jabatan.kelompokJabatan',
+            'jabatan',
         ])
-            ->where('is_active', 1)
+            ->where('is_active', true)
             ->orderBy('name', 'asc')
-            ->get()->map(function ($os) use ($engine) {
-
+            ->get()
+            ->map(function ($os) use ($engine) {
                 $result = $engine->calculate($os->penugasanAktif);
-
-                $status = collect($result['evaluators'])
-                    ->pluck('status')
-                    ->every(fn($status) => $status === 'completed')
-                    ? 'completed'
-                    : 'progress';
 
                 return [
                     'id' => $os->id,
@@ -157,9 +152,13 @@ class PenilaianController extends Controller
                     'name' => $os->name,
                     'uuid' => $os->uuid,
                     'image' => $os->image,
+
                     'biro' => $os->biro?->nama_biro,
                     'jabatan' => $os->jabatan?->nama_jabatan,
-                    'status' => $status,
+
+                    'status' => $result['status'] === 'completed'
+                        ? 'completed'
+                        : 'progress',
 
                     'finalTotalScore' => $result['finalScore'],
                     'evaluatorScores' => $result['evaluators'],
@@ -171,34 +170,32 @@ class PenilaianController extends Controller
         ]);
     }
 
-    public function ranking(EvaluationEngineService $engine): Response
-    {
-        $query = Outsourcing::with([
+    public function ranking(
+        EvaluationEngineService $engine,
+        Request $request
+    ): Response {
+        $jabatanId = $request->input('jabatan_id')
+            ?? Jabatan::where('kode_jabatan', 'DESAINER_GRAFIS')->value('id');
+
+        $outsourcings = Outsourcing::with([
             'jabatan',
             'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
             'penugasanAktif.bobotSkor',
-        ])->where('is_active', true);
-
-        $jabatan = Jabatan::select('id', 'nama_jabatan')
-            ->orderBy('nama_jabatan', 'asc');
-
-        // Filter by jabatan_id if provided
-        if (request()->has('jabatan_id')) {
-            $query->where('jabatan_id', request()->input('jabatan_id'));
-        } else {
-            $query->where('jabatan_id', $jabatan->where('kode_jabatan', 'PENGEMUDI')->value('id'));
-        }
-
-        $outsourcings = $query->get();
+        ])
+            ->where('is_active', true)
+            ->where('jabatan_id', $jabatanId)
+            ->get();
 
         $outsourcingData = $engine->calculateRankingByJabatan($outsourcings);
 
-        // Get all available jabatan for dropdown options
-        $allJabatan = $jabatan->get();
+        $allJabatan = Jabatan::select('id', 'nama_jabatan')
+            ->orderBy('nama_jabatan', 'asc')
+            ->get();
 
         return Inertia::render('admin/ranking/page', [
             'outsourcingData' => $outsourcingData,
             'allJabatan' => $allJabatan,
+            'selectedJabatanId' => (string) $jabatanId,
         ]);
     }
 }

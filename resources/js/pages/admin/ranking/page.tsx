@@ -16,8 +16,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import AdminLayout from '@/layouts/app/app-adminkmz-layout';
 import { router } from '@inertiajs/react';
+import { useEffect, useMemo, useState } from 'react';
 import {
     ChevronLeft,
     ChevronRight,
@@ -26,7 +26,6 @@ import {
     Trophy,
     Users,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
 import {
     Bar,
     BarChart,
@@ -37,6 +36,7 @@ import {
     XAxis,
     YAxis,
 } from 'recharts';
+import { ranking } from '@/routes/os';
 
 // Helper: slugify jabatan to value used by Select
 const slugify = (str: string) =>
@@ -63,16 +63,16 @@ const CustomTooltip = ({ active, payload, label }: any) => {
                     </p>
                     <p className="text-sm">
                         <span className="mr-2 inline-block h-3 w-3 rounded bg-[#10b981]"></span>
-                        Penerima Layanan:{' '}
+                        Penerima Layanan 1:{' '}
                         <span className="font-medium">
-                            {data['Penerima Layanan']}
+                            {data['Penerima Layanan 1']}
                         </span>
                     </p>
                     <p className="text-sm">
                         <span className="mr-2 inline-block h-3 w-3 rounded bg-[#f59e0b]"></span>
-                        Teman Setingkat:{' '}
+                        Penerima Layanan 2:{' '}
                         <span className="font-medium">
-                            {data['Teman Setingkat']}
+                            {data['Penerima Layanan 2']}
                         </span>
                     </p>
                     <div className="mt-2 border-t pt-2">
@@ -87,7 +87,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     return null;
 };
 
-export default function RankingPage({ outsourcingData, allJabatan }: any) {
+export default function RankingPage({
+    outsourcingData,
+    allJabatan,
+    selectedJabatanId: initialSelectedJabatanId,
+}: any) {
     const [isLoading, setIsLoading] = useState(false);
 
     // Extract jabatan options - use allJabatan if provided, otherwise extract from current data
@@ -117,11 +121,14 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
             return ranking
                 .map((item: any) => ({
                     name: item.nama ?? item.name ?? 'N/A',
+
                     Atasan: Number(item.atasan ?? 0),
-                    'Penerima Layanan': Number(
-                        item.penerima_layanan ?? item['penerima_layanan'] ?? 0,
+                    'Penerima Layanan 1': Number(
+                        item.penerima_layanan ?? item['penerima_layanan1'] ?? 0,
                     ),
-                    'Teman Setingkat': Number(item.teman ?? 0),
+                    'Penerima Layanan 2': Number(
+                        item.teman ?? item['penerima_layanan2'] ?? 0,
+                    ),
                     total: Number(item.total ?? 0),
                     rank: Number(item.ranking ?? item.rank ?? 0),
                 }))
@@ -129,9 +136,10 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
         });
     }, [outsourcingData]);
 
-    const defaultJabatanId = positions?.[0]?.value ?? '';
-    const [selectedJabatanId, setSelectedJabatanId] =
-        useState(defaultJabatanId);
+    const [selectedJabatanId, setSelectedJabatanId] = useState(
+        initialSelectedJabatanId ?? positions?.[0]?.value ?? '',
+    );
+
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
 
@@ -148,7 +156,7 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
         setIsLoading(true);
 
         // Fetch data with the selected jabatan_id
-        router.visit(`/dashboard/ranking-skor?jabatan_id=${jabatanId}`, {
+        router.visit(`${ranking.url()}?jabatan_id=${jabatanId}`, {
             onFinish: () => {
                 setIsLoading(false);
             },
@@ -156,6 +164,7 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
     };
 
     const topPerformer = currentData[0] || { name: 'N/A', total: 0 };
+
     const averageScore =
         currentData.length > 0
             ? Math.round(
@@ -169,6 +178,12 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
     const selectedJabatanLabel =
         positions.find((p: any) => p.value === selectedJabatanId)?.label ||
         'Semua Jabatan';
+
+    useEffect(() => {
+        if (initialSelectedJabatanId) {
+            setSelectedJabatanId(String(initialSelectedJabatanId));
+        }
+    }, [initialSelectedJabatanId]);
 
     return (
         <div className="space-y-6">
@@ -281,8 +296,8 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
                             </CardTitle>
                             <CardDescription>
                                 Visualisasi score berdasarkan penilaian dari 3
-                                evaluator (Atasan, Penerima Layanan, Teman
-                                Setingkat) - {selectedJabatanLabel}
+                                evaluator (Atasan, Penerima Layanan 1, Penerima
+                                Layanan 2) - {selectedJabatanLabel}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -306,7 +321,7 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
                                         />
                                         <XAxis
                                             type="number"
-                                            domain={[0, 100]}
+                                            domain={[0, 4]}
                                             tick={{
                                                 fontSize: 12,
                                                 fill: '#64748b',
@@ -341,17 +356,17 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
                                             radius={[0, 0, 0, 0]}
                                         />
                                         <Bar
-                                            dataKey="Penerima Layanan"
+                                            dataKey="Penerima Layanan 1"
                                             stackId="score"
                                             fill="#10b981"
-                                            name="Penilai Penerima Layanan"
+                                            name="Penilai Penerima Layanan 1"
                                             radius={[0, 0, 0, 0]}
                                         />
                                         <Bar
-                                            dataKey="Teman Setingkat"
+                                            dataKey="Penerima Layanan 2"
                                             stackId="score"
                                             fill="#f59e0b"
-                                            name="Penilai Teman Setingkat"
+                                            name="Penilai Penerima Layanan 2"
                                             radius={[0, 4, 4, 0]}
                                         />
                                     </BarChart>
@@ -430,10 +445,10 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
                                                 Atasan
                                             </th>
                                             <th className="px-4 py-3 text-center font-semibold">
-                                                Penerima Layanan
+                                                Penerima Layanan 1
                                             </th>
                                             <th className="px-4 py-3 text-center font-semibold">
-                                                Teman Setingkat
+                                                Penerima Layanan 2
                                             </th>
                                             <th className="px-4 py-3 text-center font-semibold">
                                                 Total Score
@@ -492,7 +507,7 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
                                                         >
                                                             {
                                                                 outsourcing[
-                                                                    'Penerima Layanan'
+                                                                    'Penerima Layanan 1'
                                                                 ]
                                                             }
                                                         </Badge>
@@ -508,7 +523,7 @@ export default function RankingPage({ outsourcingData, allJabatan }: any) {
                                                         >
                                                             {
                                                                 outsourcing[
-                                                                    'Teman Setingkat'
+                                                                    'Penerima Layanan 2'
                                                                 ]
                                                             }
                                                         </Badge>
