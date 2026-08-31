@@ -434,6 +434,8 @@ class EvaluationEngineService
 
     public function calculateRankingByJabatan(Collection $outsourcings): array
     {
+
+        dd($outsourcings);
         $result = [];
 
         foreach ($outsourcings as $outsourcing) {

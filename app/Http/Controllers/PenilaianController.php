@@ -147,7 +147,7 @@ class PenilaianController extends Controller
 
                 $status = collect($result['evaluators'])
                     ->pluck('status')
-                    ->every(fn ($status) => $status === 'completed')
+                    ->every(fn($status) => $status === 'completed')
                     ? 'completed'
                     : 'progress';
 
@@ -177,12 +177,16 @@ class PenilaianController extends Controller
             'jabatan',
             'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
             'penugasanAktif.bobotSkor',
-        ])
-            ->where('is_active', true);
+        ])->where('is_active', true);
+
+        $jabatan = Jabatan::select('id', 'nama_jabatan')
+            ->orderBy('nama_jabatan', 'asc');
 
         // Filter by jabatan_id if provided
         if (request()->has('jabatan_id')) {
             $query->where('jabatan_id', request()->input('jabatan_id'));
+        } else {
+            $query->where('jabatan_id', $jabatan->where('kode_jabatan', 'PENGEMUDI')->value('id'));
         }
 
         $outsourcings = $query->get();
@@ -190,9 +194,7 @@ class PenilaianController extends Controller
         $outsourcingData = $engine->calculateRankingByJabatan($outsourcings);
 
         // Get all available jabatan for dropdown options
-        $allJabatan = Jabatan::select('id', 'nama_jabatan')
-            ->orderBy('nama_jabatan', 'asc')
-            ->get();
+        $allJabatan = $jabatan->get();
 
         return Inertia::render('admin/ranking/page', [
             'outsourcingData' => $outsourcingData,
