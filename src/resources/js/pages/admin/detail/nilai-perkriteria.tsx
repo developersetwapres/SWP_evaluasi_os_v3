@@ -1,0 +1,100 @@
+'use client';
+
+import { EmployeeHeader } from '@/components/penilaian/detail/employee-header';
+import { EmployeeNavigation } from '@/components/penilaian/detail/employee-navigation';
+import { ViewScoreComponent } from '@/components/penilaian/view-score-component';
+import { cn } from '@/lib/utils';
+import { nilaiPerkriteria } from '@/routes/os';
+import { Link, usePage } from '@inertiajs/react';
+import { User2 } from 'lucide-react';
+
+export default function nilaiPerItemKriteria({
+    rekapPerAspek,
+    evaluationData,
+    uuidOs,
+}: any) {
+    const { url } = usePage();
+    const isActive = (path: string) => url == path;
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+            <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
+                <div className="space-y-8">
+                    <EmployeeNavigation employeeUuid={uuidOs} />
+
+                    <nav className="grid h-10 w-full grid-cols-3 rounded-lg bg-muted p-1">
+                        <Link
+                            href={nilaiPerkriteria.url({
+                                outsourcing: uuidOs,
+                            })}
+                            className={cn(
+                                'flex items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
+                                isActive(
+                                    nilaiPerkriteria.url({
+                                        outsourcing: uuidOs,
+                                    }),
+                                )
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+                            )}
+                        >
+                            <User2 className="h-4 w-4" />
+                            <span className="hidden sm:inline">Atasan</span>
+                        </Link>
+
+                        <Link
+                            href={nilaiPerkriteria.url({
+                                outsourcing: uuidOs,
+                                tipePenilai: 'penerima_layanan1',
+                            })}
+                            className={cn(
+                                'flex items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
+                                isActive(
+                                    nilaiPerkriteria.url({
+                                        outsourcing: uuidOs,
+                                        tipePenilai: 'penerima_layanan1',
+                                    }),
+                                )
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+                            )}
+                        >
+                            <User2 className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                                Penerima Layanan 1
+                            </span>
+                        </Link>
+
+                        <Link
+                            href={nilaiPerkriteria.url({
+                                outsourcing: uuidOs,
+                                tipePenilai: 'penerima_layanan2',
+                            })}
+                            className={cn(
+                                'flex items-center justify-center space-x-2 rounded-md px-3 py-2 text-sm font-medium transition-all',
+                                isActive(
+                                    nilaiPerkriteria.url({
+                                        outsourcing: uuidOs,
+                                        tipePenilai: 'penerima_layanan2',
+                                    }),
+                                )
+                                    ? 'bg-background text-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:bg-background/50 hover:text-foreground',
+                            )}
+                        >
+                            <User2 className="h-4 w-4" />
+                            <span className="hidden sm:inline">
+                                Penerima Layanan 2
+                            </span>
+                        </Link>
+                    </nav>
+
+                    <ViewScoreComponent
+                        rekapPerAspek={rekapPerAspek}
+                        evaluationData={evaluationData}
+                    />
+                </div>
+            </main>
+        </div>
+    );
+}

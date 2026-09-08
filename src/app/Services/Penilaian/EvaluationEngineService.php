@@ -1,0 +1,493 @@
+<?php
+
+namespace App\Services\Penilaian;
+
+use App\Models\Jabatan;
+use App\Models\Penugasan;
+use App\Models\Pilar;
+use Illuminate\Support\Collection;
+
+class EvaluationEngineService
+{
+    public function calculate(Collection $penugasanCollection): array
+    {
+        $evaluators = [];
+        $globalPilar = [];
+        $finalScore = 0;
+
+        foreach ($penugasanCollection as $penugasan) {
+
+            $evaluatorResult = $this->calculateEvaluator($penugasan);
+
+            $evaluators[] = $evaluatorResult;
+
+            $finalScore += $evaluatorResult['weightedScore'];
+
+            foreach ($evaluatorResult['aspects'] as $pilar) {
+
+                $globalPilar[$pilar['id']]['title'] = $pilar['title'];
+                $globalPilar[$pilar['id']]['bobot'] = $pilar['bobot'];
+
+                // gunakan weightedScore PER evaluator (sudah termasuk bobot pilar)
+                $globalPilar[$pilar['id']]['nilai'][] =
+                    $pilar['weightedScore'] * $evaluatorResult['bobot'];
+            }
+        }
+
+        return [
+            'status' => $this->resolveStatus($evaluators),
+            'finalScore' => round($finalScore, 2),
+            'evaluators' => $evaluators,
+            'aspectsGlobal' => $this->calculateGlobalPilar($globalPilar),
+        ];
+    }
+
+    protected function calculateEvaluator($penugasan): array
+    {
+        $pilarData = [];
+        $totalEvaluatorScore = 0;
+
+        foreach ($penugasan->penilaian as $penilaian) {
+
+            $pilar = $penilaian->indikator?->pilar;
+
+            if (! $pilar) {
+                continue;
+            }
+
+            $pilarData[$pilar->id]['title'] = $pilar->title;
+            $pilarData[$pilar->id]['bobot'] = $pilar->bobotSkor->bobot / 100;
+            $pilarData[$pilar->id]['nilai'][] = $penilaian->nilai;
+            $pilarData[$pilar->id]['indicators'][] = [
+                'indicatorId' => $penilaian->indikator_id,
+                'indicatorTitle' => $penilaian->indikator?->title,
+                'value' => $penilaian->nilai !== null ? (float) $penilaian->nilai : null,
+            ];
+        }
+
+        $pilarResults = [];
+
+        foreach ($pilarData as $id => $data) {
+
+            $countNilai = count($data['nilai']);
+
+            if ($countNilai === 0) {
+                continue;
+            }
+
+            $avg = array_sum($data['nilai']) / $countNilai;
+            $weightedPilar = $avg * $data['bobot'];
+
+            $totalEvaluatorScore += $weightedPilar;
+
+            $pilarResults[] = [
+                'id' => $id,
+                'title' => $data['title'],
+                'averageScore' => round($avg, 2),
+                'weightedScore' => round($weightedPilar, 2),
+                'bobot' => $data['bobot'],
+                'indicators' => $data['indicators'] ?? [],
+            ];
+        }
+
+        $bobotEvaluator = $penugasan->bobotSkor->bobot / 100;
+
+        // konsisten: sum(avg × bobot_pilar) × bobot_evaluator
+        $weightedFinal = $totalEvaluatorScore * $bobotEvaluator;
+
+        return [
+            'type' => $penugasan->tipe_penilai,
+            'uuidPenugasan' => $penugasan->uuid,
+            'evaluatorName' => $penugasan->evaluators?->userable?->name ?? $penugasan->evaluators?->name,
+            'averageScore' => round($totalEvaluatorScore, 2),
+            'bobot' => $bobotEvaluator,
+            'weightedScore' => round($weightedFinal, 2),
+            'status' => $penugasan->status,
+            'notes' => $penugasan->catatan,
+            'aspects' => $pilarResults,
+        ];
+    }
+
+    protected function calculateGlobalPilar(array $globalPilar): array
+    {
+        $result = [];
+
+        foreach ($globalPilar as $id => $data) {
+
+            $countNilai = count($data['nilai'] ?? []);
+
+            if ($countNilai === 0) {
+                continue;
+            }
+
+            $total = array_sum($data['nilai']);
+
+            $result[] = [
+                'id' => $id,
+                'title' => $data['title'],
+                'averageScore' => round($total / $countNilai, 2),
+                'weightedScore' => round($total, 2),
+                'bobot' => $data['bobot'],
+            ];
+        }
+
+        return $result;
+    }
+
+    private function resolveStatus(array $evaluators): string
+    {
+        $evaluators = collect($evaluators);
+
+        if ($evaluators->isEmpty()) {
+            return 'draft';
+        }
+
+        return $evaluators->every(
+            fn($evaluator) => $evaluator['status'] === 'completed'
+        )
+            ? 'completed'
+            : 'draft';
+    }
+
+    /**
+     * @return array{
+     *     kelompokJabatanId: int|null,
+     *     kelompokJabatan: string,
+     *     columns: list<string>,
+     *     rows: list<array<string, mixed>>
+     * }
+     */
+    public function buildExportRows(): array
+    {
+        return Penugasan::with([
+            'outsourcings.jabatan.kelompokJabatan',
+            'evaluators.userable',
+            'penilaian.indikator.pilar',
+        ])
+            ->get()
+            ->groupBy(function ($penugasan) {
+                return $penugasan->outsourcings?->jabatan?->kelompokJabatan?->nama_kelompok
+                    ?? 'Tanpa Kelompok';
+            })
+            ->map(function ($items, $kelompok) {
+
+                return [
+                    'kelompokJabatan' => $kelompok,
+                    'penugasan' => $items->map(function ($penugasan) {
+
+                        $outsourcing = $penugasan->outsourcings;
+
+                        return [
+                            'id' => $penugasan->id,
+                            'outsourcing' => $outsourcing->name,
+                            'jabatan_os' => $outsourcing->jabatan?->nama_jabatan ?? '',
+                            'evaluator' => $penugasan->evaluators?->userable?->name ?? '',
+                            'jabatan_evaluator' => $penugasan->evaluators?->userable?->jabatan ?? '',
+                            'tipe_penilai' => $penugasan->tipe_penilai,
+                            'nilai' => $penugasan->penilaian->map(function ($penilaian) {
+                                return [
+                                    'indikator' => $penilaian->indikator?->title ?? '',
+                                    'pilar' => $penilaian->indikator?->pilar?->title ?? '',
+                                    'nilai' => $penilaian->nilai,
+                                ];
+                            })->values(),
+                        ];
+                    })->values(),
+                ];
+            })->values()->toArray();
+    }
+
+    /**
+     * @return list<array{indikatorId: int, columnName: string}>
+     */
+    protected function buildIndicatorColumnsForKelompok(?int $kelompokJabatanId): array
+    {
+        if ($kelompokJabatanId === null) {
+            return [];
+        }
+
+        $columns = [];
+        $pilars = Pilar::query()
+            ->orderBy('id')
+            ->with([
+                'indikator' => fn($query) => $query
+                    ->where('kelompok_jabatan_id', $kelompokJabatanId)
+                    ->orderBy('id'),
+            ])
+            ->get();
+
+        foreach ($pilars as $pilar) {
+            if ($pilar->indikator->isEmpty()) {
+                continue;
+            }
+
+            $indicatorOrder = 0;
+
+            foreach ($pilar->indikator as $indikator) {
+                $indicatorOrder++;
+                $columns[] = [
+                    'indikatorId' => $indikator->id,
+                    'columnName' => sprintf('%s - I.%d', $pilar->title, $indicatorOrder),
+                ];
+            }
+        }
+
+        return $columns;
+    }
+
+    public function calculateDetailPerPilar(
+        Collection $penugasanCollection,
+        string $outsourcingUuid
+    ): array {
+
+        $result = $this->calculate($penugasanCollection);
+
+        $aspects = [];
+
+        foreach ($result['aspectsGlobal'] as $globalPilar) {
+
+            $evaluators = [];
+
+            foreach ($result['evaluators'] as $evaluator) {
+
+                $found = collect($evaluator['aspects'])
+                    ->firstWhere('id', $globalPilar['id']);
+
+                if ($found) {
+
+                    $weighted =
+                        $found['weightedScore'] * $evaluator['bobot'];
+
+                    $evaluators[] = [
+                        'evaluatorName' => $evaluator['evaluatorName'],
+                        'evaluatorType' => $evaluator['type'],
+                        'averageScore' => $found['averageScore'],
+                        'weightedScore' => round($weighted, 2),
+                        'bobot' => $evaluator['bobot'],
+                    ];
+                } else {
+
+                    $evaluators[] = [
+                        'evaluatorName' => $evaluator['evaluatorName'],
+                        'evaluatorType' => $evaluator['type'],
+                        'averageScore' => 0,
+                        'weightedScore' => 0,
+                        'bobot' => $evaluator['bobot'],
+                    ];
+                }
+            }
+
+            $total = collect($evaluators)->sum('weightedScore');
+
+            $aspects[] = [
+                'id' => $globalPilar['id'],
+                'aspectTitle' => $globalPilar['title'],
+                'evaluators' => $evaluators,
+                'total' => round($total, 2),
+            ];
+        }
+
+        return [
+            'uuid' => $outsourcingUuid,
+            'aspects' => $aspects,
+        ];
+    }
+
+    public function calculateRawScore($penugasan): float
+    {
+        $pilarData = [];
+
+        foreach ($penugasan->penilaian as $penilaian) {
+
+            $pilar = $penilaian->indikator?->pilar;
+
+            if (! $pilar) {
+                continue;
+            }
+
+            $pilarData[$pilar->id]['bobot'] =
+                $pilar->bobotSkor->bobot / 100;
+
+            $pilarData[$pilar->id]['nilai'][] =
+                $penilaian->nilai;
+        }
+
+        $total = 0;
+
+        foreach ($pilarData as $data) {
+
+            $count = count($data['nilai']);
+
+            if ($count === 0) {
+                continue;
+            }
+
+            $avg = array_sum($data['nilai']) / $count;
+
+            $total += $avg * $data['bobot'];
+        }
+
+        return round($total, 2);
+    }
+
+    public function calculateSingleSummary($penilaian): array
+    {
+        $aspects = Pilar::with(['indikator', 'bobotSkor'])->get();
+
+        $finalTotalScore = 0;
+        $aspectResults = [];
+
+        foreach ($aspects as $aspect) {
+
+            $indikatorIds = $aspect->indikator->pluck('id');
+
+            $nilai = $penilaian
+                ->whereIn('indikator_id', $indikatorIds)
+                ->pluck('nilai')
+                ->filter(fn($n) => $n !== null)
+                ->map(fn($n) => (float) $n);
+
+            if ($nilai->isEmpty() || ! $aspect->bobotSkor) {
+                continue;
+            }
+
+            $average = round($nilai->avg(), 2);
+            $bobot = $aspect->bobotSkor->bobot / 100;
+
+            $weighted = round($average * $bobot, 2);
+
+            $finalTotalScore += $weighted;
+
+            $aspectResults[] = [
+                'title' => $aspect->title,
+                'nilai' => $average,
+                'bobot' => $bobot,
+            ];
+        }
+
+        return [
+            'finalTotalScore' => round($finalTotalScore, 2),
+            'aspects' => $aspectResults,
+        ];
+    }
+
+    public function getEvaluationData($penugasan, int $jabatanId)
+    {
+        // Get kelompok_jabatan_id from jabatan
+        $kelompokJabatanId = Jabatan::find($jabatanId, ['id', 'kelompok_jabatan_id'])?->kelompok_jabatan_id;
+
+        return Pilar::select(['id', 'title', 'bobot_skor_id'])
+            ->with([
+                'bobotSkor:id,bobot',
+                'indikator' => fn($query) => $query
+                    ->where('kelompok_jabatan_id', $kelompokJabatanId)
+                    ->orderBy('id')
+                    ->with([
+                        'behavioral' => fn($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
+                        'penilaian' => fn($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
+                    ]),
+            ])
+            ->orderBy('id')
+            ->get();
+    }
+
+    public function getDetailByPilar($penilaian): array
+    {
+        $aspects = Pilar::with(['indikator', 'bobotSkor'])->get();
+
+        $finalTotalScore = 0;
+        $aspectResults = [];
+
+        foreach ($aspects as $aspect) {
+            $indikatorIds = $aspect->indikator->pluck('id');
+
+            // kumpulkan semua nilai indikator dalam 1 pilar
+            $nilai = collect();
+            $bobot = optional($aspect->bobotSkor)->bobot;
+
+            $penilaian
+                ->whereIn('indikator_id', $indikatorIds)
+                ->each(
+                    fn($p) => $p->nilai !== null
+                        ? $nilai->push((float) $p->nilai)
+                        : null
+                );
+
+            if ($nilai->isEmpty() || $bobot === null) {
+                continue;
+            }
+
+            $average = round($nilai->avg(), 2);
+            $weighted = round($average * ($bobot / 100), 2);
+
+            $finalTotalScore += $weighted;
+
+            $aspectResults[] = [
+                'title' => $aspect->title,
+                'nilai' => $average,
+                'avg' => round($nilai->avg(), 2),
+                'bobot' => $bobot / 100,
+            ];
+        }
+
+        return [
+            'finalTotalScore' => round($finalTotalScore, 2),
+            'aspects' => $aspectResults,
+        ];
+    }
+
+    public function calculateRankingByJabatan(Collection $outsourcings): array
+    {
+        $result = [];
+
+        foreach ($outsourcings as $outsourcing) {
+            $penugasan = $outsourcing->penugasanAktif;
+
+            if (!$penugasan || $penugasan->isEmpty()) {
+                continue;
+            }
+
+            $calc = $this->calculate($penugasan);
+
+            $evaluators = collect($calc['evaluators']);
+
+            $atasan = $evaluators->firstWhere('type', 'atasan');
+            $penerima = $evaluators->firstWhere('type', 'penerima_layanan1');
+            $teman = $evaluators->firstWhere('type', 'penerima_layanan2');
+
+            $atasanScore = $atasan['weightedScore'] ?? 0;
+            $penerimaScore = $penerima['weightedScore'] ?? 0;
+            $temanScore = $teman['weightedScore'] ?? 0;
+
+            $jabatan = $outsourcing->jabatan?->nama_jabatan ?? 'Tanpa Jabatan';
+
+            $result[$jabatan][] = [
+                'nama' => $outsourcing->name,
+                'atasan' => round($atasanScore, 2),
+                'penerima_layanan' => round($penerimaScore, 2),
+                'teman' => round($temanScore, 2),
+                'total' => round($calc['finalScore'], 2),
+            ];
+        }
+
+        $final = [];
+
+        foreach ($result as $jabatan => $items) {
+            $sorted = collect($items)
+                ->sortByDesc('total')
+                ->values()
+                ->map(function ($item, $index) {
+                    $item['ranking'] = $index + 1;
+
+                    return $item;
+                });
+
+            $final[] = [
+                'jabatan' => $jabatan,
+                'ranking' => $sorted,
+            ];
+        }
+
+        return $final;
+    }
+}
