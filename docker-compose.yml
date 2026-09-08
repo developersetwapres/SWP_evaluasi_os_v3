@@ -1,39 +1,17 @@
-version: '3.9'
-
 services:
-  evaluasiosv3_app:
+  app:
     build:
-      context: .
+      context: ./
       dockerfile: Dockerfile
-
-    image: kmz_evaluasiosv3:latest
-
-    container_name: kmz_evaluasiosv3
-
+    image: evaluasios
+    container_name: evaluasios-app
     restart: unless-stopped
+    working_dir: /var/www/
+    ports:
+      - "8004:8080"
 
-    networks:
-      - app-network
-
-    environment:
-      APP_ENV: ${APP_ENV}
-      APP_DEBUG: ${APP_DEBUG}
-      APP_URL: ${APP_URL}
-      APP_KEY: ${APP_KEY}
-      DB_CONNECTION: ${DB_CONNECTION}
-      DB_HOST: ${DB_HOST}
-      DB_PORT: ${DB_PORT}
-      DB_DATABASE: ${DB_DATABASE}
-      DB_USERNAME: ${DB_USERNAME}
-      DB_PASSWORD: ${DB_PASSWORD}
-
-    volumes:
-      - public_data:/var/www/public
-
-volumes:
-  public_data:
-    name: evaluasiosv3_public
-
-networks:
-  app-network:
-    external: true
+  scheduler:
+    image: evaluasios
+    container_name: evaluasios-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/
