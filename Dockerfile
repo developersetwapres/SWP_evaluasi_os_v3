@@ -70,7 +70,13 @@ RUN npm install --legacy-peer-deps
 RUN npm run build && rm -f public/hot
 
 RUN addgroup -g 1945 -S pplsi && adduser -u 1945 -S pplsi -G pplsi
-RUN chown -R pplsi:pplsi /var/www /run /var/lib/nginx /var/log/nginx
+# RUN chown -R pplsi:pplsi /var/www /run /var/lib/nginx /var/log/nginx
+
+RUN mkdir -p /var/logs
+RUN chown -R pplsi:pplsi /var/www /run /var/lib/nginx /var/log/nginx /var/logs
+
+RUN rm -rf /var/www/storage/logs && ln -s /var/logs /var/www/storage/logs
+
 USER pplsi
 
 EXPOSE 8080
