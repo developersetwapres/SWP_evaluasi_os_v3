@@ -9,9 +9,3 @@ services:
     working_dir: /var/www/
     ports:
       - "8005:8080"
-
-  scheduler:
-    image: evaluasios
-    container_name: evaluasios-scheduler
-    restart: unless-stopped
-    working_dir: /var/www/
