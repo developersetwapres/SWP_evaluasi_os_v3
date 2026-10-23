@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Http\Requests\UpdateOutsourcingRequest;
+use App\Http\Resources\Api\IntegrationPengemudiResource;
 use App\Models\Jabatan;
 use App\Models\Pilar;
 use App\Services\Penilaian\EvaluationEngineService;
