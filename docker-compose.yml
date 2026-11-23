@@ -7,12 +7,3 @@ services:
     container_name: evaluasios-app
     restart: unless-stopped
     working_dir: /var/www/
-    ports:
-      - "8005:8080"
-
-    networks:
-      - dbmysql-network
-
-networks:
-  dbmysql-network:
-    external: true
