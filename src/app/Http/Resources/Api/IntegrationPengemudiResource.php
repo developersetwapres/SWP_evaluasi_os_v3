@@ -14,8 +14,8 @@ class IntegrationPengemudiResource extends JsonApiResource
         'name',
         'jabatan_id',
         'nip',
-        'is_active',
         'image',
+        'kode_biro'
     ];
 
     /**

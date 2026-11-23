@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    //------------------------------------------------------------------------------
+    'simdatuk' => [
+        'api_image_url' => env('SIMDATUK_API_IMAGE_URL'),
+        'token_api' => env('SIMDATUK_TOKEN_API'),
+    ],
+
 ];

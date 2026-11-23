@@ -13,7 +13,6 @@ class UserResource extends JsonApiResource
         'id',
         'email',
         'password',
-        'role',
     ];
 
     /**
