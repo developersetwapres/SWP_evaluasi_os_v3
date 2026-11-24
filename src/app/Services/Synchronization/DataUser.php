@@ -32,9 +32,17 @@ class DataUser
                 ->timeout(30)
                 ->get($apiUrl);
 
+            if ($response->status() === 429) {
+                throw new RuntimeException(
+                    'API Simdatuk membatasi request (429 Too Many Requests). '
+                        . 'Retry-After: '
+                        . ($response->header('Retry-After') ?? 'Tidak tersedia')
+                );
+            }
+
             $response->throw();
 
-            return $response->json('data');
+            return $response->json('data') ?? [];
         } catch (ConnectionException $e) {
             throw new RuntimeException(
                 'Tidak dapat terhubung ke API Simdatuk: ' . $e->getMessage(),
@@ -43,7 +51,8 @@ class DataUser
             );
         } catch (RequestException $e) {
             throw new RuntimeException(
-                'API Simdatuk mengembalikan HTTP ' . $e->response->status()
+                'API Simdatuk mengembalikan HTTP '
+                    . $e->response->status()
                     . ': ' . $e->response->body(),
                 $e->response->status(),
                 $e
