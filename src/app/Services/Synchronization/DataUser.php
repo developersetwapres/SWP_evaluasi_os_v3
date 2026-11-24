@@ -12,40 +12,60 @@ class DataUser
 {
     public function get(string $type): array
     {
-        $typeParams = $type === 'os'
-            ? '&type=3' . '&employment_type_id=19'
-            : 'type=1';
-
-        if ($typeParams === null) {
-            throw new InvalidArgumentException("Tipe pegawai tidak valid: {$type}");
+        if (!in_array($type, ['os', 'evaluators'], true)) {
+            throw new InvalidArgumentException(
+                "Tipe pegawai tidak valid: {$type}"
+            );
         }
 
         $apiUrl = config('services.simdatuk.api_image_url')
-            . '/api/employees/?'
-            . $typeParams
-            . '&employment_status=1';
+            . '/api/employees/';
 
         $token = config('services.simdatuk.token_api');
 
         try {
-            $response = Http::withToken($token)
-                ->timeout(30)
-                ->get($apiUrl);
+            if ($type === 'os') {
+                $response = Http::withToken($token)
+                    ->timeout(30)
+                    ->get($apiUrl, [
+                        'type' => 3,
+                        'employment_type_id' => 19,
+                        'employment_status' => 1,
+                    ]);
 
-            if ($response->status() === 429) {
-                throw new RuntimeException(
-                    'API Simdatuk membatasi request (429 Too Many Requests). '
-                        . 'Retry-After: '
-                        . ($response->header('Retry-After') ?? 'Tidak tersedia')
-                );
+                $response->throw();
+
+                return $response->json('data') ?? [];
             }
 
-            $response->throw();
+            // Ambil ASN (type 2)
+            $asn = Http::withToken($token)
+                ->timeout(30)
+                ->get($apiUrl, [
+                    'type' => 2,
+                    'employment_status' => 1,
+                ]);
 
-            return $response->json('data') ?? [];
+            $asn->throw();
+
+            // Ambil Non ASN (type 3)
+            $nonAsn = Http::withToken($token)
+                ->timeout(30)
+                ->get($apiUrl, [
+                    'type' => 3,
+                    'employment_status' => 1,
+                ]);
+
+            $nonAsn->throw();
+
+            return array_merge(
+                $asn->json('data') ?? [],
+                $nonAsn->json('data') ?? []
+            );
         } catch (ConnectionException $e) {
             throw new RuntimeException(
-                'Tidak dapat terhubung ke API Simdatuk: ' . $e->getMessage(),
+                'Tidak dapat terhubung ke API Simdatuk: '
+                    . $e->getMessage(),
                 0,
                 $e
             );

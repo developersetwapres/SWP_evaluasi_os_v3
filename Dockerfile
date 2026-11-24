@@ -1,7 +1,15 @@
 # Build frontend React/Vite + Laravel
 FROM php:8.5.12-cli-alpine AS frontend
 
-RUN apk add --no-cache nodejs npm icu-libs libzip libpng libjpeg-turbo freetype oniguruma icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev oniguruma-dev $PHPIZE_DEPS && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install -j"$(nproc)" bcmath exif gd intl mbstring pcntl pdo_mysql zip
+RUN apk add --no-cache \
+    nodejs npm \
+    icu-libs libzip libpng libjpeg-turbo freetype oniguruma \
+    icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev oniguruma-dev \
+    openldap-dev \
+    $PHPIZE_DEPS \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath exif gd intl ldap mbstring pcntl pdo_mysql zip
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
@@ -23,7 +31,18 @@ FROM php:8.5.12-fpm-alpine
 
 LABEL Maintainer="Pusat Pengembangan dan Layanan Sistem Informasi <TI Setwapres>"
 
-RUN apk add --no-cache nginx supervisor icu-libs libzip libpng libjpeg-turbo freetype oniguruma icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev oniguruma-dev $PHPIZE_DEPS && docker-php-ext-configure gd --with-freetype --with-jpeg && docker-php-ext-install -j"$(nproc)" bcmath exif gd intl mbstring pcntl pdo_mysql zip && apk del $PHPIZE_DEPS icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev oniguruma-dev
+RUN apk add --no-cache \
+    nginx supervisor \
+    icu-libs libzip libpng libjpeg-turbo freetype oniguruma \
+    openldap \
+    && apk add --no-cache --virtual .build-deps \
+        $PHPIZE_DEPS \
+        icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev oniguruma-dev \
+        openldap-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        bcmath exif gd intl ldap mbstring pcntl pdo_mysql zip \
+    && apk del .build-deps
 
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
@@ -41,7 +60,9 @@ COPY config/php.ini /usr/local/etc/php/conf.d/zz-app.ini
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/supervisord.conf /etc/supervisord.conf
 
-RUN mkdir -p /run /var/log/supervisor && chown -R www-data:www-data storage bootstrap/cache && chmod -R ug+rwx storage bootstrap/cache
+RUN mkdir -p /run /var/log/supervisor \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R ug+rwx storage bootstrap/cache
 
 EXPOSE 8080
 
