@@ -1,7 +1,7 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -37,6 +37,7 @@ import {
     store as storePegawai,
     update as updatePegawai,
 } from '@/routes/pegawai';
+import { datauser } from '@/routes/synchronization';
 import { tempImage } from '@/routes/upload';
 import { index } from '@/routes/user';
 import { Link, router, usePage } from '@inertiajs/react';
@@ -78,7 +79,7 @@ export default function UserManagement({
     const imageUrl = flash?.pathTemp ?? '';
 
     const [users, setUsers] = useState(initialUsers);
-    const [jumlahDinilai, setJumlahDinilai] = useState<string | null>('null');
+    const [jumlahDinilai, setJumlahDinilai] = useState<string | null>(null);
     const [selectedUser, setSelectedUser] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -120,12 +121,37 @@ export default function UserManagement({
             selectedUser == null || user.is_active == selectedUser;
 
         const matchesJumlahDinilai =
-            jumlahDinilai == null || jumlahDinilai == '1'
+            jumlahDinilai === null
+                ? true
+                : jumlahDinilai === '1'
                 ? user.jumlahDinilai > 0
-                : user;
+                : user.jumlahDinilai == 0;
 
         return matchesSearch && matchesRole && matchesJumlahDinilai;
     });
+
+
+    const handleSinkronisasi = (type: string) => {
+        router.put(datauser.url(type), {}, {
+            preserveScroll: true,
+
+            onSuccess: (page) => {
+                const flash = page.props.flash;
+
+                if (flash.success) {
+                    toast.success('Sinkronisasi Berhasil', {
+                        description: flash.success,
+                    });
+                }
+
+                if (flash.error) {
+                    toast.error('Sinkronisasi Gagal', {
+                        description: flash.error,
+                    });
+                }
+            },
+        });
+    };
 
     const handleAdd = () => {
         setEditingUser(null);
@@ -403,6 +429,7 @@ export default function UserManagement({
                         </div>
                     )}
                 </CardHeader>
+
                 <CardContent>
                     {/* Filters */}
                     <div className="mb-6 flex flex-col gap-4 sm:flex-row">
@@ -417,7 +444,7 @@ export default function UserManagement({
                         </div>
 
                         <Select
-                            value={jumlahDinilai || 'Semua Status'}
+                            value={jumlahDinilai || 'Semua Data'}
                             onValueChange={(value) =>
                                 setJumlahDinilai(
                                     value === 'Semua Data' ? null : value,
@@ -425,11 +452,11 @@ export default function UserManagement({
                             }
                         >
                             <SelectTrigger className="md:w-48">
-                                <SelectValue placeholder="Filter Status" />
+                                <SelectValue placeholder="Filter Data" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Semua Status">
-                                    Semua Status
+                                <SelectItem value="Semua Data">
+                                    Semua Data
                                 </SelectItem>
                                 <SelectItem value={'1'}>Menilai</SelectItem>
                                 <SelectItem value={'0'}>
@@ -465,6 +492,15 @@ export default function UserManagement({
                             <Plus className="h-4 w-4" />
                             <span>Tambah User Os</span>
                         </Button>
+
+
+                        <Button
+                            onClick={() => handleSinkronisasi('os')}
+                            className="flex items-center space-x-2"
+                        >
+                            <Plus className="h-4 w-4" />
+                            <span>Sinkronisasi Os</span>
+                        </Button>
                     </div>
 
                     {/* Users Grid */}
@@ -481,7 +517,7 @@ export default function UserManagement({
                                                 <Avatar className="h-15 w-15">
                                                     <AvatarImage
                                                         src={
-                                                            `/storage/${user.image}` ||
+                                                            user.image ||
                                                             '/placeholder.svg'
                                                         }
                                                         alt={user.name}
@@ -594,7 +630,7 @@ export default function UserManagement({
                                                     <Avatar className="h-12 w-12">
                                                         <AvatarImage
                                                             src={
-                                                                `/storage/${user.image}` ||
+                                                                user.image ||
                                                                 '/placeholder.svg'
                                                             }
                                                             alt={user.name}

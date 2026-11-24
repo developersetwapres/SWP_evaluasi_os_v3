@@ -4,6 +4,7 @@ use App\Http\Controllers\MasterPegawaiController;
 use App\Http\Controllers\OutsourcingController;
 use App\Http\Controllers\PenilaianController;
 use App\Http\Controllers\PenugasanController;
+use App\Http\Controllers\Synchronization\UserController as SynchronizationUserController;
 use App\Http\Controllers\UserController;
 use App\Services\Uploadfile\FotoUserService;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +50,8 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::post('/dashboard/penugasan-peer/reset/{penugasan:uuid}', [PenugasanController::class, 'reset'])->name('penugasan.reset');
 
     Route::post('/upload-temp-image', [FotoUserService::class, 'uploadTempImage'])->name('upload.tempImage');
+
+    Route::put('synchronization-data-user/{type}', [SynchronizationUserController::class, 'update'])->name('synchronization.datauser');
 });
 
 require __DIR__.'/settings.php';

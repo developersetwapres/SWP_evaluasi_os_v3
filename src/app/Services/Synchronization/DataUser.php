@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Services\Synchronization;
+
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\ConnectionException;
+use InvalidArgumentException;
+use RuntimeException;
+
+class DataUser
+{
+    public function get(string $type): array
+    {
+        $typeParams = [
+            'asn' => 1,
+            'non-asn' => 2,
+            'os' => 3,
+        ][$type] ?? null;
+
+        if ($typeParams === null) {
+            throw new InvalidArgumentException("Tipe pegawai tidak valid: {$type}");
+        }
+
+        $apiUrl = config('services.simdatuk.api_image_url')
+            . '/api/employees/?type=' . $typeParams . '&employment_type_id=19&employment_status=1';
+
+        $token = config('services.simdatuk.token_api');
+
+        try {
+            $response = Http::withToken($token)
+                ->timeout(30)
+                ->get($apiUrl);
+
+            $response->throw();
+
+            return $response->json('data');
+
+        } catch (ConnectionException $e) {
+            throw new RuntimeException(
+                'Tidak dapat terhubung ke API Simdatuk: ' . $e->getMessage(),
+                0,
+                $e
+            );
+
+        } catch (RequestException $e) {
+            throw new RuntimeException(
+                'API Simdatuk mengembalikan HTTP ' . $e->response->status()
+                . ': ' . $e->response->body(),
+                $e->response->status(),
+                $e
+            );
+        }
+    }
+}

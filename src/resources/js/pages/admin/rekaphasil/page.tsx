@@ -166,7 +166,7 @@ export default function ResultsRecapPage({
                                             <img
                                                 src={
                                                     result.image
-                                                        ? `/storage/${result.image}`
+                                                        ? result.image
                                                         : '/placeholder.svg'
                                                 }
                                                 alt={result.name}
