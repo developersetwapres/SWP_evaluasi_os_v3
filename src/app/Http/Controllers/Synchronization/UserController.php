@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Synchronization;
 
 use App\Http\Controllers\Controller;
+use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
 use App\Services\Synchronization\DataUser;
 use Illuminate\Http\RedirectResponse;
@@ -24,21 +25,21 @@ class UserController extends Controller
                 ->unique()
                 ->values();
 
-            $outsourcings = Outsourcing::whereIn('nip', $nips)
-                ->get()
-                ->keyBy('nip');
+            $osOrPegawai = $type === 'os'
+                ? Outsourcing::whereIn('nip', $nips)->get()->keyBy('nip')
+                : MasterPegawai::whereIn('nip', $nips)->get()->keyBy('nip');
 
             $updated = 0;
 
-            DB::transaction(function () use ($users, $outsourcings, &$updated) {
+            DB::transaction(function () use ($users, $osOrPegawai, &$updated) {
                 foreach ($users as $user) {
                     $nip = $user['employee_id_number'] ?? null;
 
-                    if (!$nip || !isset($outsourcings[$nip])) {
+                    if (!$nip || !isset($osOrPegawai[$nip])) {
                         continue;
                     }
 
-                    $outsourcing = $outsourcings[$nip];
+                    $outsourcing = $osOrPegawai[$nip];
 
                     $outsourcing->name = $user['name'];
                     $outsourcing->image = $user['photo_profile'] ?? $outsourcing->image;
@@ -49,13 +50,14 @@ class UserController extends Controller
                 }
             });
 
+            $label = $type === 'os' ? 'Outsourcing' : 'Pegawai';
+
             return back()->with(
                 'success',
-                "Sinkronisasi berhasil. {$updated} data Outsourcing diperbarui."
+                "Sinkronisasi berhasil. {$updated} data {$label} diperbarui."
             );
-
         } catch (Throwable $e) {
-            Log::error('Sinkronisasi data Outsourcing gagal', [
+            Log::error('Sinkronisasi data ' . ($type == 'os' ? 'Outsourcing' : 'Pegawai') . ' gagal', [
                 'type' => $type,
                 'message' => $e->getMessage(),
                 'exception' => $e,

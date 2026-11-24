@@ -1,7 +1,8 @@
 'use client';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -124,33 +125,36 @@ export default function UserManagement({
             jumlahDinilai === null
                 ? true
                 : jumlahDinilai === '1'
-                ? user.jumlahDinilai > 0
-                : user.jumlahDinilai == 0;
+                  ? user.jumlahDinilai > 0
+                  : user.jumlahDinilai == 0;
 
         return matchesSearch && matchesRole && matchesJumlahDinilai;
     });
 
-
     const handleSinkronisasi = (type: string) => {
-        router.put(datauser.url(type), {}, {
-            preserveScroll: true,
+        router.put(
+            datauser.url(type),
+            {},
+            {
+                preserveScroll: true,
 
-            onSuccess: (page) => {
-                const flash = page.props.flash;
+                onSuccess: (page) => {
+                    const flash = page.props.flash;
 
-                if (flash.success) {
-                    toast.success('Sinkronisasi Berhasil', {
-                        description: flash.success,
-                    });
-                }
+                    if (flash.success) {
+                        toast.success('Sinkronisasi Berhasil', {
+                            description: flash.success,
+                        });
+                    }
 
-                if (flash.error) {
-                    toast.error('Sinkronisasi Gagal', {
-                        description: flash.error,
-                    });
-                }
+                    if (flash.error) {
+                        toast.error('Sinkronisasi Gagal', {
+                            description: flash.error,
+                        });
+                    }
+                },
             },
-        });
+        );
     };
 
     const handleAdd = () => {
@@ -443,63 +447,82 @@ export default function UserManagement({
                             />
                         </div>
 
-                        <Select
-                            value={jumlahDinilai || 'Semua Data'}
-                            onValueChange={(value) =>
-                                setJumlahDinilai(
-                                    value === 'Semua Data' ? null : value,
-                                )
-                            }
-                        >
-                            <SelectTrigger className="md:w-48">
-                                <SelectValue placeholder="Filter Data" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Semua Data">
-                                    Semua Data
-                                </SelectItem>
-                                <SelectItem value={'1'}>Menilai</SelectItem>
-                                <SelectItem value={'0'}>
-                                    Tidak menilai
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
+                        {isEvaluator && (
+                            <Select
+                                value={jumlahDinilai || 'Semua Data'}
+                                onValueChange={(value) =>
+                                    setJumlahDinilai(
+                                        value === 'Semua Data' ? null : value,
+                                    )
+                                }
+                            >
+                                <SelectTrigger className="md:w-48">
+                                    <SelectValue placeholder="Filter Data" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Semua Data">
+                                        Semua Data
+                                    </SelectItem>
+                                    <SelectItem value={'1'}>Menilai</SelectItem>
+                                    <SelectItem value={'0'}>
+                                        Tidak menilai
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                        )}
 
-                        <Select
-                            value={selectedUser || 'Semua Status'}
-                            onValueChange={(value) =>
-                                setSelectedUser(
-                                    value === 'Semua Status' ? null : value,
-                                )
-                            }
-                        >
-                            <SelectTrigger className="md:w-48">
-                                <SelectValue placeholder="Filter Status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Semua Status">
-                                    Semua Status
-                                </SelectItem>
-                                <SelectItem value={'1'}>Aktif</SelectItem>
-                                <SelectItem value={'0'}>Non Aktif</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        {isOutsourcing && (
+                            <>
+                                <Select
+                                    value={selectedUser || 'Semua Status'}
+                                    onValueChange={(value) =>
+                                        setSelectedUser(
+                                            value === 'Semua Status'
+                                                ? null
+                                                : value,
+                                        )
+                                    }
+                                >
+                                    <SelectTrigger className="md:w-48">
+                                        <SelectValue placeholder="Filter Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Semua Status">
+                                            Semua Status
+                                        </SelectItem>
+                                        <SelectItem value={'1'}>
+                                            Aktif
+                                        </SelectItem>
+                                        <SelectItem value={'0'}>
+                                            Non Aktif
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Button
+                                    onClick={handleAdd}
+                                    className="flex items-center space-x-2"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span>Tambah User Os</span>
+                                </Button>
+                            </>
+                        )}
 
                         <Button
-                            onClick={handleAdd}
+                            onClick={() =>
+                                handleSinkronisasi(
+                                    isOutsourcing ? 'os' : 'evaluators',
+                                )
+                            }
                             className="flex items-center space-x-2"
                         >
                             <Plus className="h-4 w-4" />
-                            <span>Tambah User Os</span>
-                        </Button>
-
-
-                        <Button
-                            onClick={() => handleSinkronisasi('os')}
-                            className="flex items-center space-x-2"
-                        >
-                            <Plus className="h-4 w-4" />
-                            <span>Sinkronisasi Os</span>
+                            <span>
+                                {isOutsourcing
+                                    ? 'Sinkronisasi Os'
+                                    : 'Sinkronisasi Pegawai'}
+                            </span>
                         </Button>
                     </div>
 
