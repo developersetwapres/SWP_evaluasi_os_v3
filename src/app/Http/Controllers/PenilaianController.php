@@ -35,7 +35,7 @@ class PenilaianController extends Controller
      */
     public function create(Penugasan $penugasan, EvaluationEngineService $engine): Response|RedirectResponse
     {
-        abort_if(! $penugasan->outsourcings, 404);
+        abort_if(!$penugasan->outsourcings, 404);
 
         if ($penugasan->evaluators->id !== Auth::id()) {
             return to_route('home');
@@ -208,7 +208,7 @@ class PenilaianController extends Controller
             )
             ->orderBy('nama_biro', 'asc')
             ->get()
-            ->map(fn (Biro $biro): array => [
+            ->map(fn(Biro $biro): array => [
                 'kodeBiro' => $biro->kode_biro,
                 'namaBiro' => $biro->nama_biro,
             ])

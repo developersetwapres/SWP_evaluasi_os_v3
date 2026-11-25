@@ -170,6 +170,7 @@ export default function ViewScore({
                                     </CardContent>
                                 </Card>
                             )}
+
                             {developmentArea && (
                                 <Card className="gap-0 border-l-4 border-l-yellow-500 py-2">
                                     <CardHeader className="bg-yellow-50 py-2">
@@ -189,6 +190,7 @@ export default function ViewScore({
                                     </CardContent>
                                 </Card>
                             )}
+
                             {/* Overall Notes */}
                             {overallNotes && (
                                 <Card className="gap-0 border-l-4 border-l-yellow-500 py-2">

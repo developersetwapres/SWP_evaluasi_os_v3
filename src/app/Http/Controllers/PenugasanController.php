@@ -15,6 +15,7 @@ use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
 use App\Models\Penugasan;
 use App\Models\Siklus;
+use App\Services\Penilaian\EvaluationEngineService;
 use App\Services\Penilaian\SaranPerbaikanEvaluatorService;
 use App\Services\Penugasan\PenugasanDashboardService;
 use Illuminate\Http\RedirectResponse;
@@ -149,7 +150,7 @@ class PenugasanController extends Controller
         //
     }
 
-    public function home(PenugasanDashboardService $service): Response
+    public function homex(PenugasanDashboardService $service): Response
     {
         $siklus = $service->activeSiklus();
 
@@ -158,6 +159,138 @@ class PenugasanController extends Controller
                 $service->evaluatorHomeAssignments(Auth::user())
             )->resolve(),
             'siklusAktif' => $siklus?->title ?? 'Tidak ada siklus aktif',
+        ];
+
+        return Inertia::render('evaluator/page', $data);
+    }
+
+    public function home(EvaluationEngineService $evaluationEngine): Response
+    {
+        $user = Auth::user();
+
+        // 1. Ambil semua penugasan milik user login (lengkap untuk hitung nilai)
+        $myPenugasans = $user
+            ->penugasan()
+            ->with([
+                'siklus',
+                'outsourcings.jabatan',
+                'penilaian.indikator.pilar.bobotSkor',
+                'bobotSkor',
+                'evaluators.userable',
+            ])
+            ->whereHas('siklus', fn($q) => $q->where('is_active', false))
+            ->get();
+
+        // 2. Group berdasarkan siklus
+        $semesterHistory = $myPenugasans
+            ->groupBy('siklus_id')
+            ->map(function ($penugasanBySiklus) use ($evaluationEngine) {
+                $siklus = $penugasanBySiklus->first()->siklus;
+
+
+                // 3. Di dalam siklus, group lagi berdasarkan outsourcing
+                $employees = $penugasanBySiklus
+                    ->groupBy('outsourcing_id')
+                    ->map(function ($penugasanByOutsourcing) use ($evaluationEngine) {
+                        $first = $penugasanByOutsourcing->first();
+
+                        return [
+                            'id' => $first->outsourcings->id,
+                            'uuid' => $first->uuid,
+                            'outsourcings' => [
+                                'name' => $first->outsourcings->name,
+                                'jabatan' => optional($first->outsourcings->jabatan)->nama_jabatan,
+                                'image' => $first->outsourcings->image,
+                            ],
+                            'status' => $first->status,
+                            'tipe_penilai' => $first->tipe_penilai,
+                            'score' => $evaluationEngine->calculateRawScore($first),
+                        ];
+                    })
+                    ->values();
+
+
+                return [
+                    'id' => $siklus->uuid,
+                    'name' => $siklus->title,
+                    'period' => sprintf(
+                        '%s - %s',
+                        optional($siklus->tanggal_mulai)->translatedFormat('F Y'),
+                        optional($siklus->tanggal_selesai)->translatedFormat('F Y'),
+                    ),
+                    'status' => $siklus->is_active ? 'active' : 'completed',
+                    'employees' => $employees,
+                ];
+            })
+            ->values();
+
+        //----------------------------------------------------------
+
+        /** @var Outsourcing $outsourcing */
+        $outsourcing = $user->userable;
+
+        $siklusAktif = Siklus::query()
+            ->select(['id', 'title'])
+            ->where('is_active', true)
+            ->first();
+
+        $evaluatorsHistory = Penugasan::query()
+            ->where('outsourcing_id', $outsourcing->id)
+            ->whereNot('siklus_id', $siklusAktif->id)
+            ->with([
+                'bobotSkor',
+                'evaluators.userable',
+                'penilaian.indikator.pilar.bobotSkor',
+            ])
+            ->get();
+
+        $penugasan = Penugasan::query()
+            ->where('outsourcing_id', $outsourcing->id)
+            ->where('siklus_id', $siklusAktif->id)
+            ->with([
+                'bobotSkor',
+                'evaluators.userable',
+                'penilaian.indikator.pilar.bobotSkor',
+            ])
+            ->get();
+
+
+        $hasil = $evaluationEngine->calculate($penugasan)['evaluators'];
+
+        $hasilHistory = $evaluatorsHistory
+            ->groupBy('siklus_id')
+            ->map(function ($penugasanBySiklus) use ($evaluationEngine) {
+                $siklus = $penugasanBySiklus->first()->siklus;
+
+                $evaluators = $evaluationEngine->calculate($penugasanBySiklus)['evaluators'];
+
+                return [
+                    'id' => $siklus->uuid,
+                    'name' => $siklus->title,
+                    'period' => sprintf(
+                        '%s - %s',
+                        optional($siklus->tanggal_mulai)->translatedFormat('F Y'),
+                        optional($siklus->tanggal_selesai)->translatedFormat('F Y')
+                    ),
+                    'status' => $siklus->is_active ? 'active' : 'completed',
+                    'evaluators' => $evaluators,
+                ];
+            })
+            ->values();
+
+        $typeUser = Auth::user()->userable_type === Outsourcing::class ? 'outsourcing' : 'pegawai';
+
+        $data = [
+            'semesterHistory' => $semesterHistory,
+            'penugasanPeer' => Auth::user()->penugasan()
+                ->select(['outsourcing_id', 'siklus_id', 'status', 'uuid', 'tipe_penilai'])
+                ->whereHas('siklus', fn($q) => $q->where('is_active', true))
+                ->with(['siklus', 'outsourcings'])
+                ->get(),
+            'resultScore' => $typeUser == 'outsourcing' ? $hasil : null,
+            'resultScoreHistory' => $typeUser == 'outsourcing' ? $hasilHistory : null,
+            'typeUser' => $typeUser,
+            'siklusAktif' => $siklusAktif->title
         ];
 
         return Inertia::render('evaluator/page', $data);
