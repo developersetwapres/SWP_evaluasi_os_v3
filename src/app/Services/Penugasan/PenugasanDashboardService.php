@@ -32,7 +32,7 @@ class PenugasanDashboardService
                     ->where('siklus_id', $siklus->id)
                     ->with([
                         'evaluators' => fn ($evaluatorQuery) => $evaluatorQuery
-                            ->select(['id', 'name', 'email', 'userable_id', 'userable_type', 'nip']),
+                            ->select(['id', 'email', 'userable_id', 'userable_type', 'nip']),
                         'evaluators.userable' => fn (MorphTo $morphTo) => $morphTo->constrain([
                             Outsourcing::class => fn($query) => $query
                                 ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan_id'])
@@ -82,7 +82,7 @@ class PenugasanDashboardService
                     ->whereHas('siklus', fn ($siklus) => $siklus->where('is_active', true))
                     ->with([
                         'evaluators' => fn ($evaluatorQuery) => $evaluatorQuery
-                            ->select(['id', 'name', 'email', 'userable_id', 'userable_type', 'nip']),
+                            ->select(['id', 'email', 'userable_id', 'userable_type', 'nip']),
                         'evaluators.userable' => fn (MorphTo $morphTo) => $morphTo->constrain([
                             Outsourcing::class => fn($query) => $query
                                 ->select(['id', 'uuid', 'nip', 'name', 'image']),
@@ -104,7 +104,7 @@ class PenugasanDashboardService
                 'outsourcings:id,name,uuid,image,jabatan_id,nip',
                 'outsourcings.jabatan:id,nama_jabatan',
                 'evaluators' => fn ($query) => $query
-                    ->select(['id', 'name', 'email', 'userable_id', 'userable_type', 'nip']),
+                    ->select(['id', 'email', 'userable_id', 'userable_type', 'nip']),
                 'evaluators.userable' => fn (MorphTo $morphTo) => $morphTo->constrain([
                     Outsourcing::class => fn($query) => $query
                         ->select(['id', 'uuid', 'nip', 'name', 'image']),

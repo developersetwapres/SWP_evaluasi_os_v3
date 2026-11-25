@@ -22,7 +22,7 @@ class SaranPerbaikanEvaluatorService
                 'outsourcings.penugasan' => fn($query) => $query
                     ->select(['id','uuid','siklus_id','outsourcing_id','penilai_id','tipe_penilai','catatan','area_pengembangan','kekuatan_teramati']),
                 'outsourcings.penugasan.evaluators' => fn($query) => $query
-                    ->select(['id','name','email','userable_id','userable_type','nip']),
+                    ->select(['id','email','userable_id','userable_type','nip']),
                 'outsourcings.penugasan.evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
                     MasterPegawai::class => fn($query) => $query
                         ->select(['id','uuid','nip','name','image','jabatan']),

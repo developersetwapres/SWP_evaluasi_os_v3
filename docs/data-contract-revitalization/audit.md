@@ -614,3 +614,54 @@ Frontend lint was executed on the affected Phase 3 file set. It remains non-gree
 - The hard-coded `siklus_id=1` user-management behavior remains intentionally unchanged.
 - The legacy registration view and route registration remain inconsistent; registration is disabled in Fortify configuration but a registration test still invokes the route.
 - The full Laravel suite remains red due to unrelated stale fixtures/setup and existing role/seeder issues.
+
+## Q. Schema-First Investigation and SQL Regression Remediation
+
+### Q1. Verified runtime schema
+
+Migration parity was verified read-only against the configured MySQL database:
+
+- MySQL `8.0.46`
+- Database `SWP_evaluasi_os_v3`
+- All 19 project migrations reported as ran.
+- Live `users` columns exactly match the cumulative migration schema.
+- A dedicated [database-schema.md](./database-schema.md) records the verified table map and relationships.
+
+The live `users` table has no `name` column. Its 17 columns are `id`, `userable_id`, `userable_type`, `nip`, `nip_sso`, `is_ldap`, `email`, `role`, `password`, `two_factor_secret`, `two_factor_recovery_codes`, `two_factor_confirmed_at`, `is_active`, `email_verified_at`, `remember_token`, `created_at`, and `updated_at`.
+
+### Q2. Exact SQL root cause
+
+Phase 2 added `users` eager-load selections containing `name`, producing:
+
+```sql
+SELECT id, name, email, userable_id, userable_type, nip
+FROM users
+WHERE users.id IN (...)
+```
+
+The surrounding `$os->name` rekap mapping was not responsible. The invalid column was introduced by `User` relation eager-loading selections in rekap, ranking, detail, status, Saran, and evaluation-form paths.
+
+Display names belong to:
+
+- `master_pegawais.name` for employee evaluators.
+- `outsourcings.name` for outsourcing evaluators.
+
+### Q3. Correction
+
+Every affected `evaluators`/`evaluators.userable` path now selects only existing `users` columns:
+
+```php
+select(['id', 'email', 'userable_id', 'userable_type', 'nip'])
+```
+
+Polymorphic constraints continue to select `name`, `uuid`, `nip`, `image`, and required position/biro fields from the appropriate polymorphic model.
+
+No migration or database record was changed.
+
+### Q4. Schema-remediation validation
+
+- Targeted Laravel suite: 9 tests passed, 100 assertions.
+- `npm run types:check`: passed.
+- `npm run build`: passed.
+- Live `Schema::getColumnListing('users')`: matched migrations and returned no `name`.
+- All remaining application `select()` results were inspected; no `users` eager-load selection still combines `name` with `email`.

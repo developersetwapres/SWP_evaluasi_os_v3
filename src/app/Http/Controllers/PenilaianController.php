@@ -55,7 +55,7 @@ class PenilaianController extends Controller
         $jabatanId = $outsourcing->jabatan_id;
 
         $evaluatorUser = $penugasan->evaluators()
-            ->select(['id','name','email','userable_id','userable_type','nip'])
+            ->select(['id','email','userable_id','userable_type','nip'])
             ->with([
                 'userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
                     Outsourcing::class => fn($query) => $query
@@ -194,7 +194,7 @@ class PenilaianController extends Controller
                     ->with([
                         'bobotSkor:id,bobot',
                         'evaluators' => fn($query) => $query
-                            ->select(['id','name','email','userable_id','userable_type','nip']),
+                            ->select(['id','email','userable_id','userable_type','nip']),
                         'evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
                             MasterPegawai::class => fn($query) => $query
                                 ->select(['id','uuid','nip','name','image','jabatan']),
@@ -290,7 +290,7 @@ class PenilaianController extends Controller
                 ->with([
                     'bobotSkor:id,bobot',
                     'evaluators' => fn($query) => $query
-                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                        ->select(['id','email','userable_id','userable_type','nip']),
                     'evaluators.userable',
                     'penilaian' => fn($query) => $query
                         ->select(['id','uuid','penugasan_id','indikator_id','nilai']),

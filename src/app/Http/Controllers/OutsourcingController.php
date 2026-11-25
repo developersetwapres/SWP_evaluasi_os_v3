@@ -152,7 +152,7 @@ class OutsourcingController extends Controller
                 ->with([
                     'bobotSkor:id,bobot',
                     'evaluators' => fn($query) => $query
-                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                        ->select(['id','email','userable_id','userable_type','nip']),
                     'evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
                         MasterPegawai::class => fn($query) => $query
                             ->select(['id','uuid','nip','name','image','jabatan']),
@@ -198,7 +198,7 @@ class OutsourcingController extends Controller
                 ->with([
                     'bobotSkor:id,bobot',
                     'evaluators' => fn($query) => $query
-                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                        ->select(['id','email','userable_id','userable_type','nip']),
                     'evaluators.userable',
                     'penilaian' => fn($query) => $query
                         ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
@@ -226,7 +226,7 @@ class OutsourcingController extends Controller
                 ->select(['id','uuid','siklus_id','outsourcing_id','penilai_id','tipe_penilai','catatan','area_pengembangan','kekuatan_teramati'])
                 ->with([
                     'evaluators' => fn($query) => $query
-                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                        ->select(['id','email','userable_id','userable_type','nip']),
                     'evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
                         MasterPegawai::class => fn($query) => $query
                             ->select(['id','uuid','nip','name','image','jabatan']),

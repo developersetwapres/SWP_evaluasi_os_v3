@@ -164,7 +164,7 @@ class EvaluationEngineService
             'outsourcings.jabatan:id,nama_jabatan,kelompok_jabatan_id',
             'outsourcings.jabatan.kelompokJabatan:id,nama_kelompok',
             'evaluators' => fn($query) => $query
-                ->select(['id','name','email','userable_id','userable_type','nip']),
+                ->select(['id','email','userable_id','userable_type','nip']),
             'evaluators.userable',
             'penilaian' => fn($query) => $query
                 ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
