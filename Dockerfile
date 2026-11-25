@@ -54,7 +54,9 @@ RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --opt
 
 COPY --from=frontend /app/public/build/ /var/www/public/build/
 
-COPY config/.env /var/www/.env
+COPY --chown=www-data:www-data config/.env /var/www/.env
+RUN chmod 640 /var/www/.env
+
 COPY config/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
 COPY config/php.ini /usr/local/etc/php/conf.d/zz-app.ini
 COPY config/nginx.conf /etc/nginx/nginx.conf
