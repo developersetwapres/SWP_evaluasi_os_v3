@@ -1,4 +1,4 @@
-FROM alpine:3.24
+FROM alpine:3.23
 LABEL Maintainer="Pusat Pengembangan dan Layanan Sistem Informasi <setnegapps@setneg.go.id>"
 
 WORKDIR /var/www
@@ -47,7 +47,7 @@ ENV TZ Asia/Jakarta
 RUN mkdir /data-setneg-point
 
 COPY ./config/nginx.conf /etc/nginx/nginx.conf
-COPY ./config/fpm-pool.conf /etc/php85/php-fpm.d/www.conf
+COPY ./config/fpm-pool.conf /etc/php84/php-fpm.d/www.conf
 COPY ./config/php.ini /etc/php84/conf.d/custom.ini
 COPY ./config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
