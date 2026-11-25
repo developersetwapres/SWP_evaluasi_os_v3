@@ -1,76 +1,73 @@
-# Build frontend React/Vite + Laravel
-FROM php:8.5.12-cli-alpine AS frontend
-
-RUN apk add --no-cache \
-    nodejs npm \
-    icu-libs libzip libpng libjpeg-turbo freetype oniguruma \
-    icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev oniguruma-dev \
-    openldap-dev \
-    $PHPIZE_DEPS \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" \
-        bcmath exif gd intl ldap mbstring pcntl pdo_mysql zip
-
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
-
-WORKDIR /app
-
-COPY src/ ./
-
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
-
-RUN npm ci
-
-COPY config/.env /app/.env
-
-RUN npm run build
-
-
-# Laravel 13 + PHP-FPM + Nginx
-FROM php:8.5.12-fpm-alpine
-
-LABEL Maintainer="Pusat Pengembangan dan Layanan Sistem Informasi <TI Setwapres>"
-
-RUN apk add --no-cache \
-    nginx supervisor \
-    icu-libs libzip libpng libjpeg-turbo freetype oniguruma \
-    openldap \
-    && apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS \
-        icu-dev libzip-dev libpng-dev libjpeg-turbo-dev freetype-dev oniguruma-dev \
-        openldap-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" \
-        bcmath exif gd intl ldap mbstring pcntl pdo_mysql zip \
-    && apk del .build-deps
-
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+FROM alpine:3.22
+LABEL Maintainer="Pusat Pengembangan dan Layanan Sistem Informasi <setnegapps@setneg.go.id>"
 
 WORKDIR /var/www
 
-COPY src/ ./
+RUN apk add --no-cache \
+  curl \
+  nginx \
+  nodejs \
+  npm \
+  php84 \
+  php84-bcmath \
+  php84-ctype \
+  php84-curl \
+  php84-dom \
+  php84-fileinfo \
+  php84-fpm \
+  php84-gd \
+  php84-iconv \
+  php84-intl \
+  php84-ldap \
+  php84-mbstring \
+  php84-mysqli \
+  php84-opcache \
+  php84-openssl \
+  php84-pdo \
+  php84-pdo_mysql \
+  php84-pdo_pgsql \
+  php84-pgsql \
+  php84-pecl-imagick \
+  php84-phar \
+  php84-session \
+  php84-simplexml \
+  php84-tokenizer \
+  php84-xml \
+  php84-xmlreader \
+  php84-xmlwriter \
+  php84-zip \
+  supervisor \
+  tzdata \
+  postgresql-client
 
-RUN composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 
-COPY --from=frontend /app/public/build/ /var/www/public/build/
+ENV TZ Asia/Jakarta
 
-COPY --chown=www-data:www-data config/.env /var/www/.env
-RUN chmod 640 /var/www/.env
+RUN mkdir /data-setneg-point
 
-COPY config/fpm-pool.conf /usr/local/etc/php-fpm.d/www.conf
-COPY config/php.ini /usr/local/etc/php/conf.d/zz-app.ini
-COPY config/nginx.conf /etc/nginx/nginx.conf
-COPY config/supervisord.conf /etc/supervisord.conf
+COPY ./config/nginx.conf /etc/nginx/nginx.conf
+COPY ./config/fpm-pool.conf /etc/php84/php-fpm.d/www.conf
+COPY ./config/php.ini /etc/php84/conf.d/custom.ini
+COPY ./config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+COPY src/ /var/www
+
+COPY ./config/.env /var/www
+
+RUN ln -s /usr/bin/php84 /usr/bin/php
+RUN composer install --optimize-autoloader --no-dev
+RUN php artisan storage:link
+
+RUN npm install --legacy-peer-deps
+RUN npm run build
 
 RUN addgroup -g 1945 -S pplsi && adduser -u 1945 -S pplsi -G pplsi
-
-RUN mkdir -p /run /var/log/supervisor \
-    && chown -R pplsi:pplsi storage bootstrap/cache \
-    && chmod -R ug+rwx storage bootstrap/cache
-
-RUN chown -R pplsi:pplsi /var/www /run /var/lib/nginx /var/log/nginx
+RUN chown -R pplsi:pplsi /var/www /run /var/lib/nginx /var/log/nginx /data-setneg-point
 USER pplsi
 
 EXPOSE 8080
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+HEALTHCHECK --timeout=10s CMD curl --silent --fail http://127.0.0.1:8080/fpm-ping
