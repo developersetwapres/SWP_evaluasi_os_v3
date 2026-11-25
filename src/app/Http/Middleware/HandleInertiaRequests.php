@@ -6,6 +6,7 @@ use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -37,22 +38,31 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
+        if ($user) {
+            $user->load([
+                'userable' => function (MorphTo $morphTo): void {
+                    $morphTo->constrain([
+                        MasterPegawai::class => fn($query) => $query
+                            ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan', 'kode_biro'])
+                            ->with('biro:kode_biro,nama_biro'),
+                        Outsourcing::class => fn($query) => $query
+                            ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan_id', 'kode_biro'])
+                            ->with([
+                                'jabatan:id,nama_jabatan',
+                                'biro:kode_biro,nama_biro',
+                            ]),
+                    ]);
+                },
+            ]);
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $request->user()?->load(
-                    [
-                        'userable' => function ($query) {
-                            $query->morphWith(
-                                [
-                                    MasterPegawai::class => ['biro'],
-                                    Outsourcing::class => ['biro', 'jabatan'],
-                                ]
-                            );
-                        }
-                    ]
-                ),
+                'user' => $user,
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'flash' => [

@@ -25,26 +25,17 @@ import {
 import { dashboard } from '@/routes';
 import { exportMentahan, rekapaspekevaluator } from '@/routes/os';
 import { getScoreColor } from '@/utils/score';
-
-type RecapFilters = {
-    search: string;
-    kodeBiro: string | null;
-};
-
-type Unit = {
-    kodeBiro: string;
-    namaBiro: string | null;
-};
+import type {
+    EvaluatorScore,
+    RekapHasilPageProps,
+    RekapResult,
+} from '@/types';
 
 export default function ResultsRecapPage({
     evaluationResults,
     filters,
     units,
-}: {
-    evaluationResults: any;
-    filters: RecapFilters;
-    units: Unit[];
-}) {
+}: RekapHasilPageProps) {
     const [searchTerm, setSearchTerm] = useState(filters.search);
     const [filterUnit, setFilterUnit] = useState(filters.kodeBiro ?? 'all');
     const results = evaluationResults ?? [];
@@ -155,7 +146,7 @@ export default function ResultsRecapPage({
 
                     {/* Results Grid */}
                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {results.map((result: any) => (
+                        {results.map((result: RekapResult) => (
                             <Card
                                 key={result.id}
                                 className="gap-0 transition-shadow hover:shadow-lg"
@@ -232,8 +223,8 @@ export default function ResultsRecapPage({
                                         <div className="space-y-1">
                                             {result?.evaluatorScores?.map(
                                                 (
-                                                    evaluator: any,
-                                                    index: any,
+                                                    evaluator: EvaluatorScore,
+                                                    index: number,
                                                 ) => (
                                                     <div
                                                         key={index}

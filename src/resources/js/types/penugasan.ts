@@ -2,11 +2,7 @@ export type PenugasanPeer = {
     uuid: string;
     name: string;
     image: string;
-    nrp_os: string;
-    jabatan_id: number;
     nama_jabatan: string;
-    unit_kerja: string;
-    status: string;
     biro?: string;
     evaluators?: {
         atasan?: {

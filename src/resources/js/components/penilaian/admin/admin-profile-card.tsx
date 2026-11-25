@@ -25,7 +25,9 @@ export function AdminProfileCard() {
                             {user.userable?.name}
                         </CardTitle>
                         <CardDescription className="text-blue-100">
-                            {user.userable?.jabatan}
+                            {typeof user.userable?.jabatan === 'string'
+                                ? user.userable.jabatan
+                                : user.userable?.jabatan?.nama_jabatan}
                         </CardDescription>
                     </div>
                 </div>
@@ -40,7 +42,7 @@ export function AdminProfileCard() {
                         <div className="flex items-center space-x-2">
                             <span className="font-medium">Role:</span>
 
-                            {user.role.map((r: string, i: number) => {
+                            {(user.role ?? []).map((r: string, i: number) => {
                                 const role = r.toLowerCase();
 
                                 const href =
@@ -61,7 +63,7 @@ export function AdminProfileCard() {
                                         className="hover:underline"
                                     >
                                         {label}
-                                        {i < user.role.length - 1 && ', '}
+                                        {i < (user.role?.length ?? 0) - 1 && ', '}
                                     </Link>
                                 );
                             })}

@@ -7,7 +7,32 @@ export type User = {
     two_factor_enabled?: boolean;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown;
+    nip?: string;
+    nip_sso?: string;
+    role?: string[];
+    userable_type?: string;
+    userable_id?: number | string | null;
+    userable?: OutsourcingUserable | EmployeeUserable | null;
+};
+
+export type OutsourcingUserable = {
+    id: number;
+    uuid: string;
+    name: string;
+    image: string;
+    nip?: string | null;
+    jabatan?: { id: number; nama_jabatan: string } | null;
+    biro?: { kode_biro: string; nama_biro: string } | null;
+};
+
+export type EmployeeUserable = {
+    id: number;
+    uuid: string;
+    name: string;
+    image: string;
+    nip?: string | null;
+    jabatan?: string | null;
+    biro?: { kode_biro: string; nama_biro: string } | null;
 };
 
 export type Auth = {

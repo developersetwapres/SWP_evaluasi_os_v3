@@ -32,7 +32,19 @@ import {
     Award,
     Briefcase,
 } from 'lucide-react';
-import { getScoreColor } from '@/utils/score';
+import {
+    getScoreBadgeColor,
+    getScoreColor,
+    getScoreLabel,
+} from '@/utils/score';
+import type {
+    EvaluatorAssignment,
+    EvaluatorPageProps,
+    EvaluatorScore,
+    ResultHistory,
+    SemesterEmployee,
+    SemesterHistory,
+} from '@/types';
 
 export default function EvaluatorPage({
     penugasanPeer,
@@ -41,7 +53,7 @@ export default function EvaluatorPage({
     typeUser,
     resultScore,
     siklusAktif,
-}: any) {
+}: EvaluatorPageProps) {
     const { auth } = usePage().props;
 
     const user = auth.user;
@@ -111,9 +123,12 @@ export default function EvaluatorPage({
                                         <CardDescription className="text-xs text-green-100 md:text-sm">
                                             {user?.userable_type ==
                                             'App\Models\Outsourcing'
-                                                ? user?.userable?.jabatan
-                                                      ?.nama_jabatan
-                                                : user?.userable?.jabatan}
+                                                ? (typeof user?.userable?.jabatan === 'object'
+                                                      ? user.userable.jabatan?.nama_jabatan
+                                                      : undefined)
+                                                : (typeof user?.userable?.jabatan === 'string'
+                                                      ? user.userable.jabatan
+                                                      : undefined)}
                                             {' • '}
                                             {user?.userable?.biro?.nama_biro}
                                         </CardDescription>
@@ -131,11 +146,11 @@ export default function EvaluatorPage({
 
                                         <Badge
                                             className={`${getScoreBadgeColor(
-                                                resultScore?.finalTotalScore,
+                                                resultScore?.finalTotalScore ?? 0,
                                             )} border-2 text-sm md:px-4 md:py-1.5`}
                                         >
                                             {getScoreLabel(
-                                                resultScore?.finalTotalScore,
+                                                resultScore?.finalTotalScore ?? 0,
                                             )}
                                         </Badge>
 
@@ -191,9 +206,9 @@ export default function EvaluatorPage({
                                             </div>
 
                                             <div className="mt-4 grid gap-2 md:grid-cols-3">
-                                                {resultScore.map(
+                                                {resultScore?.map(
                                                     (
-                                                        score: any,
+                                                        score: EvaluatorScore,
                                                         index: number,
                                                     ) => (
                                                         <Card
@@ -207,10 +222,10 @@ export default function EvaluatorPage({
                                                                         'atasan' ? (
                                                                             <Briefcase className="h-5 w-5 text-indigo-600" />
                                                                         ) : score.type ===
-                                                                          'teman_setingkat' ? (
+                                                                          'penerima_layanan2' ? (
                                                                             <Users className="h-5 w-5 text-indigo-600" />
                                                                         ) : score.type ===
-                                                                          'penerima_layanan' ? (
+                                                                          'penerima_layanan1' ? (
                                                                             <Award className="h-5 w-5 text-indigo-600" />
                                                                         ) : null}
                                                                     </div>
@@ -244,11 +259,11 @@ export default function EvaluatorPage({
                                                                                 ? 'Penilaian oleh atasan langsung'
                                                                                 : ''}
                                                                             {score.type ===
-                                                                            'teman_setingkat'
+                                                                            'penerima_layanan2'
                                                                                 ? 'Penilaian oleh teman setingkat'
                                                                                 : ''}
                                                                             {score.type ===
-                                                                            'penerima_layanan'
+                                                                            'penerima_layanan1'
                                                                                 ? 'Penilaian oleh penerima layanan'
                                                                                 : ''}
                                                                         </p>
@@ -357,7 +372,7 @@ export default function EvaluatorPage({
                                                             {
                                                                 penugasanPeer?.filter(
                                                                     (
-                                                                        emp: any,
+                                                                        emp: EvaluatorAssignment,
                                                                     ) =>
                                                                         emp.status ===
                                                                         'completed',
@@ -386,7 +401,7 @@ export default function EvaluatorPage({
                                         {/* Creative Employee Cards */}
                                         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {penugasanPeer?.map(
-                                                (employee: any) => (
+                                                (employee: EvaluatorAssignment) => (
                                                     <Card
                                                         key={employee.id}
                                                         className="group relative overflow-hidden border-0 bg-linear-to-br from-white to-blue-50 pb-2 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
@@ -567,9 +582,9 @@ export default function EvaluatorPage({
                                                     collapsible
                                                     className="space-y-4"
                                                 >
-                                                    {resultScoreHistory.map(
+                                                    {resultScoreHistory?.map(
                                                         (
-                                                            resultScore: any,
+                                                            resultScore: ResultHistory,
                                                             index: number,
                                                         ) => {
                                                             return (
@@ -615,7 +630,7 @@ export default function EvaluatorPage({
                                                                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                                                             {resultScore?.evaluators.map(
                                                                                 (
-                                                                                    score: any,
+                                                                                    score: EvaluatorScore,
                                                                                     index: number,
                                                                                 ) => (
                                                                                     <Card
@@ -631,10 +646,10 @@ export default function EvaluatorPage({
                                                                                                     'atasan' ? (
                                                                                                         <Briefcase className="h-5 w-5 text-indigo-600" />
                                                                                                     ) : score.type ===
-                                                                                                      'teman_setingkat' ? (
+                                                                                                      'penerima_layanan2' ? (
                                                                                                         <Users className="h-5 w-5 text-indigo-600" />
                                                                                                     ) : score.type ===
-                                                                                                      'penerima_layanan' ? (
+                                                                                                      'penerima_layanan1' ? (
                                                                                                         <Award className="h-5 w-5 text-indigo-600" />
                                                                                                     ) : null}
                                                                                                 </div>
@@ -668,11 +683,11 @@ export default function EvaluatorPage({
                                                                                                             ? 'Penilaian oleh atasan langsung'
                                                                                                             : ''}
                                                                                                         {score.type ===
-                                                                                                        'teman_setingkat'
+                                                                                                        'penerima_layanan2'
                                                                                                             ? 'Penilaian oleh teman setingkat'
                                                                                                             : ''}
                                                                                                         {score.type ===
-                                                                                                        'penerima_layanan'
+                                                                                                        'penerima_layanan1'
                                                                                                             ? 'Penilaian oleh penerima layanan'
                                                                                                             : ''}
                                                                                                     </p>
@@ -780,13 +795,13 @@ export default function EvaluatorPage({
                                             className="space-y-4"
                                         >
                                             {semesterHistory.map(
-                                                (semester: any) => {
+                                                (semester: SemesterHistory) => {
                                                     const semesterStats = {
                                                         total: semester
                                                             .employees.length,
                                                         completed:
                                                             semester.employees.filter(
-                                                                (emp: any) =>
+                                                                (emp: SemesterEmployee) =>
                                                                     emp.status ===
                                                                     'completed',
                                                             ).length,
@@ -794,7 +809,7 @@ export default function EvaluatorPage({
                                                             semester.employees.reduce(
                                                                 (
                                                                     acc: number,
-                                                                    emp: any,
+                                                                    emp: SemesterEmployee,
                                                                 ) =>
                                                                     acc +
                                                                     (emp.score ||
@@ -852,7 +867,7 @@ export default function EvaluatorPage({
                                                                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                                                     {semester.employees.map(
                                                                         (
-                                                                            employee: any,
+                                                                            employee: SemesterEmployee,
                                                                         ) => (
                                                                             <Card
                                                                                 key={

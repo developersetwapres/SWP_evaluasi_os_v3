@@ -20,7 +20,6 @@ class PenugasanAssignmentOutsourcingResource extends JsonResource
             'uuid' => $this->uuid,
             'image' => $this->image,
             'name' => $this->name,
-            'jabatan' => $this->jabatan?->nama_jabatan,
             'biro' => $this->biro?->nama_biro,
             'nama_jabatan' => $this->jabatan?->nama_jabatan,
             'evaluators' => $this->evaluators(),

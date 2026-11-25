@@ -10,8 +10,12 @@ use App\Models\Jabatan;
 use App\Models\Outsourcing;
 use App\Models\Penilaian;
 use App\Models\Penugasan;
+use App\Http\Resources\RekapHasilResource;
+use App\Http\Resources\EvaluationFormResource;
+use App\Models\MasterPegawai;
 use App\Services\Penilaian\EvaluationEngineService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,19 +45,51 @@ class PenilaianController extends Controller
             return to_route('home');
         }
 
-        $jabatanId = $penugasan->outsourcings->jabatan_id;
+        $outsourcing = $penugasan->outsourcings()
+            ->select(['id','uuid','nip','name','image','jabatan_id','kode_biro'])
+            ->with([
+                'jabatan:id,nama_jabatan',
+                'biro:kode_biro,nama_biro',
+            ])
+            ->firstOrFail();
+        $jabatanId = $outsourcing->jabatan_id;
 
-        $evaluator = $penugasan->evaluators?->userable;
-
-        if ($penugasan->evaluators?->userable instanceof Outsourcing) {
-            $evaluator->load(['jabatan', 'biro']);
-        } else {
-            $evaluator?->load('biro');
-        }
+        $evaluatorUser = $penugasan->evaluators()
+            ->select(['id','name','email','userable_id','userable_type','nip'])
+            ->with([
+                'userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
+                    Outsourcing::class => fn($query) => $query
+                        ->select(['id','uuid','nip','name','image','jabatan_id','kode_biro'])
+                        ->with([
+                            'jabatan:id,nama_jabatan',
+                            'biro:kode_biro,nama_biro',
+                        ]),
+                    MasterPegawai::class => fn($query) => $query
+                        ->select(['id','uuid','nip','name','image','jabatan','kode_biro'])
+                        ->with('biro:kode_biro,nama_biro'),
+                ]),
+            ])
+            ->firstOrFail();
+        $evaluator = $evaluatorUser->userable;
 
         $data = [
-            'outsourcing' => $penugasan->outsourcings->load(['jabatan', 'biro']),
-            'evaluator' => $evaluator,
+            'outsourcing' => [
+                'id' => $outsourcing->id,
+                'uuid' => $outsourcing->uuid,
+                'name' => $outsourcing->name,
+                'image' => $outsourcing->image,
+                'jabatan' => $outsourcing->jabatan ? ['nama_jabatan' => $outsourcing->jabatan->nama_jabatan] : null,
+                'biro' => $outsourcing->biro ? ['nama_biro' => $outsourcing->biro->nama_biro] : null,
+            ],
+            'evaluator' => $evaluator ? [
+                'id' => $evaluatorUser->id,
+                'name' => $evaluator->name,
+                'image' => $evaluator->image,
+                'jabatan' => $evaluator instanceof MasterPegawai
+                    ? $evaluator->jabatan
+                    : ($evaluator->jabatan ? ['nama_jabatan' => $evaluator->jabatan->nama_jabatan] : null),
+                'biro' => $evaluator->biro ? ['nama_biro' => $evaluator->biro->nama_biro] : null,
+            ] : null,
             'uuidPenugasanPeer' => $penugasan->uuid,
             'tipePenilai' => $penugasan->tipe_penilai,
             'overallNotes' => $penugasan->catatan,
@@ -63,10 +99,10 @@ class PenilaianController extends Controller
         ];
 
         if ($penugasan->status === 'completed') {
-            return Inertia::render('evaluator/viewscore', $data);
+            return Inertia::render('evaluator/viewscore', (new EvaluationFormResource($data))->resolve());
         }
 
-        return Inertia::render('evaluator/evaluation-form', $data);
+        return Inertia::render('evaluator/evaluation-form', (new EvaluationFormResource($data))->resolve());
     }
 
     /**
@@ -146,18 +182,33 @@ class PenilaianController extends Controller
             ->select([
                 'id',
                 'uuid',
-                'nip',
                 'name',
                 'image',
                 'jabatan_id',
                 'kode_biro',
+                'is_active',
             ])
             ->with([
-                'penugasanAktif.bobotSkor',
-                'penugasanAktif.evaluators.userable',
-                'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
-                'biro',
-                'jabatan',
+                'penugasanAktif' => fn($query) => $query
+                    ->select(['id','uuid','bobot_skor_id','siklus_id','outsourcing_id','penilai_id','tipe_penilai','status','catatan'])
+                    ->with([
+                        'bobotSkor:id,bobot',
+                        'evaluators' => fn($query) => $query
+                            ->select(['id','name','email','userable_id','userable_type','nip']),
+                        'evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
+                            MasterPegawai::class => fn($query) => $query
+                                ->select(['id','uuid','nip','name','image','jabatan']),
+                            Outsourcing::class => fn($query) => $query
+                                ->select(['id','uuid','nip','name','image']),
+                        ]),
+                        'penilaian' => fn($query) => $query
+                            ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
+                        'penilaian.indikator:id,title,pilar_id',
+                        'penilaian.indikator.pilar:id,title,bobot_skor_id',
+                        'penilaian.indikator.pilar.bobotSkor:id,bobot',
+                    ]),
+                'biro:kode_biro,nama_biro',
+                'jabatan:id,nama_jabatan',
             ])
             ->where('is_active', true)
             ->when($kodeBiro, function (Builder $query, string $kodeBiro): void {
@@ -179,7 +230,6 @@ class PenilaianController extends Controller
 
                 return [
                     'id' => $os->id,
-                    'nip' => $os->nip,
                     'name' => $os->name,
                     'uuid' => $os->uuid,
                     'image' => $os->image,
@@ -215,7 +265,7 @@ class PenilaianController extends Controller
             ->values();
 
         return Inertia::render('admin/rekaphasil/page', [
-            'evaluationResults' => $evaluationResults,
+            'evaluationResults' => RekapHasilResource::collection($evaluationResults)->resolve(),
             'filters' => [
                 'search' => $search,
                 'kodeBiro' => $kodeBiro,
@@ -231,10 +281,23 @@ class PenilaianController extends Controller
         $jabatanId = $request->input('jabatan_id')
             ?? Jabatan::where('kode_jabatan', 'DESAINER_GRAFIS')->value('id');
 
-        $outsourcings = Outsourcing::with([
-            'jabatan',
-            'penugasanAktif.penilaian.indikator.pilar.bobotSkor',
-            'penugasanAktif.bobotSkor',
+        $outsourcings = Outsourcing::query()
+            ->select(['id','uuid','name','image','jabatan_id','is_active'])
+            ->with([
+            'jabatan:id,nama_jabatan',
+            'penugasanAktif' => fn($query) => $query
+                ->select(['id','uuid','bobot_skor_id','siklus_id','outsourcing_id','penilai_id','tipe_penilai','status','catatan'])
+                ->with([
+                    'bobotSkor:id,bobot',
+                    'evaluators' => fn($query) => $query
+                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                    'evaluators.userable',
+                    'penilaian' => fn($query) => $query
+                        ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
+                    'penilaian.indikator:id,title,pilar_id',
+                    'penilaian.indikator.pilar:id,title,bobot_skor_id',
+                    'penilaian.indikator.pilar.bobotSkor:id,bobot',
+                ]),
         ])
             ->where('is_active', true)
             ->where('jabatan_id', $jabatanId)

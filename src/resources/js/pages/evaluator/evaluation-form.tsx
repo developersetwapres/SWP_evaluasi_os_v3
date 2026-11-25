@@ -37,7 +37,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { home } from '@/routes';
 import { store } from '@/routes/penilaian';
-import type { Outsourcing } from '@/types/outsourcing';
+import type {
+    EvaluationFormProps as ContractEvaluationFormProps,
+    PersonSummary,
+} from '@/types';
 
 type BehavioralOption = {
     value: number;
@@ -79,22 +82,9 @@ type Person = {
     jabatan?: string | { nama_jabatan?: string };
     jabatan_id?: number;
     biro?: { nama_biro?: string };
-    [key: string]: unknown;
 };
 
-interface EvaluationFormProps {
-    outsourcing: Outsourcing & {
-        id?: number;
-        biro?: { nama_biro?: string };
-    };
-    evaluator: Person;
-    evaluationData: unknown;
-    uuidPenugasanPeer: string;
-    tipePenilai: string;
-    developmentArea?: string | null;
-    observedStrengths?: string | null;
-    overallNotes?: string | null;
-}
+interface EvaluationFormProps extends ContractEvaluationFormProps {}
 
 // const guidePillars = [
 //     {
@@ -151,17 +141,30 @@ const scoringAnchors = [
     },
 ];
 
-function readArray(value: unknown): any[] {
-    return Array.isArray(value) ? value : [];
+type RawRecord = Record<string, unknown>;
+
+function readRecord(value: unknown): RawRecord {
+    return value && typeof value === 'object' ? value as RawRecord : {};
 }
 
-function readPillars(evaluationData: unknown): any[] {
+function readBobot(value: unknown): number {
+    const record = readRecord(value);
+    return Number(record.bobot ?? 0);
+}
+
+function readArray(value: unknown): RawRecord[] {
+    return Array.isArray(value)
+        ? value.map(readRecord)
+        : [];
+}
+
+function readPillars(evaluationData: unknown): RawRecord[] {
     if (Array.isArray(evaluationData)) {
-        return evaluationData;
+        return evaluationData.map(readRecord);
     }
 
     if (evaluationData && typeof evaluationData === 'object') {
-        return Object.values(evaluationData);
+        return Object.values(evaluationData).map(readRecord);
     }
 
     return [];
@@ -188,7 +191,7 @@ function normalizePillars(evaluationData: unknown): Pillar[] {
     const sourcePillars = readPillars(evaluationData);
     let globalNumber = 1;
 
-    return sourcePillars.map((sourcePilar: any) => {
+    return sourcePillars.map((sourcePilar) => {
         const sourceIndicators = readArray(
             sourcePilar.indikator ?? sourcePilar.kriteria,
         );
@@ -197,11 +200,10 @@ function normalizePillars(evaluationData: unknown): Pillar[] {
             id: Number(sourcePilar.id ?? 0),
             title: String(sourcePilar.title ?? 'Untitled Pillar'),
             weight: Number(
-                sourcePilar.bobot_skor?.bobot ??
-                    sourcePilar.bobotSkor?.bobot ??
-                    0,
+                readBobot(sourcePilar.bobot_skor) ||
+                    readBobot(sourcePilar.bobotSkor),
             ),
-            indicators: sourceIndicators.map((sourceIndicator: any) => ({
+            indicators: sourceIndicators.map((sourceIndicator) => ({
                 id: Number(sourceIndicator.id ?? globalNumber),
                 globalNumber: globalNumber++,
                 title: String(sourceIndicator.title ?? 'Untitled Indicator'),
@@ -216,7 +218,7 @@ function normalizePillars(evaluationData: unknown): Pillar[] {
     });
 }
 
-function getJabatan(person?: Person | null): string {
+function getJabatan(person?: PersonSummary | null): string {
     if (!person) {
         return '-';
     }
@@ -228,7 +230,7 @@ function getJabatan(person?: Person | null): string {
     return person.jabatan?.nama_jabatan ?? '-';
 }
 
-function getBiro(person?: Person | Outsourcing | null): string {
+function getBiro(person?: PersonSummary | null): string {
     const biro = person?.biro;
 
     return typeof biro === 'object' && biro && 'nama_biro' in biro
@@ -251,7 +253,7 @@ function PersonSummaryCard({
 }: {
     label: string;
     icon: typeof UserRound;
-    person: Person | (Outsourcing & { biro?: { nama_biro?: string } });
+    person: PersonSummary;
 }) {
     return (
         <Card className="gap-3 border-slate-200 bg-white shadow-sm transition-colors hover:shadow-md">

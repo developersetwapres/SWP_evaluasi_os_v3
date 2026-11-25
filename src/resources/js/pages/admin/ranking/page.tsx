@@ -37,6 +37,7 @@ import {
     YAxis,
 } from 'recharts';
 import { ranking } from '@/routes/os';
+import type { RankingPageProps, RankingRow } from '@/types';
 
 // Helper: slugify jabatan to value used by Select
 const slugify = (str: string) =>
@@ -46,7 +47,24 @@ const slugify = (str: string) =>
         .replace(/(^-|-$)/g, '');
 
 // Custom tooltip component (adapted to new keys)
-const CustomTooltip = ({ active, payload, label }: any) => {
+type RankingChartItem = {
+    name: string;
+    Atasan: number;
+    'Penerima Layanan 1': number;
+    'Penerima Layanan 2': number;
+    total: number;
+    rank: number;
+};
+
+const CustomTooltip = ({
+    active,
+    payload,
+    label,
+}: {
+    active?: boolean;
+    payload?: Array<{ payload: RankingChartItem }>;
+    label?: string;
+}) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
 
@@ -91,13 +109,13 @@ export default function RankingPage({
     outsourcingData,
     allJabatan,
     selectedJabatanId: initialSelectedJabatanId,
-}: any) {
+}: RankingPageProps) {
     const [isLoading, setIsLoading] = useState(false);
 
     // Extract jabatan options - use allJabatan if provided, otherwise extract from current data
     const positions = useMemo(() => {
         if (allJabatan && Array.isArray(allJabatan)) {
-            return allJabatan.map((jabatan: any) => ({
+            return allJabatan.map((jabatan) => ({
                 value: String(jabatan.id),
                 label: jabatan.nama_jabatan,
             }));
@@ -105,8 +123,8 @@ export default function RankingPage({
 
         // Fallback: extract from current data
         if (!Array.isArray(outsourcingData)) return [];
-        return outsourcingData.map((d: any) => ({
-            value: slugify(d.jabatan || d.job || ''),
+        return outsourcingData.map((d) => ({
+            value: slugify(d.jabatan || ''),
             label: d.jabatan,
         }));
     }, [outsourcingData, allJabatan]);
@@ -116,23 +134,19 @@ export default function RankingPage({
         if (!Array.isArray(outsourcingData) || outsourcingData.length === 0)
             return [];
 
-        return outsourcingData.flatMap((group: any) => {
+        return outsourcingData.flatMap((group) => {
             const ranking = Array.isArray(group.ranking) ? group.ranking : [];
             return ranking
-                .map((item: any) => ({
-                    name: item.nama ?? item.name ?? 'N/A',
+                .map((item: RankingRow) => ({
+                    name: item.nama ?? 'N/A',
 
                     Atasan: Number(item.atasan ?? 0),
-                    'Penerima Layanan 1': Number(
-                        item.penerima_layanan ?? item['penerima_layanan1'] ?? 0,
-                    ),
-                    'Penerima Layanan 2': Number(
-                        item.teman ?? item['penerima_layanan2'] ?? 0,
-                    ),
+                    'Penerima Layanan 1': Number(item.penerima_layanan ?? 0),
+                    'Penerima Layanan 2': Number(item.teman ?? 0),
                     total: Number(item.total ?? 0),
-                    rank: Number(item.ranking ?? item.rank ?? 0),
+                    rank: Number(item.ranking ?? 0),
                 }))
-                .sort((a: any, b: any) => a.rank - b.rank);
+                .sort((a: RankingChartItem, b: RankingChartItem) => a.rank - b.rank);
         });
     }, [outsourcingData]);
 
@@ -169,14 +183,14 @@ export default function RankingPage({
         currentData.length > 0
             ? Math.round(
                   currentData.reduce(
-                      (sum: number, item: any) => sum + Number(item.total || 0),
+                      (sum: number, item: RankingChartItem) => sum + Number(item.total || 0),
                       0,
                   ) / currentData.length,
               )
             : 0;
 
     const selectedJabatanLabel =
-        positions.find((p: any) => p.value === selectedJabatanId)?.label ||
+        positions.find((p) => p.value === selectedJabatanId)?.label ||
         'Semua Jabatan';
 
     useEffect(() => {
@@ -215,7 +229,7 @@ export default function RankingPage({
                                         <SelectValue placeholder="Pilih Jabatan Outsourcing" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {positions.map((position: any) => (
+                                        {positions.map((position) => (
                                             <SelectItem
                                                 key={position.value}
                                                 value={position.value}
@@ -458,7 +472,7 @@ export default function RankingPage({
                                     <tbody>
                                         {paginatedData.map(
                                             (
-                                                outsourcing: any,
+                                                outsourcing: RankingChartItem,
                                                 index: number,
                                             ) => (
                                                 <tr

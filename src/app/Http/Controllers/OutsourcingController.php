@@ -11,6 +11,8 @@ use App\Http\Requests\UpdateOutsourcingRequest;
 use App\Http\Resources\Api\IntegrationPengemudiResource;
 use App\Models\Jabatan;
 use App\Models\Pilar;
+use App\Models\MasterPegawai;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use App\Services\Penilaian\EvaluationEngineService;
 use App\Services\Uploadfile\FotoUserService;
 use Illuminate\Support\Facades\DB;
@@ -145,11 +147,26 @@ class OutsourcingController extends Controller
     ): Response {
 
         $outsourcing->load([
-            'penugasan.bobotSkor',
-            'penugasan.evaluators.userable',
-            'penugasan.penilaian.indikator.pilar.bobotSkor',
-            'jabatan',
-            'biro',
+            'penugasan' => fn($query) => $query
+                ->select(['id','uuid','bobot_skor_id','siklus_id','outsourcing_id','penilai_id','tipe_penilai','status','catatan','area_pengembangan','kekuatan_teramati'])
+                ->with([
+                    'bobotSkor:id,bobot',
+                    'evaluators' => fn($query) => $query
+                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                    'evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
+                        MasterPegawai::class => fn($query) => $query
+                            ->select(['id','uuid','nip','name','image','jabatan']),
+                        Outsourcing::class => fn($query) => $query
+                            ->select(['id','uuid','nip','name','image']),
+                    ]),
+                    'penilaian' => fn($query) => $query
+                        ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
+                    'penilaian.indikator:id,title,pilar_id',
+                    'penilaian.indikator.pilar:id,title,bobot_skor_id',
+                    'penilaian.indikator.pilar.bobotSkor:id,bobot',
+                ]),
+            'jabatan:id,nama_jabatan',
+            'biro:kode_biro,nama_biro',
         ]);
 
         $result = $engine->calculate($outsourcing->penugasan);
@@ -176,9 +193,19 @@ class OutsourcingController extends Controller
     ): Response {
 
         $outsourcing->load([
-            'penugasan.bobotSkor',
-            'penugasan.evaluators.userable',
-            'penugasan.penilaian.indikator.pilar.bobotSkor',
+            'penugasan' => fn($query) => $query
+                ->select(['id','uuid','bobot_skor_id','siklus_id','outsourcing_id','penilai_id','tipe_penilai','status','catatan','area_pengembangan','kekuatan_teramati'])
+                ->with([
+                    'bobotSkor:id,bobot',
+                    'evaluators' => fn($query) => $query
+                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                    'evaluators.userable',
+                    'penilaian' => fn($query) => $query
+                        ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
+                    'penilaian.indikator:id,title,pilar_id',
+                    'penilaian.indikator.pilar:id,title,bobot_skor_id',
+                    'penilaian.indikator.pilar.bobotSkor:id,bobot',
+                ]),
         ]);
 
         $data = [
@@ -195,7 +222,19 @@ class OutsourcingController extends Controller
     {
 
         $data = [
-            'penugasans' => $outsourcing->penugasan->load('evaluators.userable'),
+            'penugasans' => $outsourcing->penugasan()
+                ->select(['id','uuid','siklus_id','outsourcing_id','penilai_id','tipe_penilai','catatan','area_pengembangan','kekuatan_teramati'])
+                ->with([
+                    'evaluators' => fn($query) => $query
+                        ->select(['id','name','email','userable_id','userable_type','nip']),
+                    'evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
+                        MasterPegawai::class => fn($query) => $query
+                            ->select(['id','uuid','nip','name','image','jabatan']),
+                        Outsourcing::class => fn($query) => $query
+                            ->select(['id','uuid','nip','name','image']),
+                    ]),
+                ])
+                ->get(),
             'uuidOs' => $outsourcing->uuid,
         ];
 
@@ -204,7 +243,10 @@ class OutsourcingController extends Controller
 
     public function nilaiPerkriteria(Outsourcing $outsourcing, EvaluationEngineService $engine, $tipePenilai = 'atasan'): Response
     {
-
+        $outsourcing->load([
+            'penugasan' => fn($query) => $query
+                ->select(['id','uuid','bobot_skor_id','siklus_id','outsourcing_id','penilai_id','tipe_penilai','status','catatan','area_pengembangan','kekuatan_teramati']),
+        ]);
         $penugasan = $outsourcing->penugasan->firstWhere('tipe_penilai', $tipePenilai);
 
         if (!$penugasan) {
@@ -220,15 +262,20 @@ class OutsourcingController extends Controller
         $data = [
             'rekapPerAspek' => $engine->calculateSingleSummary($penugasan->penilaian),
 
-            'evaluationData' => Pilar::select(['id', 'title'])
+            'evaluationData' => Pilar::select(['id', 'title', 'bobot_skor_id'])
                 ->with([
                     'bobotSkor:id,bobot',
                     'indikator' => fn($query) => $query
+                        ->select(['id','uuid','title','defenisi','pilar_id','kelompok_jabatan_id'])
                         ->where('kelompok_jabatan_id', $kelompokJabatanId)
                         ->orderBy('id')
                         ->with([
-                            'behavioral' => fn($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
-                            'penilaian' => fn($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
+                            'behavioral' => fn($behavioralQuery) => $behavioralQuery
+                                ->select(['id','indikator_id','skor','behavioral'])
+                                ->orderByDesc('skor'),
+                            'penilaian' => fn($penilaianQuery) => $penilaianQuery
+                                ->select(['id','uuid','penugasan_id','indikator_id','nilai'])
+                                ->where('penugasan_id', $penugasan->id),
                         ]),
                 ])
                 ->orderBy('id')

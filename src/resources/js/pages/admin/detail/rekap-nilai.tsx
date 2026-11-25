@@ -5,6 +5,7 @@ import { EmployeeNavigation } from '@/components/penilaian/detail/employee-navig
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calculator } from 'lucide-react';
+import type { RekapNilaiProps } from '@/types';
 
 const getScoreLabel = (score: number) => {
     if (score >= 91) return 'Sangat Baik';
@@ -30,7 +31,7 @@ const getScoreColor = (score: number) => {
     return 'text-red-600';
 };
 
-export default function rekapNilai({ peraspek }: any) {
+export default function rekapNilai({ peraspek }: RekapNilaiProps) {
     if (!peraspek || !peraspek.aspects) {
         return null;
     }
@@ -56,7 +57,7 @@ export default function rekapNilai({ peraspek }: any) {
                             <div className="grid grid-cols-3 gap-6">
                                 {peraspek.aspects.length > 0 &&
                                     peraspek.aspects[0].evaluators.map(
-                                        (e: any, i: number) => (
+                                        (e, i: number) => (
                                             <div
                                                 key={i}
                                                 className="rounded-lg border border-blue-300 bg-blue-100 p-4 text-center"
@@ -77,9 +78,9 @@ export default function rekapNilai({ peraspek }: any) {
 
                     {/* Perhitungan Berbobot per Aspek */}
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {peraspek.aspects.map((aspek: any, index: number) => {
+                        {peraspek.aspects.map((aspek, index: number) => {
                             const weightedList = aspek.evaluators.map(
-                                (e: any) => Number(e.weightedScore).toFixed(2),
+                                (e) => Number(e.weightedScore).toFixed(2),
                             );
 
                             return (
@@ -91,7 +92,7 @@ export default function rekapNilai({ peraspek }: any) {
                                     </CardHeader>
                                     <CardContent>
                                         {aspek.evaluators.map(
-                                            (penilai: any, index: number) => (
+                                            (penilai, index: number) => (
                                                 <div
                                                     key={index}
                                                     className="mb-4 rounded-lg border-2 border-green-200 bg-gradient-to-r from-green-50 to-green-100 p-6"
@@ -107,8 +108,10 @@ export default function rekapNilai({ peraspek }: any) {
                                                                 {penilai?.evaluatorType ==
                                                                 'atasan'
                                                                     ? 'Atasan'
-                                                                    : penilai?.evaluatorType ==
-                                                                        'penerima_layanan'
+                                                                    : penilai?.evaluatorType ===
+                                                                        'penerima_layanan1' ||
+                                                                      penilai?.evaluatorType ===
+                                                                        'penerima_layanan2'
                                                                       ? 'Penerima Layanan'
                                                                       : 'Teman Setingkat'}
                                                             </p>

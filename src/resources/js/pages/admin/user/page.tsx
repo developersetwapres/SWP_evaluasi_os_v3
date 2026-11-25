@@ -64,6 +64,7 @@ import {
     Users,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import type { UserManagementPageProps, UserManagementRow } from '@/types';
 
 export default function UserManagement({
     initialUsers,
@@ -75,7 +76,7 @@ export default function UserManagement({
     biros,
     pegawaiTidakMenilai,
     jabatans,
-}: any) {
+}: UserManagementPageProps) {
     const { flash } = usePage().props;
     const imageUrl = flash?.pathTemp ?? '';
 
@@ -85,7 +86,7 @@ export default function UserManagement({
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDialogAsnOpen, setIsDialogAsnOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<any>(null);
+    const [editingUser, setEditingUser] = useState<UserManagementRow | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [onProcessing, setOnProcessing] = useState(false);
     const [formData, setFormData] = useState({
@@ -112,14 +113,14 @@ export default function UserManagement({
         }
     }, [imageUrl]);
 
-    const filteredUsers = users?.filter((user: any) => {
+    const filteredUsers = users?.filter((user: UserManagementRow) => {
         const matchesSearch =
             user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             user.jabatan?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesRole =
-            selectedUser == null || user.is_active == selectedUser;
+            selectedUser == null || String(user.is_active) === selectedUser;
 
         const matchesJumlahDinilai =
             jumlahDinilai === null
@@ -172,16 +173,16 @@ export default function UserManagement({
         setIsDialogOpen(true);
     };
 
-    const handleEdit = (user: any) => {
+    const handleEdit = (user: UserManagementRow) => {
         setEditingUser(user);
         setFormData({
             name: user.name,
-            email: user.email,
-            jabatan: user.id_jabatan,
-            unit_kerja: user.kode_biro,
-            nip: user.nip,
-            status: user.is_active?.toString(),
-            image: user.image,
+            email: user.email ?? '',
+            jabatan: user.id_jabatan?.toString() ?? '',
+            unit_kerja: user.kode_biro ?? '',
+            nip: user.nip ?? '',
+            status: user.is_active ? '1' : '0',
+            image: user.image ?? '',
             password: '',
         });
 
@@ -192,7 +193,7 @@ export default function UserManagement({
         }
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: string) => {
         //
     };
 
@@ -250,13 +251,13 @@ export default function UserManagement({
         }
     };
 
-    const toggleUserStatus = (id: number) => {
-        const user = users.find((u: any) => u.id === id);
+    const toggleUserStatus = (id: string) => {
+        const user = users.find((u: UserManagementRow) => u.id === id);
 
         const newStatus = user?.status === 'active' ? 'inactive' : 'active';
 
         setUsers(
-            users.map((user: any) =>
+            users.map((user: UserManagementRow) =>
                 user.id === id ? { ...user, status: newStatus } : user,
             ),
         );
@@ -271,9 +272,8 @@ export default function UserManagement({
 
             router.post(tempImage.url(), data, {
                 forceFormData: true,
-                onSuccess: (response: any) => {
-                    const pathTemp =
-                        response?.pathTemp ?? response?.data?.pathTemp;
+                onSuccess: (response) => {
+                    const pathTemp = response.props.flash.pathTemp;
 
                     if (pathTemp) {
                         setFormData((prev) => ({
@@ -528,7 +528,7 @@ export default function UserManagement({
 
                     {/* Users Grid */}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredUsers?.map((user: any, index: number) => {
+                        {filteredUsers?.map((user: UserManagementRow, index: number) => {
                             if (user.type == 'pegawai') {
                                 return (
                                     <Card
@@ -549,7 +549,7 @@ export default function UserManagement({
                                                         {user.name
                                                             .split(' ')
                                                             .map(
-                                                                (n: any) =>
+                                                                (n: string) =>
                                                                     n[0],
                                                             )
                                                             .join('')
@@ -662,7 +662,7 @@ export default function UserManagement({
                                                             {user.name
                                                                 .split(' ')
                                                                 .map(
-                                                                    (n: any) =>
+                                                                    (n: string) =>
                                                                         n[0],
                                                                 )
                                                                 .join('')
@@ -681,7 +681,7 @@ export default function UserManagement({
                                                 </div>
                                                 <Badge
                                                     variant={
-                                                        user.status === 'active'
+                                                        user.is_active
                                                             ? 'default'
                                                             : 'secondary'
                                                     }
@@ -692,7 +692,7 @@ export default function UserManagement({
                                                         )
                                                     }
                                                 >
-                                                    {user.is_active == 1
+                                                    {user.is_active
                                                         ? 'Aktif'
                                                         : 'Nonaktif'}
                                                 </Badge>
@@ -894,7 +894,7 @@ export default function UserManagement({
                                             nip: e.target.value,
                                         })
                                     }
-                                    disabled={editingUser}
+                                    disabled={Boolean(editingUser)}
                                     placeholder="Masukkan NIP/NRP"
                                 />
                             </div>
@@ -914,9 +914,9 @@ export default function UserManagement({
                                         <SelectValue placeholder="Pilih unit kerja" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {biros.map((biro: any) => (
+                                        {biros.map((biro) => (
                                             <SelectItem
-                                                key={biro.id}
+                                                key={biro.kode_biro}
                                                 value={biro.kode_biro}
                                             >
                                                 {biro.kode_biro}
@@ -945,10 +945,10 @@ export default function UserManagement({
                                         <SelectValue placeholder="Pilih jabatan" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {jabatans.map((jabatan: any) => (
+                                        {jabatans.map((jabatan) => (
                                             <SelectItem
                                                 key={jabatan.id}
-                                                value={jabatan.id}
+                                                value={String(jabatan.id)}
                                             >
                                                 {jabatan.nama_jabatan}
                                             </SelectItem>
@@ -1139,7 +1139,7 @@ export default function UserManagement({
                                             nip: e.target.value,
                                         })
                                     }
-                                    disabled={editingUser}
+                                    disabled={Boolean(editingUser)}
                                     placeholder="Masukkan NIP/NRP"
                                     className={
                                         editingUser
@@ -1180,9 +1180,9 @@ export default function UserManagement({
                                     <SelectValue placeholder="Pilih unit kerja" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {biros.map((biro: any) => (
+                                    {biros.map((biro) => (
                                         <SelectItem
-                                            key={biro.id}
+                                            key={biro.kode_biro}
                                             value={biro.kode_biro}
                                         >
                                             {biro.kode_biro}

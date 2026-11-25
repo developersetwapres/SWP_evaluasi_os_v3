@@ -24,6 +24,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { exportSaranEvaluator, saranEvaluator } from '@/routes/os';
+import type { SaranPerbaikanPageProps } from '@/types';
 
 type FeedbackValue = string | null | undefined;
 
@@ -41,23 +42,6 @@ type Evaluator = {
     name?: string | null;
     image?: string | null;
     penugasan?: Penugasan[];
-};
-
-type OutsourcingGroup = {
-    jabatan?: string | null;
-    jabatan_id?: string | number | null;
-    evaluators?: Evaluator[];
-};
-
-type Jabatan = {
-    id: string | number;
-    nama_jabatan: string;
-};
-
-type SaranPerbaikanProps = {
-    Outsourcings?: OutsourcingGroup[];
-    allJabatan?: Jabatan[];
-    selectedJabatanId?: string;
 };
 
 type PersonEntry = {
@@ -364,7 +348,7 @@ export default function SaranPerbaikan({
     Outsourcings = [],
     allJabatan = [],
     selectedJabatanId: initialSelectedJabatanId,
-}: SaranPerbaikanProps) {
+}: SaranPerbaikanPageProps) {
     const [isLoading, setIsLoading] = useState(false);
 
     const positions = useMemo(() => {
@@ -414,9 +398,7 @@ export default function SaranPerbaikan({
                 : [];
 
             return evaluators.map((evaluator, index) => ({
-                id:
-                    evaluator.id?.toString() ||
-                    `${slugify(jabatan)}-${slugify(evaluator.name || '')}-${index}`,
+                id: `${slugify(jabatan)}-${slugify(evaluator.name || '')}-${index}`,
                 name: evaluator.name?.trim() || 'Tanpa Nama',
                 image: evaluator.image,
                 jabatan,

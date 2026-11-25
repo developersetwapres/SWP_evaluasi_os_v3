@@ -32,10 +32,13 @@ class PenugasanDashboardService
                     ->where('siklus_id', $siklus->id)
                     ->with([
                         'evaluators' => fn ($evaluatorQuery) => $evaluatorQuery
-                            ->select(['id', 'userable_id', 'userable_type', 'nip']),
-                        'evaluators.userable' => fn (MorphTo $morphTo) => $morphTo->morphWith([
-                            Outsourcing::class => ['jabatan:id,nama_jabatan'],
-                            MasterPegawai::class => [],
+                            ->select(['id', 'name', 'email', 'userable_id', 'userable_type', 'nip']),
+                        'evaluators.userable' => fn (MorphTo $morphTo) => $morphTo->constrain([
+                            Outsourcing::class => fn($query) => $query
+                                ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan_id'])
+                                ->with('jabatan:id,nama_jabatan'),
+                            MasterPegawai::class => fn($query) => $query
+                                ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan']),
                         ]),
                     ]),
             ])
@@ -70,16 +73,22 @@ class PenugasanDashboardService
     public function statusByOutsourcings(): Collection
     {
         return Outsourcing::query()
-            ->select(['id', 'name', 'image', 'jabatan_id', 'is_active'])
+            ->select(['id', 'uuid', 'name', 'image', 'jabatan_id', 'is_active'])
             ->where('is_active', true)
             ->with([
                 'jabatan:id,nama_jabatan',
                 'penugasan' => fn ($query) => $query
                     ->select(['id', 'siklus_id', 'outsourcing_id', 'penilai_id', 'tipe_penilai', 'status'])
+                    ->whereHas('siklus', fn ($siklus) => $siklus->where('is_active', true))
                     ->with([
                         'evaluators' => fn ($evaluatorQuery) => $evaluatorQuery
-                            ->select(['id', 'userable_id', 'userable_type', 'nip']),
-                        'evaluators.userable',
+                            ->select(['id', 'name', 'email', 'userable_id', 'userable_type', 'nip']),
+                        'evaluators.userable' => fn (MorphTo $morphTo) => $morphTo->constrain([
+                            Outsourcing::class => fn($query) => $query
+                                ->select(['id', 'uuid', 'nip', 'name', 'image']),
+                            MasterPegawai::class => fn($query) => $query
+                                ->select(['id', 'uuid', 'nip', 'name', 'image']),
+                        ]),
                     ]),
             ])
             ->orderBy('name')
@@ -94,8 +103,14 @@ class PenugasanDashboardService
             ->with([
                 'outsourcings:id,name,uuid,image,jabatan_id,nip',
                 'outsourcings.jabatan:id,nama_jabatan',
-                'evaluators' => fn ($query) => $query->select(['id', 'userable_id', 'userable_type', 'nip']),
-                'evaluators.userable',
+                'evaluators' => fn ($query) => $query
+                    ->select(['id', 'name', 'email', 'userable_id', 'userable_type', 'nip']),
+                'evaluators.userable' => fn (MorphTo $morphTo) => $morphTo->constrain([
+                    Outsourcing::class => fn($query) => $query
+                        ->select(['id', 'uuid', 'nip', 'name', 'image']),
+                    MasterPegawai::class => fn($query) => $query
+                        ->select(['id', 'uuid', 'nip', 'name', 'image']),
+                ]),
             ])
             ->get();
     }

@@ -7,12 +7,13 @@ import { cn } from '@/lib/utils';
 import { nilaiPerkriteria } from '@/routes/os';
 import { Link, usePage } from '@inertiajs/react';
 import { User2 } from 'lucide-react';
+import type { NilaiPerkriteriaProps } from '@/types';
 
 export default function nilaiPerItemKriteria({
     rekapPerAspek,
     evaluationData,
     uuidOs,
-}: any) {
+}: NilaiPerkriteriaProps) {
     const { url } = usePage();
     const isActive = (path: string) => url == path;
 
@@ -90,7 +91,6 @@ export default function nilaiPerItemKriteria({
                     </nav>
 
                     <ViewScoreComponent
-                        rekapPerAspek={rekapPerAspek}
                         evaluationData={evaluationData}
                     />
                 </div>

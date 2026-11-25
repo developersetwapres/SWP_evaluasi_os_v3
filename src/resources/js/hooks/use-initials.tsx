@@ -7,7 +7,7 @@ function getInitial(name: string): string {
 }
 
 export function useInitials(): GetInitialsFn {
-    return useCallback((fullName: string): string => {
+    return useCallback((fullName?: string | null): string => {
         if (!fullName) {
             return '';
         }

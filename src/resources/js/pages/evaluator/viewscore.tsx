@@ -5,20 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { home } from '@/routes';
-import type { Outsourcing } from '@/types/outsourcing';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, ClipboardCheck, FileText, UserCheck } from 'lucide-react';
+import type { ViewScoreProps as ContractViewScoreProps } from '@/types';
 
-interface ViewScoreProps {
-    outsourcing: Outsourcing;
-    evaluator: any;
-    evaluationData: any;
-    overallNotes: string;
-    rekapPerAspek: any;
-    tipePenilai: string;
-    developmentArea: string;
-    observedStrengths: string;
-}
+interface ViewScoreProps extends ContractViewScoreProps {}
 
 export default function ViewScore({
     outsourcing,
@@ -98,9 +89,9 @@ export default function ViewScore({
                                         {evaluator.name}
                                     </h3>
                                     <p className="text-lg font-medium text-green-100">
-                                        {evaluator?.jabatan_id
-                                            ? evaluator?.jabatan?.nama_jabatan
-                                            : evaluator?.jabatan}
+                                        {typeof evaluator.jabatan === 'object'
+                                            ? evaluator.jabatan?.nama_jabatan
+                                            : evaluator.jabatan}
                                     </p>
                                 </CardContent>
                             </Card>
@@ -140,7 +131,9 @@ export default function ViewScore({
                                         {outsourcing.name}
                                     </h3>
                                     <p className="text-lg font-medium text-blue-100">
-                                        {outsourcing.jabatan.nama_jabatan} •{' '}
+                                        {typeof outsourcing.jabatan === 'object'
+                                            ? outsourcing.jabatan?.nama_jabatan
+                                            : outsourcing.jabatan} •{' '}
                                         {outsourcing?.biro?.nama_biro}
                                     </p>
                                 </CardContent>

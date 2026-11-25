@@ -14,11 +14,14 @@ class UserController extends Controller
     public function index($user): Response
     {
         if ($user == 'outsourcings') {
-            $initialUsers = Outsourcing::with([
-                'biro',
-                'jabatan',
+            $initialUsers = Outsourcing::query()
+                ->select(['id','uuid','nip','name','image','jabatan_id','kode_biro','is_active'])
+                ->with([
+                'biro:kode_biro,nama_biro',
+                'jabatan:id,nama_jabatan',
                 'user' => fn($q) =>
-                $q->withCount([
+                $q->select(['id','userable_id','userable_type','nip','email','role'])
+                    ->withCount([
                     'penugasan as penugasan_count' => fn($q) =>
                     $q->where('siklus_id', 1)
                 ])
@@ -41,11 +44,14 @@ class UserController extends Controller
                     'jumlahDinilai' => $o->user?->penugasan_count ?? 0,
                 ]);
         } elseif ($user == 'evaluators') {
-            $initialUsers = MasterPegawai::where('kode_unit', '02')
+            $initialUsers = MasterPegawai::query()
+                    ->select(['id','uuid','nip','name','image','jabatan','kode_biro','kode_unit'])
+                    ->where('kode_unit', '02')
                 ->with([
-                    'biro',
+                        'biro:kode_biro,nama_biro',
                     'user' => fn($q) =>
-                    $q->withCount([
+                        $q->select(['id','userable_id','userable_type','nip','email','role'])
+                            ->withCount([
                         'penugasan as penugasan_count' => fn($q) =>
                         $q->where('siklus_id', 1)
                     ])
@@ -91,8 +97,10 @@ class UserController extends Controller
                     $q->where('siklus_id', 1)
                 )
                 ->count(),
-            'jabatans' => Jabatan::orderBy('nama_jabatan', 'asc')->get(),
-            'biros' => Biro::where('kode_biro', 'like', '02%')
+            'jabatans' => Jabatan::select(['id','nama_jabatan','kode_jabatan'])
+                ->orderBy('nama_jabatan', 'asc')->get(),
+            'biros' => Biro::select(['kode_biro','nama_biro'])
+                ->where('kode_biro', 'like', '02%')
                 ->orderBy('nama_biro', 'asc')
                 ->get()
         ];

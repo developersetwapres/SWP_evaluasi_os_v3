@@ -4,15 +4,20 @@ import { statuspenilaian } from '@/routes/penugasan';
 import { router } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
+import type { StatusOutsourcingRow } from '@/types';
 
-export default function ETXpenilaianByOutsourcing({ outsourcings }: any) {
+export default function ETXpenilaianByOutsourcing({
+    outsourcings,
+}: {
+    outsourcings: StatusOutsourcingRow[];
+}) {
     const downloaded = useRef(false);
 
     useEffect(() => {
         if (downloaded.current) return;
         downloaded.current = true;
 
-        const formattedData = outsourcings.map((item: any, index: number) => ({
+        const formattedData = outsourcings.map((item, index: number) => ({
             ID: index + 1,
             Outsourcing: item.outsourcing_name,
             Jabatan: item.outsourcing_jabatan,

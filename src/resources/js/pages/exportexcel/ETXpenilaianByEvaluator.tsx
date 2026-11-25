@@ -4,15 +4,20 @@ import { statuspenilaian } from '@/routes/penugasan';
 import { router } from '@inertiajs/react';
 import { useEffect, useRef } from 'react';
 import * as XLSX from 'xlsx';
+import type { StatusEvaluatorRow } from '@/types';
 
-export default function ETXpenilaianByEvaluator({ evaluators }: any) {
+export default function ETXpenilaianByEvaluator({
+    evaluators,
+}: {
+    evaluators: StatusEvaluatorRow[];
+}) {
     const downloaded = useRef(false);
 
     useEffect(() => {
         if (downloaded.current) return;
         downloaded.current = true;
 
-        const formattedData = evaluators.map((item: any, index: number) => ({
+        const formattedData = evaluators.map((item, index: number) => ({
             ID: index + 1,
             Evaluator: item.evaluator_name,
             'Tipe Penilai': item.tipe_penilai,

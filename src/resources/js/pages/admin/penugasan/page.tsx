@@ -20,7 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { store } from '@/routes/penugasan';
 import { router } from '@inertiajs/react';
-import type { PenugasanPeer } from '@/types/penugasan';
+import type { AssignmentEvaluator, PenugasanPeer } from '@/types';
 import { Separator } from '@radix-ui/react-separator';
 import {
     AlertCircle,
@@ -38,17 +38,17 @@ import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 
 interface initialData {
-    evaluators: any;
+    evaluators: AssignmentEvaluator[];
     outsourcing: PenugasanPeer[];
 }
 
 interface SearchableSelectProps {
-    items: any[];
+    items: AssignmentEvaluator[];
     value: string;
     onValueChange: (value: string) => void;
     placeholder: string;
-    getLabel: (item: any) => string;
-    getSubLabel?: (item: any) => string;
+    getLabel: (item: AssignmentEvaluator) => string;
+    getSubLabel?: (item: AssignmentEvaluator) => string;
 }
 
 function SearchableSelect({
@@ -142,9 +142,9 @@ export default function PeerAssignment({
     const [selectedEmployee, setSelectedEmployee] = useState<{
         uuid: string;
         name: string;
-        biro: string;
+        biro: string | undefined;
         jabatan: string;
-        evaluators: any;
+        evaluators: PenugasanPeer['evaluators'];
     } | null>(null);
 
     const [selectedEvaluators, setSelectedEvaluators] = useState({
@@ -154,7 +154,7 @@ export default function PeerAssignment({
     });
 
     const filteredSearchEmployees = outsourcing?.filter(
-        (emp: any) =>
+        (emp: PenugasanPeer) =>
             emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             emp?.biro?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
@@ -269,7 +269,7 @@ export default function PeerAssignment({
                                 (penugasan: PenugasanPeer, index) => {
                                     const assignedCount = Object.values(
                                         penugasan.evaluators || {},
-                                    ).filter((e: any) => e?.name).length;
+                                    ).filter((e) => e?.name).length;
 
                                     const completionPercentage =
                                         (assignedCount / 3) * 100;
@@ -300,7 +300,7 @@ export default function PeerAssignment({
                                                                         )
                                                                         .map(
                                                                             (
-                                                                                n: any,
+                                                                                n: string,
                                                                             ) =>
                                                                                 n[0],
                                                                         )
@@ -374,7 +374,7 @@ export default function PeerAssignment({
                                                                             {
                                                                                 uuid: penugasan.uuid,
                                                                                 name: penugasan.name,
-                                                                                biro: penugasan.biro,
+                                                                                biro: penugasan.biro ?? '',
                                                                                 evaluators:
                                                                                     penugasan.evaluators,
                                                                                 jabatan:

@@ -9,6 +9,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { CheckCircle, Info } from 'lucide-react';
+import type { EvaluationPillar } from '@/types';
 
 const getScoreClassification = (score: number) => {
     if (score <= 1) {
@@ -42,19 +43,23 @@ const getScoreClassification = (score: number) => {
     };
 };
 
-export function ViewScoreComponent({ evaluationData }: any) {
-    const getIndicators = (aspect: any) =>
+export function ViewScoreComponent({
+    evaluationData,
+}: {
+    evaluationData: EvaluationPillar[];
+}) {
+    const getIndicators = (aspect: EvaluationPillar) =>
         aspect.indikator ?? aspect.kriteria ?? [];
 
     function getAspectStats(aspectTitle: string) {
-        const aspect = evaluationData.find((a: any) => a.title === aspectTitle);
+        const aspect = evaluationData.find((a) => a.title === aspectTitle);
 
         if (!aspect) {
             return { total: 0, count: 0, avg: 0 };
         }
 
         const indicators = getIndicators(aspect);
-        const scoresList = indicators.map((c: any) => c.penilaian?.nilai || 0);
+        const scoresList = indicators.map((c) => c.penilaian?.nilai || 0);
         const total = scoresList.reduce((a: number, b: number) => a + b, 0);
         const count = indicators.length;
         const avg = count ? parseFloat((total / count).toFixed(2)) : 0;
@@ -91,7 +96,7 @@ export function ViewScoreComponent({ evaluationData }: any) {
                 </CardHeader>
             </Card>
 
-            {evaluationData.map((aspect: any, aspectIndex: number) => {
+            {evaluationData.map((aspect, aspectIndex: number) => {
                 const indicators = getIndicators(aspect);
 
                 return (
@@ -140,7 +145,7 @@ export function ViewScoreComponent({ evaluationData }: any) {
                             <div className="space-y-6">
                                 {indicators.map(
                                     (
-                                        criterion: any,
+                                        criterion,
                                         criterionIndex: number,
                                     ) => {
                                         const score =
@@ -191,7 +196,7 @@ export function ViewScoreComponent({ evaluationData }: any) {
                                                     <ul className="space-y-1 text-sm text-gray-600">
                                                         {criterion?.behavioral?.map(
                                                             (
-                                                                indicator: any,
+                                                                indicator,
                                                                 idx: number,
                                                             ) => (
                                                                 <li

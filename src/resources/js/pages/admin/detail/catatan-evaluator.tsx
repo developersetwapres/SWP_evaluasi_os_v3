@@ -11,8 +11,9 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { FileText } from 'lucide-react';
+import type { CatatanEvaluatorProps } from '@/types';
 
-export default function catatanEvaluator({ penugasans, uuidOs }) {
+export default function catatanEvaluator({ penugasans, uuidOs }: CatatanEvaluatorProps) {
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
             <main className="mx-auto max-w-7xl px-4 pb-8 sm:px-6 lg:px-8">
@@ -37,7 +38,9 @@ export default function catatanEvaluator({ penugasans, uuidOs }) {
                                         penugasan.tipe_penilai === 'atasan'
                                             ? 'Atasan'
                                             : penugasan.tipe_penilai ===
-                                                'penerima_layanan'
+                                                'penerima_layanan1' ||
+                                              penugasan.tipe_penilai ===
+                                                'penerima_layanan2'
                                               ? 'Penerima Layanan'
                                               : 'Outsourcing';
 
@@ -45,7 +48,9 @@ export default function catatanEvaluator({ penugasans, uuidOs }) {
                                         penugasan.tipe_penilai === 'atasan'
                                             ? 'border-l-red-500 bg-red-50'
                                             : penugasan.tipe_penilai ===
-                                                'penerima_layanan'
+                                                'penerima_layanan1' ||
+                                                penugasan.tipe_penilai ===
+                                                'penerima_layanan2'
                                               ? 'border-l-blue-500 bg-blue-50'
                                               : 'border-l-green-500 bg-green-50';
 
@@ -53,7 +58,9 @@ export default function catatanEvaluator({ penugasans, uuidOs }) {
                                         penugasan.tipe_penilai === 'atasan'
                                             ? 'bg-red-100 text-red-800 border-red-200'
                                             : penugasan.tipe_penilai ===
-                                                'penerima_layanan'
+                                                'penerima_layanan1' ||
+                                                penugasan.tipe_penilai ===
+                                                'penerima_layanan2'
                                               ? 'bg-blue-100 text-blue-800 border-blue-200'
                                               : 'bg-green-100 text-green-800 border-green-200';
 

@@ -3,17 +3,32 @@
 namespace App\Services\Penilaian;
 
 use App\Models\Jabatan;
+use App\Models\MasterPegawai;
+use App\Models\Outsourcing;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class SaranPerbaikanEvaluatorService
 {
     public function saran(?int $jabatanId = null): array
     {
         $query = Jabatan::query()
+            ->select(['id', 'nama_jabatan'])
             ->with([
                 'outsourcings' => function ($query) {
-                    $query->where('is_active', true);
+                    $query
+                        ->select(['id','uuid','name','image','jabatan_id','is_active'])
+                        ->where('is_active', true);
                 },
-                'outsourcings.penugasan.evaluators.userable',
+                'outsourcings.penugasan' => fn($query) => $query
+                    ->select(['id','uuid','siklus_id','outsourcing_id','penilai_id','tipe_penilai','catatan','area_pengembangan','kekuatan_teramati']),
+                'outsourcings.penugasan.evaluators' => fn($query) => $query
+                    ->select(['id','name','email','userable_id','userable_type','nip']),
+                'outsourcings.penugasan.evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
+                    MasterPegawai::class => fn($query) => $query
+                        ->select(['id','uuid','nip','name','image','jabatan']),
+                    Outsourcing::class => fn($query) => $query
+                        ->select(['id','uuid','nip','name','image']),
+                ]),
             ]);
 
         if ($jabatanId !== null) {

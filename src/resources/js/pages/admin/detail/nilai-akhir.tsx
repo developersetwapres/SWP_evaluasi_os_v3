@@ -28,6 +28,7 @@ import {
 import { router } from '@inertiajs/react';
 import { BarChart3, Calculator, Users } from 'lucide-react';
 import { useState } from 'react';
+import type { EvaluatorScore, NilaiAkhirProps } from '@/types';
 
 export default function nilaiAkhir({
     name,
@@ -39,11 +40,14 @@ export default function nilaiAkhir({
     finalTotalScore,
     pilarScores,
     evaluatorScores,
-}: any) {
+}: NilaiAkhirProps) {
     const [isResetNilaiOpen, setIsResetNilaiOpen] = useState(false);
-    const [selectedPenilaian, setSelectedPenilaian] = useState<any>(null);
+    const [selectedPenilaian, setSelectedPenilaian] = useState<EvaluatorScore | null>(null);
 
     const handleResetNilai = () => {
+        if (!selectedPenilaian) {
+            return;
+        }
         setIsResetNilaiOpen(false);
         setSelectedPenilaian(null);
 
@@ -131,7 +135,7 @@ export default function nilaiAkhir({
                         </CardHeader>
                         <CardContent className="p-8">
                             <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-                                {pilarScores.map((pilar: any, index: any) => (
+                                {pilarScores.map((pilar, index) => (
                                     <div
                                         key={index}
                                         className="transform rounded-xl border-2 border-blue-300 bg-gradient-to-br from-blue-400 to-blue-700 p-6 px-8 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
@@ -188,7 +192,7 @@ export default function nilaiAkhir({
                         <CardContent className="p-8">
                             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                                 {evaluatorScores.map(
-                                    (evaluator: any, index: any) => {
+                                    (evaluator: EvaluatorScore, index: number) => {
                                         const evaluatorType =
                                             evaluator.type === 'atasan'
                                                 ? 'Atasan'

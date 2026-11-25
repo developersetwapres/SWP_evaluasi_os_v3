@@ -160,9 +160,16 @@ class EvaluationEngineService
     public function buildExportRows(): array
     {
         return Penugasan::with([
-            'outsourcings.jabatan.kelompokJabatan',
+            'outsourcings:id,uuid,name,jabatan_id',
+            'outsourcings.jabatan:id,nama_jabatan,kelompok_jabatan_id',
+            'outsourcings.jabatan.kelompokJabatan:id,nama_kelompok',
+            'evaluators' => fn($query) => $query
+                ->select(['id','name','email','userable_id','userable_type','nip']),
             'evaluators.userable',
-            'penilaian.indikator.pilar',
+            'penilaian' => fn($query) => $query
+                ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
+            'penilaian.indikator:id,title,pilar_id',
+            'penilaian.indikator.pilar:id,title',
         ])
             ->get()
             ->groupBy(function ($penugasan) {
@@ -380,11 +387,16 @@ class EvaluationEngineService
             ->with([
                 'bobotSkor:id,bobot',
                 'indikator' => fn($query) => $query
+                    ->select(['id','uuid','title','defenisi','pilar_id','kelompok_jabatan_id'])
                     ->where('kelompok_jabatan_id', $kelompokJabatanId)
                     ->orderBy('id')
                     ->with([
-                        'behavioral' => fn($behavioralQuery) => $behavioralQuery->orderByDesc('skor'),
-                        'penilaian' => fn($penilaianQuery) => $penilaianQuery->where('penugasan_id', $penugasan->id),
+                        'behavioral' => fn($behavioralQuery) => $behavioralQuery
+                            ->select(['id','indikator_id','skor','behavioral'])
+                            ->orderByDesc('skor'),
+                        'penilaian' => fn($penilaianQuery) => $penilaianQuery
+                            ->select(['id','uuid','penugasan_id','indikator_id','nilai'])
+                            ->where('penugasan_id', $penugasan->id),
                     ]),
             ])
             ->orderBy('id')

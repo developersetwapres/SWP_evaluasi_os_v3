@@ -1,19 +1,19 @@
 import * as XLSX from 'xlsx';
+import type { RekapResult } from '@/types';
 
-export default function exportToExcel(evaluationResults: any[]) {
-    const formattedData = (evaluationResults ?? []).map((item: any) => {
+export default function exportToExcel(evaluationResults: RekapResult[]) {
+    const formattedData = (evaluationResults ?? []).map((item) => {
         const atasan = item.evaluatorScores?.find(
-            (e: any) => e.type === 'atasan',
+            (e) => e.type === 'atasan',
         );
         const penerima = item.evaluatorScores?.find(
-            (e: any) => e.type === 'penerima_layanan1',
+            (e) => e.type === 'penerima_layanan1',
         );
         const teman = item.evaluatorScores?.find(
-            (e: any) => e.type === 'penerima_layanan2',
+            (e) => e.type === 'penerima_layanan2',
         );
 
         return {
-            'NRP Outsourcing': item.nip,
             'Nama Outsourcing': item.name,
             'Unit Kerja Outsourcing': item.biro,
             'Jabatan Outsourcing': item.jabatan,

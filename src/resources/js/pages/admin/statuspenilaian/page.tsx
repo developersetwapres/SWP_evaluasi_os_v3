@@ -28,14 +28,16 @@ import { evaluators, outsourcings } from '@/routes/penugasan';
 import { Link } from '@inertiajs/react';
 import { Download, User, Users2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import type {
+    StatusEvaluatorRow,
+    StatusOutsourcingRow,
+    StatusPenilaianPageProps,
+} from '@/types';
 
 export default function StatusPenilaian({
     byOutsourcings,
     byEvaluators,
-}: {
-    byOutsourcings: any;
-    byEvaluators: any;
-}) {
+}: StatusPenilaianPageProps) {
     const [evaluatorFilter, setEvaluatorFilter] = useState<
         'all' | 'completed' | 'incomplete'
     >('all');
@@ -46,7 +48,7 @@ export default function StatusPenilaian({
     const filteredEvaluators = useMemo(() => {
         if (!byEvaluators) return [];
         if (evaluatorFilter === 'all') return byEvaluators;
-        return byEvaluators.filter((r: any) =>
+        return byEvaluators.filter((r: StatusEvaluatorRow) =>
             evaluatorFilter === 'completed'
                 ? r.status === 'completed'
                 : r.status !== 'completed',
@@ -55,7 +57,7 @@ export default function StatusPenilaian({
 
     const filteredOutsourcings = useMemo(() => {
         if (!byOutsourcings) return [];
-        return byOutsourcings.filter((r: any) => {
+        return byOutsourcings.filter((r: StatusOutsourcingRow) => {
             if (outsourcingFilter === 'all') return true;
             const statuses = [
                 r.evaluatorsAtasan?.status,
@@ -140,7 +142,9 @@ export default function StatusPenilaian({
                                     <Select
                                         value={evaluatorFilter}
                                         onValueChange={(v) =>
-                                            setEvaluatorFilter(v as any)
+                                            setEvaluatorFilter(
+                                                v as 'all' | 'completed' | 'incomplete',
+                                            )
                                         }
                                     >
                                         <SelectTrigger className="w-full">
@@ -178,8 +182,8 @@ export default function StatusPenilaian({
                                 </TableHeader>
                                 <TableBody>
                                     {filteredEvaluators.map(
-                                        (row: any, index: number) => (
-                                            <TableRow key={row.index}>
+                                        (row: StatusEvaluatorRow, index: number) => (
+                                            <TableRow                                             key={index}>
                                                 <TableCell className="w-8">
                                                     {index + 1}
                                                 </TableCell>
@@ -220,7 +224,9 @@ export default function StatusPenilaian({
                                     <Select
                                         value={outsourcingFilter}
                                         onValueChange={(v) =>
-                                            setOutsourcingFilter(v as any)
+                                            setOutsourcingFilter(
+                                                v as 'all' | 'completed' | 'incomplete',
+                                            )
                                         }
                                     >
                                         <SelectTrigger className="w-full">
@@ -263,7 +269,7 @@ export default function StatusPenilaian({
                                 </TableHeader>
                                 <TableBody>
                                     {filteredOutsourcings.map(
-                                        (row: any, index: number) => (
+                                        (row: StatusOutsourcingRow, index: number) => (
                                             <TableRow key={index}>
                                                 <TableCell className="w-8">
                                                     {index + 1}
