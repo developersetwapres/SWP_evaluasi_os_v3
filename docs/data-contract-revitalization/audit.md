@@ -564,3 +564,53 @@ Executed successfully:
 
 Executed unchanged baseline:
 - `php artisan test` — 54 tests executed, 43 passed, 6 failed, with the same 54/43/228 baseline result. The failures remain present and include registration/auth rendering 500 responses. No newly introduced PHP syntax or route failure was observed.
+
+## P. Phase 3 Final Review and Remediation
+
+### P1. Contract corrections
+
+- Corrected evaluator payload typing so `evaluator` is explicitly nullable in evaluation-form and view-score contracts.
+- Corrected evaluator dashboard typing: `resultScore` is now an array of evaluator score objects, and the frontend derives the displayed total from `weightedScore`; no nonexistent `finalTotalScore` prop is assumed.
+- Replaced raw partial `penugasanPeer` model output with a mapped contract containing `id`, `uuid`, `status`, `tipe_penilai`, and a narrowed `outsourcings` summary.
+- Added an explicit no-active-cycle branch that preserves the page and returns nullable/empty score structures.
+- Corrected assignment and user payload typing where boolean/numeric backend states and nullable relationship fields differed from earlier assumptions.
+- Replaced the settings redirect helper with an explicit closure route to eliminate an invalid generated Wayfinder `query` route artifact.
+- Corrected the stale Penilaian store test fixture to use `kelompok_jabatan_id`, matching the actual `indikators` schema.
+
+### P2. Resource and relationship verification
+
+- `RekapHasilResource` exposes only the five summary and result fields consumed by its page/export flow.
+- `EvaluationFormResource` exposes only the evaluation form/view-score payload fields and does not expose model attributes.
+- Assignment and status Resources match the corresponding TypeScript structures.
+- The evaluator assignment resource preserves UUID action keys and relationship slot keys.
+- Shared polymorphic loading retains `id`, `uuid`, `nip`, `name`, `image`, `userable_type`, `userable_id`, and required position/biro keys.
+
+### P3. Final validation
+
+Executed successfully:
+- `npm run types:check`
+- `npm run build`
+- `php artisan route:list --except-vendor`
+- PHP syntax lint for remediated route/controller/test code
+- Targeted Pest suite: Rekap, Penilaian store, Penugasan dashboard, and Saran export: **9 tests passed, 100 assertions**
+
+Full Laravel suite final result:
+- **54 tests, 45 passed, 239 assertions, 6 failures, 3 errors**
+- Compared with the baseline 43/54 and 228 assertions, this run passes the two repaired Penilaian store tests plus one additional test.
+
+Remaining full-suite failures are documented and were not introduced by the contract implementation:
+- Disabled or stale registration route contract in `FortifyServiceProvider` / registration test.
+- Role middleware receiving a string role in one dashboard test.
+- Example test expecting a 200 but receiving an existing redirect.
+- Profile update and temp-image tests returning existing setup/runtime mismatches.
+- Factory seeder null fixture and two stale EvaluationEngine export expectations.
+
+Frontend lint was executed on the affected Phase 3 file set. It remains non-green with legacy lint findings across the audited pages, including import ordering, unused imports, component naming, and preexisting constant-truthiness rules. The focused contract files pass TypeScript and build validation.
+
+### P4. Remaining Phase 3 concerns
+
+- Live SQL query counts and payload-byte measurements remain unavailable.
+- There is no server-side pagination in the audited list pages.
+- The hard-coded `siklus_id=1` user-management behavior remains intentionally unchanged.
+- The legacy registration view and route registration remain inconsistent; registration is disabled in Fortify configuration but a registration test still invokes the route.
+- The full Laravel suite remains red due to unrelated stale fixtures/setup and existing role/seeder issues.

@@ -79,19 +79,19 @@ export default function ViewScore({
                                     <div className="relative mx-2 mb-6">
                                         <div className="absolute inset-0 scale-110 animate-pulse rounded-full bg-white/20"></div>
                                         <img
-                                            src={`/storage/${evaluator.image}`}
-                                            alt={evaluator.name}
+                                            src={`/storage/${evaluator?.image ?? ''}`}
+                                            alt={evaluator?.name ?? 'Evaluator'}
                                             className="mx-auto h-20 w-20 rounded-full border-4 border-white shadow-lg"
                                         />
                                     </div>
 
                                     <h3 className="mb-1 text-2xl font-bold text-white">
-                                        {evaluator.name}
+                                        {evaluator?.name ?? '-'}
                                     </h3>
                                     <p className="text-lg font-medium text-green-100">
-                                        {typeof evaluator.jabatan === 'object'
+                                        {typeof evaluator?.jabatan === 'object'
                                             ? evaluator.jabatan?.nama_jabatan
-                                            : evaluator.jabatan}
+                                            : evaluator?.jabatan ?? '-'}
                                     </p>
                                 </CardContent>
                             </Card>

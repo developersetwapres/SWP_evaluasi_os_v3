@@ -254,11 +254,13 @@ export default function UserManagement({
     const toggleUserStatus = (id: string) => {
         const user = users.find((u: UserManagementRow) => u.id === id);
 
-        const newStatus = user?.status === 'active' ? 'inactive' : 'active';
+        const newStatus = user?.is_active ? 'inactive' : 'active';
 
         setUsers(
             users.map((user: UserManagementRow) =>
-                user.id === id ? { ...user, status: newStatus } : user,
+                user.id === id
+                    ? { ...user, is_active: newStatus === 'active' }
+                    : user,
             ),
         );
     };

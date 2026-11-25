@@ -139,18 +139,33 @@ export default function EvaluatorPage({
                                 {typeUser === 'outsourcing' && (
                                     <div className="text-right">
                                         <div className="mb-2 text-4xl font-bold md:text-5xl">
-                                            {resultScore?.finalTotalScore?.toFixed(
-                                                2,
-                                            )}
+                                            {resultScore
+                                                ?.reduce(
+                                                    (sum, score) =>
+                                                        sum +
+                                                        (score.weightedScore ?? 0),
+                                                    0,
+                                                )
+                                                .toFixed(2)}
                                         </div>
 
                                         <Badge
                                             className={`${getScoreBadgeColor(
-                                                resultScore?.finalTotalScore ?? 0,
+                                                resultScore?.reduce(
+                                                    (sum, score) =>
+                                                        sum +
+                                                        (score.weightedScore ?? 0),
+                                                    0,
+                                                ) ?? 0,
                                             )} border-2 text-sm md:px-4 md:py-1.5`}
                                         >
                                             {getScoreLabel(
-                                                resultScore?.finalTotalScore ?? 0,
+                                                resultScore?.reduce(
+                                                    (sum, score) =>
+                                                        sum +
+                                                        (score.weightedScore ?? 0),
+                                                    0,
+                                                ) ?? 0,
                                             )}
                                         </Badge>
 

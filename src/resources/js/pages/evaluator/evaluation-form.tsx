@@ -253,7 +253,7 @@ function PersonSummaryCard({
 }: {
     label: string;
     icon: typeof UserRound;
-    person: PersonSummary;
+    person: PersonSummary | null;
 }) {
     return (
         <Card className="gap-3 border-slate-200 bg-white shadow-sm transition-colors hover:shadow-md">

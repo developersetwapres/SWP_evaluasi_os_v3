@@ -157,8 +157,7 @@ export type UserManagementRow = {
     nip: string | null;
     email: string | null;
     role: string[] | null;
-    is_active?: boolean;
-    status?: 'active' | 'inactive';
+    is_active?: boolean | number;
     type: 'outsourcing' | 'pegawai';
     biro: string | null;
     kode_biro: string | null;
@@ -265,7 +264,7 @@ export type EvaluationPillar = {
 
 export type EvaluationFormProps = {
     outsourcing: PersonSummary & { id: number };
-    evaluator: PersonSummary;
+    evaluator: PersonSummary | null;
     evaluationData: EvaluationPillar[];
     uuidPenugasanPeer: string;
     tipePenilai: EvaluatorType;
@@ -276,7 +275,7 @@ export type EvaluationFormProps = {
 
 export type ViewScoreProps = {
     outsourcing: PersonSummary & { id: number };
-    evaluator: PersonSummary;
+    evaluator: PersonSummary | null;
     evaluationData: EvaluationPillar[];
     overallNotes: string | null;
     tipePenilai: EvaluatorType;
@@ -329,7 +328,7 @@ export type ResultHistory = {
 export type EvaluatorPageProps = {
     penugasanPeer: EvaluatorAssignment[];
     semesterHistory: SemesterHistory[];
-    resultScore: (EvaluatorScore[] & { finalTotalScore?: number }) | null;
+    resultScore: EvaluatorScore[] | null;
     resultScoreHistory: ResultHistory[] | null;
     typeUser: 'outsourcing' | 'pegawai';
     siklusAktif: string;

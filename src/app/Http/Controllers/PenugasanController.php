@@ -234,6 +234,19 @@ class PenugasanController extends Controller
             ->where('is_active', true)
             ->first();
 
+        if (! $siklusAktif) {
+            $typeUser = Auth::user()->userable_type === Outsourcing::class ? 'outsourcing' : 'pegawai';
+
+            return Inertia::render('evaluator/page', [
+                'semesterHistory' => $semesterHistory,
+                'penugasanPeer' => [],
+                'resultScore' => null,
+                'resultScoreHistory' => null,
+                'typeUser' => $typeUser,
+                'siklusAktif' => 'Tidak ada siklus aktif',
+            ]);
+        }
+
         $evaluatorsHistory = Penugasan::query()
             ->where('outsourcing_id', $outsourcing->id)
             ->whereNot('siklus_id', $siklusAktif->id)
@@ -283,10 +296,26 @@ class PenugasanController extends Controller
         $data = [
             'semesterHistory' => $semesterHistory,
             'penugasanPeer' => Auth::user()->penugasan()
-                ->select(['outsourcing_id', 'siklus_id', 'status', 'uuid', 'tipe_penilai'])
+                ->select(['id','outsourcing_id', 'siklus_id', 'status', 'uuid', 'tipe_penilai'])
                 ->whereHas('siklus', fn($q) => $q->where('is_active', true))
-                ->with(['siklus', 'outsourcings'])
-                ->get(),
+                ->with([
+                    'outsourcings:id,uuid,image,name,jabatan_id',
+                    'outsourcings.jabatan:id,nama_jabatan',
+                ])
+                ->get()
+                ->map(fn(Penugasan $item) => [
+                    'id' => $item->id,
+                    'uuid' => $item->uuid,
+                    'status' => $item->status,
+                    'tipe_penilai' => $item->tipe_penilai,
+                    'outsourcings' => [
+                        'uuid' => $item->outsourcings->uuid,
+                        'image' => $item->outsourcings->image,
+                        'name' => $item->outsourcings->name,
+                        'jabatan' => $item->outsourcings->jabatan?->nama_jabatan,
+                    ],
+                ])
+                ->values(),
             'resultScore' => $typeUser == 'outsourcing' ? $hasil : null,
             'resultScoreHistory' => $typeUser == 'outsourcing' ? $hasilHistory : null,
             'typeUser' => $typeUser,

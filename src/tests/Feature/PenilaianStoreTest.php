@@ -93,7 +93,7 @@ function createPenilaianScenario(): array
         foreach (range(1, $indicatorCount) as $indicatorIndex) {
             $indicator = Indikator::forceCreate([
                 'pilar_id' => $pillar->id,
-                'jabatan_id' => $jabatan->id,
+                'kelompok_jabatan_id' => $kelompokJabatan->id,
                 'title' => 'Indicator '.($indicators->count() + 1),
                 'defenisi' => 'Indicator definition',
                 'uuid' => (string) Str::uuid(),
