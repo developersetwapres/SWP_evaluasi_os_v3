@@ -62,9 +62,14 @@ COPY config/php.ini /usr/local/etc/php/conf.d/zz-app.ini
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/supervisord.conf /etc/supervisord.conf
 
+RUN addgroup -g 1945 -S pplsi && adduser -u 1945 -S pplsi -G pplsi
+
 RUN mkdir -p /run /var/log/supervisor \
-    && chown -R www-data:www-data storage bootstrap/cache \
+    && chown -R pplsi:pplsi storage bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
+
+RUN chown -R pplsi:pplsi /var/www /run /var/lib/nginx /var/log/nginx
+USER pplsi
 
 EXPOSE 8080
 
