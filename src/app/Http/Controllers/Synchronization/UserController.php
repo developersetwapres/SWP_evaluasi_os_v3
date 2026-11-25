@@ -31,7 +31,7 @@ class UserController extends Controller
 
             $updated = 0;
 
-            DB::transaction(function () use ($users, $osOrPegawai, &$updated) {
+            DB::transaction(function () use ($users, $osOrPegawai, $type, &$updated) {
                 foreach ($users as $user) {
                     $nip = $user['employee_id_number'] ?? null;
 
@@ -39,14 +39,31 @@ class UserController extends Controller
                         continue;
                     }
 
-                    $outsourcing = $osOrPegawai[$nip];
+                    if ($type === 'os') {
+                        $outsourcing = $osOrPegawai[$nip];
 
-                    $outsourcing->name = $user['name'];
-                    $outsourcing->image = $user['photo_profile'] ?? $outsourcing->image;
+                        $outsourcing->name = $user['name'] ?? $outsourcing->name;
+                        $outsourcing->image = isset($user['photo_profile'])
+                            ? preg_replace('/^http:\/\//i', 'https://', $user['photo_profile'])
+                            : $outsourcing->image;
 
-                    $outsourcing->save();
+                        $outsourcing->save();
 
-                    $updated++;
+                        $updated++;
+                    } else {
+                        $pegawai = $osOrPegawai[$nip];
+
+                        $pegawai->name = $user['name'] ?? $pegawai->name;
+                        $pegawai->image = isset($user['photo_profile'])
+                            ? preg_replace('/^http:\/\//i', 'https://', $user['photo_profile'])
+                            : $pegawai->image;
+
+                        $pegawai->jabatan = $user['position_name'] ?? $pegawai->jabatan;
+
+                        $pegawai->save();
+
+                        $updated++;
+                    }
                 }
             });
 

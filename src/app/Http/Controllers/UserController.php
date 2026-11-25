@@ -15,17 +15,17 @@ class UserController extends Controller
     {
         if ($user == 'outsourcings') {
             $initialUsers = Outsourcing::query()
-                ->select(['id','uuid','nip','name','image','jabatan_id','kode_biro','is_active'])
+                ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan_id', 'kode_biro', 'is_active'])
                 ->with([
-                'biro:kode_biro,nama_biro',
-                'jabatan:id,nama_jabatan',
-                'user' => fn($q) =>
-                $q->select(['id','userable_id','userable_type','nip','email','role'])
-                    ->withCount([
-                    'penugasan as penugasan_count' => fn($q) =>
-                    $q->where('siklus_id', 1)
+                    'biro:kode_biro,nama_biro',
+                    'jabatan:id,nama_jabatan',
+                    'user' => fn($q) =>
+                    $q->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role'])
+                        ->withCount([
+                            'penugasan as penugasan_count' => fn($q) =>
+                            $q->where('siklus_id', 1)
+                        ])
                 ])
-            ])
                 ->orderBy('name', 'asc')
                 ->get()
                 ->map(fn($o) => [
@@ -45,16 +45,16 @@ class UserController extends Controller
                 ]);
         } elseif ($user == 'evaluators') {
             $initialUsers = MasterPegawai::query()
-                    ->select(['id','uuid','nip','name','image','jabatan','kode_biro','kode_unit'])
-                    ->where('kode_unit', '02')
+                ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan', 'kode_biro', 'kode_unit'])
+                ->where('kode_unit', '02')
                 ->with([
-                        'biro:kode_biro,nama_biro',
+                    'biro:kode_biro,nama_biro',
                     'user' => fn($q) =>
-                        $q->select(['id','userable_id','userable_type','nip','email','role'])
-                            ->withCount([
-                        'penugasan as penugasan_count' => fn($q) =>
-                        $q->where('siklus_id', 1)
-                    ])
+                    $q->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role'])
+                        ->withCount([
+                            'penugasan as penugasan_count' => fn($q) =>
+                            $q->where('siklus_id', 1)
+                        ])
                 ])
                 ->orderBy('name', 'asc')
                 ->get()
@@ -97,9 +97,9 @@ class UserController extends Controller
                     $q->where('siklus_id', 1)
                 )
                 ->count(),
-            'jabatans' => Jabatan::select(['id','nama_jabatan','kode_jabatan'])
+            'jabatans' => Jabatan::select(['id', 'nama_jabatan', 'kode_jabatan'])
                 ->orderBy('nama_jabatan', 'asc')->get(),
-            'biros' => Biro::select(['kode_biro','nama_biro'])
+            'biros' => Biro::select(['kode_biro', 'nama_biro'])
                 ->where('kode_biro', 'like', '02%')
                 ->orderBy('nama_biro', 'asc')
                 ->get()

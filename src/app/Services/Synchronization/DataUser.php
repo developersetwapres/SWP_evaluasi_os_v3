@@ -38,7 +38,7 @@ class DataUser
                 return $response->json('data') ?? [];
             }
 
-            // Ambil ASN (type 2)
+            // Ambil ASN (type 1)
             $asn = Http::withToken($token)
                 ->timeout(30)
                 ->get($apiUrl, [
@@ -48,7 +48,7 @@ class DataUser
 
             $asn->throw();
 
-            // Ambil Non ASN (type 3)
+            // Ambil Non ASN (type 2)
             $nonAsn = Http::withToken($token)
                 ->timeout(30)
                 ->get($apiUrl, [

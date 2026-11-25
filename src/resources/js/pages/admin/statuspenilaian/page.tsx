@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Link } from '@inertiajs/react';
-import { Download, User, Users2 } from 'lucide-react';
+import { Download, FileSpreadsheet, User, Users2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type {
     StatusEvaluatorRow,
@@ -98,18 +98,18 @@ export default function StatusPenilaian({
 
                         <div className="flex gap-2 md:justify-end">
                             <Link
-                                className="flex items-center gap-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
+                                className="flex items-center gap-2 rounded-md bg-green-800 px-4 py-1.5 text-sm text-white hover:bg-green-700"
                                 href={evaluators.url()}
                             >
-                                <Download className="h-4 w-4" />
+                                <FileSpreadsheet className="h-4 w-4" />
                                 <span>Export by Evaluator</span>
                             </Link>
 
                             <Link
-                                className="flex items-center gap-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
+                                className="flex items-center gap-2 rounded-md bg-green-800 px-4 py-1.5 text-sm text-white hover:bg-green-700"
                                 href={outsourcings.url()}
                             >
-                                <Download className="h-4 w-4" />
+                                <FileSpreadsheet className="h-4 w-4" />
                                 <span>Export by Outsourcing</span>
                             </Link>
                         </div>

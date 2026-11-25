@@ -54,6 +54,7 @@ import {
     HashIcon,
     Mail,
     Plus,
+    RefreshCw,
     Search,
     Star,
     Trash2,
@@ -86,7 +87,9 @@ export default function UserManagement({
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDialogAsnOpen, setIsDialogAsnOpen] = useState(false);
-    const [editingUser, setEditingUser] = useState<UserManagementRow | null>(null);
+    const [editingUser, setEditingUser] = useState<UserManagementRow | null>(
+        null,
+    );
     const [showPassword, setShowPassword] = useState(false);
     const [onProcessing, setOnProcessing] = useState(false);
     const [formData, setFormData] = useState({
@@ -503,10 +506,10 @@ export default function UserManagement({
 
                                 <Button
                                     onClick={handleAdd}
-                                    className="flex items-center space-x-2"
+                                    className="flex items-center space-x-2 bg-emerald-600 text-white hover:bg-emerald-700"
                                 >
                                     <Plus className="h-4 w-4" />
-                                    <span>Tambah User Os</span>
+                                    <span>Tambah Data OS</span>
                                 </Button>
                             </>
                         )}
@@ -517,142 +520,26 @@ export default function UserManagement({
                                     isOutsourcing ? 'os' : 'evaluators',
                                 )
                             }
-                            className="flex items-center space-x-2"
+                            className="flex items-center space-x-2 bg-sky-600 text-white hover:bg-sky-700"
                         >
-                            <Plus className="h-4 w-4" />
-                            <span>
-                                {isOutsourcing
-                                    ? 'Sinkronisasi Os'
-                                    : 'Sinkronisasi Pegawai'}
-                            </span>
+                            <RefreshCw className="h-4 w-4" />
+                            <span>Sync dari Simdatuk</span>
                         </Button>
                     </div>
 
                     {/* Users Grid */}
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                        {filteredUsers?.map((user: UserManagementRow, index: number) => {
-                            if (user.type == 'pegawai') {
-                                return (
-                                    <Card
-                                        key={index}
-                                        className="gap-0 overflow-hidden rounded-xl bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl"
-                                    >
-                                        <CardHeader className="">
-                                            <div className="flex items-center gap-4">
-                                                <Avatar className="h-15 w-15">
-                                                    <AvatarImage
-                                                        src={
-                                                            user.image ||
-                                                            '/placeholder.svg'
-                                                        }
-                                                        alt={user.name}
-                                                    />
-                                                    <AvatarFallback>
-                                                        {user.name
-                                                            .split(' ')
-                                                            .map(
-                                                                (n: string) =>
-                                                                    n[0],
-                                                            )
-                                                            .join('')
-                                                            .substring(0, 2)
-                                                            .toUpperCase()}
-                                                    </AvatarFallback>
-                                                </Avatar>
-
-                                                <div>
-                                                    <h2 className="font-semibold text-gray-800">
-                                                        {user.name}
-                                                    </h2>
-                                                    <p className="text-sm text-gray-600">
-                                                        NIP: {user.nip}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="p-6">
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Briefcase className="h-4 w-4 text-purple-500" />
-                                                    <span className="text-sm">
-                                                        {user.jabatan}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <Building className="h-4 w-4 text-purple-500" />
-                                                    <span className="text-sm">
-                                                        {user.biro}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Star className="h-4 w-4 text-yellow-500" />
-                                                    <span className="text-sm font-medium">
-                                                        Role :
-                                                    </span>
-                                                    {user?.role?.map(
-                                                        (
-                                                            role: string,
-                                                            index: number,
-                                                        ) => (
-                                                            <Badge
-                                                                key={index}
-                                                                variant="outline"
-                                                                className="text-xs"
-                                                            >
-                                                                {role}
-                                                            </Badge>
-                                                        ),
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                                    <span className="text-sm font-medium">
-                                                        Jumlah yang dinilai:{' '}
-                                                        {user.jumlahDinilai} OS
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="flex space-x-2 pt-6">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        handleEdit(user)
-                                                    }
-                                                >
-                                                    <Edit className="h-3 w-3" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        handleDelete(user.id)
-                                                    }
-                                                    className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                                                >
-                                                    <Trash2 className="h-3 w-3" />
-                                                </Button>
-                                                <div className="ml-2 flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                                    <HashIcon className="h-3 w-3" />
-                                                    <span className="">
-                                                        {index + 1}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            } else {
-                                return (
-                                    <Card
-                                        key={index}
-                                        className="gap-0 overflow-hidden rounded-xl bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl"
-                                    >
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center space-x-3">
-                                                    <Avatar className="h-12 w-12">
+                        {filteredUsers?.map(
+                            (user: UserManagementRow, index: number) => {
+                                if (user.type == 'pegawai') {
+                                    return (
+                                        <Card
+                                            key={index}
+                                            className="gap-0 overflow-hidden rounded-xl bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl"
+                                        >
+                                            <CardHeader className="">
+                                                <div className="flex items-center gap-4">
+                                                    <Avatar className="h-15 w-15">
                                                         <AvatarImage
                                                             src={
                                                                 user.image ||
@@ -664,106 +551,232 @@ export default function UserManagement({
                                                             {user.name
                                                                 .split(' ')
                                                                 .map(
-                                                                    (n: string) =>
-                                                                        n[0],
+                                                                    (
+                                                                        n: string,
+                                                                    ) => n[0],
                                                                 )
                                                                 .join('')
                                                                 .substring(0, 2)
                                                                 .toUpperCase()}
                                                         </AvatarFallback>
                                                     </Avatar>
+
                                                     <div>
-                                                        <CardTitle className="font-semibold text-gray-800">
+                                                        <h2 className="font-semibold text-gray-800">
                                                             {user.name}
-                                                        </CardTitle>
-                                                        <p className="mt-0.5 text-xs text-gray-600">
-                                                            NRP: {user.nip}
+                                                        </h2>
+                                                        <p className="text-sm text-gray-600">
+                                                            NIP: {user.nip}
                                                         </p>
                                                     </div>
                                                 </div>
-                                                <Badge
-                                                    variant={
-                                                        user.is_active
-                                                            ? 'default'
-                                                            : 'secondary'
-                                                    }
-                                                    className="cursor-pointer"
-                                                    onClick={() =>
-                                                        toggleUserStatus(
-                                                            user.id,
-                                                        )
-                                                    }
-                                                >
-                                                    {user.is_active
-                                                        ? 'Aktif'
-                                                        : 'Nonaktif'}
-                                                </Badge>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="px-6 pt-6 pb-0.5">
-                                            <div className="space-y-3">
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="h-4 w-4 text-purple-500" />
-                                                    <span className="text-sm">
-                                                        {user.email}
-                                                    </span>
+                                            </CardHeader>
+                                            <CardContent className="p-6">
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Briefcase className="h-4 w-4 text-purple-500" />
+                                                        <span className="text-sm">
+                                                            {user.jabatan}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <Building className="h-4 w-4 text-purple-500" />
+                                                        <span className="text-sm">
+                                                            {user.biro}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <Star className="h-4 w-4 text-yellow-500" />
+                                                        <span className="text-sm font-medium">
+                                                            Role :
+                                                        </span>
+                                                        {user?.role?.map(
+                                                            (
+                                                                role: string,
+                                                                index: number,
+                                                            ) => (
+                                                                <Badge
+                                                                    key={index}
+                                                                    variant="outline"
+                                                                    className="text-xs"
+                                                                >
+                                                                    {role}
+                                                                </Badge>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                                        <span className="text-sm font-medium">
+                                                            Jumlah yang dinilai:{' '}
+                                                            {user.jumlahDinilai}{' '}
+                                                            OS
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="flex space-x-2 pt-6">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            handleEdit(user)
+                                                        }
+                                                    >
+                                                        <Edit className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                user.id,
+                                                            )
+                                                        }
+                                                        className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                    <div className="ml-2 flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                                                        <HashIcon className="h-3 w-3" />
+                                                        <span className="">
+                                                            {index + 1}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                } else {
+                                    return (
+                                        <Card
+                                            key={index}
+                                            className="gap-0 overflow-hidden rounded-xl bg-white shadow-lg transition-shadow duration-300 hover:shadow-xl"
+                                        >
+                                            <CardHeader className="pb-3">
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex items-center space-x-3">
+                                                        <Avatar className="h-12 w-12">
+                                                            <AvatarImage
+                                                                src={
+                                                                    user.image ||
+                                                                    '/placeholder.svg'
+                                                                }
+                                                                alt={user.name}
+                                                            />
+                                                            <AvatarFallback>
+                                                                {user.name
+                                                                    .split(' ')
+                                                                    .map(
+                                                                        (
+                                                                            n: string,
+                                                                        ) =>
+                                                                            n[0],
+                                                                    )
+                                                                    .join('')
+                                                                    .substring(
+                                                                        0,
+                                                                        2,
+                                                                    )
+                                                                    .toUpperCase()}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div>
+                                                            <CardTitle className="font-semibold text-gray-800">
+                                                                {user.name}
+                                                            </CardTitle>
+                                                            <p className="mt-0.5 text-xs text-gray-600">
+                                                                NRP: {user.nip}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    <Badge
+                                                        variant={
+                                                            user.is_active
+                                                                ? 'default'
+                                                                : 'secondary'
+                                                        }
+                                                        className="cursor-pointer"
+                                                        onClick={() =>
+                                                            toggleUserStatus(
+                                                                user.id,
+                                                            )
+                                                        }
+                                                    >
+                                                        {user.is_active
+                                                            ? 'Aktif'
+                                                            : 'Nonaktif'}
+                                                    </Badge>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent className="px-6 pt-6 pb-0.5">
+                                                <div className="space-y-3">
+                                                    <div className="flex items-center gap-2">
+                                                        <Mail className="h-4 w-4 text-purple-500" />
+                                                        <span className="text-sm">
+                                                            {user.email}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <Briefcase className="h-4 w-4 text-purple-500" />
+                                                        <span className="text-sm">
+                                                            {user.jabatan}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <Building className="h-4 w-4 text-purple-500" />
+                                                        <span className="text-sm">
+                                                            {user.biro}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        <CheckCircle className="h-4 w-4 text-green-500" />
+                                                        <span className="text-sm font-medium">
+                                                            Jumlah yang dinilai:{' '}
+                                                            {user.jumlahDinilai}{' '}
+                                                            OS
+                                                        </span>
+                                                    </div>
                                                 </div>
 
-                                                <div className="flex items-center gap-2">
-                                                    <Briefcase className="h-4 w-4 text-purple-500" />
-                                                    <span className="text-sm">
-                                                        {user.jabatan}
-                                                    </span>
+                                                <div className="flex space-x-2 pt-6">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            handleEdit(user)
+                                                        }
+                                                    >
+                                                        <Edit className="h-3 w-3" />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        onClick={() =>
+                                                            handleDelete(
+                                                                user.id,
+                                                            )
+                                                        }
+                                                        className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                                    >
+                                                        <Trash2 className="h-3 w-3" />
+                                                    </Button>
+                                                    <div className="ml-2 flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+                                                        <HashIcon className="h-3 w-3" />
+                                                        <span className="">
+                                                            {index + 1}
+                                                        </span>
+                                                    </div>
                                                 </div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <Building className="h-4 w-4 text-purple-500" />
-                                                    <span className="text-sm">
-                                                        {user.biro}
-                                                    </span>
-                                                </div>
-
-                                                <div className="flex items-center gap-2">
-                                                    <CheckCircle className="h-4 w-4 text-green-500" />
-                                                    <span className="text-sm font-medium">
-                                                        Jumlah yang dinilai:{' '}
-                                                        {user.jumlahDinilai} OS
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex space-x-2 pt-6">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        handleEdit(user)
-                                                    }
-                                                >
-                                                    <Edit className="h-3 w-3" />
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    onClick={() =>
-                                                        handleDelete(user.id)
-                                                    }
-                                                    className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                                                >
-                                                    <Trash2 className="h-3 w-3" />
-                                                </Button>
-                                                <div className="ml-2 flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-                                                    <HashIcon className="h-3 w-3" />
-                                                    <span className="">
-                                                        {index + 1}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            }
-                        })}
+                                            </CardContent>
+                                        </Card>
+                                    );
+                                }
+                            },
+                        )}
                     </div>
 
                     {filteredUsers?.length === 0 && (
