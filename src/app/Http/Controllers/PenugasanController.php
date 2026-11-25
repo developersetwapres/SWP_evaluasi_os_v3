@@ -296,7 +296,7 @@ class PenugasanController extends Controller
         $data = [
             'semesterHistory' => $semesterHistory,
             'penugasanPeer' => Auth::user()->penugasan()
-                ->select(['id','outsourcing_id', 'siklus_id', 'status', 'uuid', 'tipe_penilai'])
+                ->select(['id', 'outsourcing_id', 'siklus_id', 'status', 'uuid', 'tipe_penilai'])
                 ->whereHas('siklus', fn($q) => $q->where('is_active', true))
                 ->with([
                     'outsourcings:id,uuid,image,name,jabatan_id',

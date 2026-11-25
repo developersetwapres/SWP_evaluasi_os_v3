@@ -123,12 +123,15 @@ export default function EvaluatorPage({
                                         <CardDescription className="text-xs text-green-100 md:text-sm">
                                             {user?.userable_type ==
                                             'App\Models\Outsourcing'
-                                                ? (typeof user?.userable?.jabatan === 'object'
-                                                      ? user.userable.jabatan?.nama_jabatan
-                                                      : undefined)
-                                                : (typeof user?.userable?.jabatan === 'string'
-                                                      ? user.userable.jabatan
-                                                      : undefined)}
+                                                ? typeof user?.userable
+                                                      ?.jabatan === 'object'
+                                                    ? user.userable.jabatan
+                                                          ?.nama_jabatan
+                                                    : undefined
+                                                : typeof user?.userable
+                                                        ?.jabatan === 'string'
+                                                  ? user.userable.jabatan
+                                                  : undefined}
                                             {' • '}
                                             {user?.userable?.biro?.nama_biro}
                                         </CardDescription>
@@ -143,7 +146,8 @@ export default function EvaluatorPage({
                                                 ?.reduce(
                                                     (sum, score) =>
                                                         sum +
-                                                        (score.weightedScore ?? 0),
+                                                        (score.weightedScore ??
+                                                            0),
                                                     0,
                                                 )
                                                 .toFixed(2)}
@@ -154,7 +158,8 @@ export default function EvaluatorPage({
                                                 resultScore?.reduce(
                                                     (sum, score) =>
                                                         sum +
-                                                        (score.weightedScore ?? 0),
+                                                        (score.weightedScore ??
+                                                            0),
                                                     0,
                                                 ) ?? 0,
                                             )} border-2 text-sm md:px-4 md:py-1.5`}
@@ -163,7 +168,8 @@ export default function EvaluatorPage({
                                                 resultScore?.reduce(
                                                     (sum, score) =>
                                                         sum +
-                                                        (score.weightedScore ?? 0),
+                                                        (score.weightedScore ??
+                                                            0),
                                                     0,
                                                 ) ?? 0,
                                             )}
@@ -271,7 +277,7 @@ export default function EvaluatorPage({
                                                                         <p className="text-xs text-gray-500">
                                                                             {score.type ===
                                                                             'atasan'
-                                                                                ? 'Penilaian oleh atasan langsung'
+                                                                                ? 'Penilaian oleh atasan'
                                                                                 : ''}
                                                                             {score.type ===
                                                                             'penerima_layanan2'
@@ -416,7 +422,9 @@ export default function EvaluatorPage({
                                         {/* Creative Employee Cards */}
                                         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                             {penugasanPeer?.map(
-                                                (employee: EvaluatorAssignment) => (
+                                                (
+                                                    employee: EvaluatorAssignment,
+                                                ) => (
                                                     <Card
                                                         key={employee.id}
                                                         className="group relative overflow-hidden border-0 bg-linear-to-br from-white to-blue-50 pb-2 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-2xl"
@@ -816,7 +824,9 @@ export default function EvaluatorPage({
                                                             .employees.length,
                                                         completed:
                                                             semester.employees.filter(
-                                                                (emp: SemesterEmployee) =>
+                                                                (
+                                                                    emp: SemesterEmployee,
+                                                                ) =>
                                                                     emp.status ===
                                                                     'completed',
                                                             ).length,

@@ -23,8 +23,6 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AdminLayout from '@/layouts/app/app-adminkmz-layout';
-import { evaluators, outsourcings } from '@/routes/penugasan';
 import { Link } from '@inertiajs/react';
 import { Download, User, Users2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -33,6 +31,7 @@ import type {
     StatusOutsourcingRow,
     StatusPenilaianPageProps,
 } from '@/types';
+import { evaluators, outsourcings } from '@/routes/penugasan';
 
 export default function StatusPenilaian({
     byOutsourcings,
@@ -143,7 +142,10 @@ export default function StatusPenilaian({
                                         value={evaluatorFilter}
                                         onValueChange={(v) =>
                                             setEvaluatorFilter(
-                                                v as 'all' | 'completed' | 'incomplete',
+                                                v as
+                                                    | 'all'
+                                                    | 'completed'
+                                                    | 'incomplete',
                                             )
                                         }
                                     >
@@ -182,8 +184,11 @@ export default function StatusPenilaian({
                                 </TableHeader>
                                 <TableBody>
                                     {filteredEvaluators.map(
-                                        (row: StatusEvaluatorRow, index: number) => (
-                                            <TableRow                                             key={index}>
+                                        (
+                                            row: StatusEvaluatorRow,
+                                            index: number,
+                                        ) => (
+                                            <TableRow key={index}>
                                                 <TableCell className="w-8">
                                                     {index + 1}
                                                 </TableCell>
@@ -225,7 +230,10 @@ export default function StatusPenilaian({
                                         value={outsourcingFilter}
                                         onValueChange={(v) =>
                                             setOutsourcingFilter(
-                                                v as 'all' | 'completed' | 'incomplete',
+                                                v as
+                                                    | 'all'
+                                                    | 'completed'
+                                                    | 'incomplete',
                                             )
                                         }
                                     >
@@ -269,7 +277,10 @@ export default function StatusPenilaian({
                                 </TableHeader>
                                 <TableBody>
                                     {filteredOutsourcings.map(
-                                        (row: StatusOutsourcingRow, index: number) => (
+                                        (
+                                            row: StatusOutsourcingRow,
+                                            index: number,
+                                        ) => (
                                             <TableRow key={index}>
                                                 <TableCell className="w-8">
                                                     {index + 1}
