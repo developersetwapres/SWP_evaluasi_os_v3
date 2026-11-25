@@ -4,41 +4,41 @@ LABEL Maintainer="Pusat Pengembangan dan Layanan Sistem Informasi <setnegapps@se
 WORKDIR /var/www
 
 RUN apk add --no-cache \
-    curl \
-    nginx \
-    nodejs \
-    npm \
-    php84 \
-    php84-bcmath \
-    php84-ctype \
-    php84-curl \
-    php84-dom \
-    php84-fileinfo \
-    php84-fpm \
-    php84-gd \
-    php84-iconv \
-    php84-intl \
-    php84-ldap \
-    php84-mbstring \
-    php84-mysqli \
-    php84-opcache \
-    php84-openssl \
-    php84-pdo \
-    php84-pdo_mysql \
-    php84-pdo_pgsql \
-    php84-pgsql \
-    php84-pecl-imagick \
-    php84-phar \
-    php84-session \
-    php84-simplexml \
-    php84-tokenizer \
-    php84-xml \
-    php84-xmlreader \
-    php84-xmlwriter \
-    php84-zip \
-    supervisor \
-    tzdata \
-    postgresql-client
+  curl \
+  nginx \
+  nodejs \
+  npm \
+  php84 \
+  php84-bcmath \
+  php84-ctype \
+  php84-curl \
+  php84-dom \
+  php84-fileinfo \
+  php84-fpm \
+  php84-gd \
+  php84-iconv \
+  php84-intl \
+  php84-ldap \
+  php84-mbstring \
+  php84-mysqli \
+  php84-opcache \
+  php84-openssl \
+  php84-pdo \
+  php84-pdo_mysql \
+  php84-pdo_pgsql \
+  php84-pgsql \
+  php84-pecl-imagick \
+  php84-phar \
+  php84-session \
+  php84-simplexml \
+  php84-tokenizer \
+  php84-xml \
+  php84-xmlreader \
+  php84-xmlwriter \
+  php84-zip \
+  supervisor \
+  tzdata \
+  postgresql-client
 
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 
