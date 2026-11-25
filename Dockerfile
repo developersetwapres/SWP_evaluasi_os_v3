@@ -3,42 +3,43 @@ LABEL Maintainer="Pusat Pengembangan dan Layanan Sistem Informasi <setnegapps@se
 
 WORKDIR /var/www
 
-RUN apk add --no-cache \
-  curl \
-  nginx \
-  nodejs \
-  npm \
-  php85 \
-  php85-bcmath \
-  php85-ctype \
-  php85-curl \
-  php85-dom \
-  php85-fileinfo \
-  php85-fpm \
-  php85-gd \
-  php85-iconv \
-  php85-intl \
-  php85-ldap \
-  php85-mbstring \
-  php85-mysqli \
-  php85-opcache \
-  php85-openssl \
-  php85-pdo \
-  php85-pdo_mysql \
-  php85-pdo_pgsql \
-  php85-pgsql \
-  php85-pecl-imagick \
-  php85-phar \
-  php85-session \
-  php85-simplexml \
-  php85-tokenizer \
-  php85-xml \
-  php85-xmlreader \
-  php85-xmlwriter \
-  php85-zip \
-  supervisor \
-  tzdata \
-  postgresql-client
+RUN set -eux; \
+    cat /etc/alpine-release; \
+    cat /etc/apk/repositories; \
+    apk update; \
+    apk add --no-cache curl nginx nodejs npm; \
+    apk add --no-cache \
+        php85 \
+        php85-bcmath \
+        php85-ctype \
+        php85-curl \
+        php85-dom \
+        php85-fileinfo \
+        php85-fpm \
+        php85-gd \
+        php85-iconv \
+        php85-intl \
+        php85-ldap \
+        php85-mbstring \
+        php85-mysqli \
+        php85-opcache \
+        php85-openssl \
+        php85-pdo \
+        php85-pdo_mysql \
+        php85-pdo_pgsql \
+        php85-pgsql \
+        php85-pecl-imagick \
+        php85-phar \
+        php85-session \
+        php85-simplexml \
+        php85-tokenizer \
+        php85-xml \
+        php85-xmlreader \
+        php85-xmlwriter \
+        php85-zip \
+        supervisor \
+        tzdata \
+        postgresql-client
 
 COPY --from=composer/composer:latest-bin /composer /usr/bin/composer
 
