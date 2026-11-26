@@ -92,6 +92,7 @@ export default function UserManagement({
     );
     const [showPassword, setShowPassword] = useState(false);
     const [onProcessing, setOnProcessing] = useState(false);
+    const [disabled, setDisabled] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -136,6 +137,7 @@ export default function UserManagement({
     });
 
     const handleSinkronisasi = (type: string) => {
+        setDisabled(true);
         router.put(
             datauser.url(type),
             {},
@@ -156,6 +158,9 @@ export default function UserManagement({
                             description: flash.error,
                         });
                     }
+                },
+                onFinish: () => {
+                    setDisabled(false);
                 },
             },
         );
@@ -492,7 +497,7 @@ export default function UserManagement({
                                         <SelectValue placeholder="Filter Status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Semua Status">
+                                        <SelectItem value={'Semua Status'}>
                                             Semua Status
                                         </SelectItem>
                                         <SelectItem value={'1'}>
@@ -521,6 +526,7 @@ export default function UserManagement({
                                 )
                             }
                             className="flex items-center space-x-2 bg-sky-600 text-white hover:bg-sky-700"
+                            disabled={disabled}
                         >
                             <RefreshCw className="h-4 w-4" />
                             <span>Sync dari Simdatuk</span>
@@ -565,9 +571,9 @@ export default function UserManagement({
                                                         <h2 className="font-semibold text-gray-800">
                                                             {user.name}
                                                         </h2>
-                                                        <p className="text-sm text-gray-600">
+                                                        <span className="text-xs text-gray-700">
                                                             NIP: {user.nip}
-                                                        </p>
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </CardHeader>

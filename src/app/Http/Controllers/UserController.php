@@ -50,7 +50,7 @@ class UserController extends Controller
                 ->with([
                     'biro:kode_biro,nama_biro',
                     'user' => fn($q) =>
-                    $q->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role'])
+                    $q->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role', 'nip_sso'])
                         ->withCount([
                             'penugasan as penugasan_count' => fn($q) =>
                             $q->where('siklus_id', 1)
@@ -64,7 +64,7 @@ class UserController extends Controller
                     'image'   => $p->image,
                     'email'   => null,
                     'type'    => 'pegawai',
-                    'nip'     => $p->user?->nip_sso,
+                    'nip'     => $p->user?->nip . ' / ' . $p->user?->nip_sso,
                     'biro'    => $p->biro?->nama_biro,
                     'kode_biro'    => $p->biro?->kode_biro,
                     'role'    => $p->user?->role,

@@ -18,8 +18,7 @@ class DataUser
             );
         }
 
-        $apiUrl = config('services.simdatuk.api_image_url')
-            . '/api/employees/';
+        $apiUrl = config('services.simdatuk.api_image_url');
 
         $token = config('services.simdatuk.token_api');
 
@@ -27,7 +26,7 @@ class DataUser
             if ($type === 'os') {
                 $response = Http::withToken($token)
                     ->timeout(30)
-                    ->get($apiUrl, [
+                    ->get($apiUrl . '/api/employees/', [
                         'type' => 3,
                         'employment_type_id' => 19,
                         'employment_status' => 1,
@@ -41,7 +40,7 @@ class DataUser
             // Ambil ASN (type 1)
             $asn = Http::withToken($token)
                 ->timeout(30)
-                ->get($apiUrl, [
+                ->get($apiUrl . '/api/employees/', [
                     'type' => 1,
                     'employment_status' => 1,
                 ]);
@@ -51,16 +50,34 @@ class DataUser
             // Ambil Non ASN (type 2)
             $nonAsn = Http::withToken($token)
                 ->timeout(30)
-                ->get($apiUrl, [
+                ->get($apiUrl . '/api/employees/', [
                     'type' => 2,
                     'employment_status' => 1,
                 ]);
 
             $nonAsn->throw();
 
+
+            // Ambil Perbantuan Setneg (type 2)
+            $perbantuan = Http::withToken($token)
+                ->timeout(30)
+                ->get($apiUrl . '/api/diagrams/', [
+                    'id' => 4,
+                ]);
+
+            $perbantuan->throw();
+
+            $data = $perbantuan->json('data') ?? [];
+
+            $perbantuanSetneg = collect($data['childs'] ?? [])
+                ->flatMap(fn($child) => $child['users'] ?? [])
+                ->values()
+                ->all();
+
             return array_merge(
                 $asn->json('data') ?? [],
-                $nonAsn->json('data') ?? []
+                $nonAsn->json('data') ?? [],
+                $perbantuanSetneg
             );
         } catch (ConnectionException $e) {
             throw new RuntimeException(
