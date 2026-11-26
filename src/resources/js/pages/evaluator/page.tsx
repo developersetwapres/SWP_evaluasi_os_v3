@@ -89,7 +89,7 @@ export default function EvaluatorPage({
                             </div>
 
                             <Link
-                                className="inline-flex items-center justify-center gap-2 space-x-2 rounded-md border bg-transparent px-3 py-2 text-sm font-medium whitespace-nowrap hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                                className="inline-flex items-center justify-center gap-2 space-x-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium whitespace-nowrap text-red-600 hover:bg-red-100 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                                 href={logout()}
                                 onClick={handleLogout}
                                 data-test="logout-button"
@@ -110,7 +110,10 @@ export default function EvaluatorPage({
                                 <div className="flex items-center space-x-4">
                                     <div className="rounded-full bg-white/20 p-3">
                                         <img
-                                            src={`/storage/${user?.userable?.image}`}
+                                            src={
+                                                user?.userable?.image ||
+                                                '/placeholder.svg'
+                                            }
                                             alt={user?.userable?.name}
                                             className="h-19 w-19 rounded-full"
                                         />
@@ -471,7 +474,9 @@ export default function EvaluatorPage({
                                                             <div className="relative mb-4">
                                                                 <img
                                                                     src={
-                                                                        `/storage/${employee.outsourcings.image}` ||
+                                                                        employee
+                                                                            .outsourcings
+                                                                            .image ||
                                                                         '/placeholder.svg'
                                                                     }
                                                                     alt={

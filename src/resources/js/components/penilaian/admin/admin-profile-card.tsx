@@ -25,9 +25,7 @@ export function AdminProfileCard() {
                             {user.userable?.name}
                         </CardTitle>
                         <CardDescription className="text-blue-100">
-                            {typeof user.userable?.jabatan === 'string'
-                                ? user.userable.jabatan
-                                : user.userable?.jabatan?.nama_jabatan}
+                            {user.userable?.nip}
                         </CardDescription>
                     </div>
                 </div>
@@ -63,7 +61,8 @@ export function AdminProfileCard() {
                                         className="hover:underline"
                                     >
                                         {label}
-                                        {i < (user.role?.length ?? 0) - 1 && ', '}
+                                        {i < (user.role?.length ?? 0) - 1 &&
+                                            ', '}
                                     </Link>
                                 );
                             })}
@@ -71,17 +70,16 @@ export function AdminProfileCard() {
                     </div>
                     <div className="space-y-2">
                         <div className="flex items-center space-x-2">
-                            <Building2 className="h-4 w-4" />
+                            <span className="font-medium">Unit Kerja: </span>
                             <span>{user.userable?.biro?.nama_biro}</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                            <span className="font-medium">Akses:</span>
-                            <Link
-                                href="/admin/profile"
-                                className="underline hover:text-blue-100"
-                            >
-                                Full System Access
-                            </Link>
+                            <span className="font-medium">Jabatan: </span>
+                            <span>
+                                {typeof user.userable?.jabatan === 'string'
+                                    ? user.userable.jabatan
+                                    : user.userable?.jabatan?.nama_jabatan}
+                            </span>
                         </div>
                     </div>
                 </div>

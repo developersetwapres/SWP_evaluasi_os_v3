@@ -1,8 +1,42 @@
 'use client';
 
+import { Link, router, usePage } from '@inertiajs/react';
+import {
+    Briefcase,
+    Building,
+    Calendar,
+    CheckCircle,
+    Clock,
+    Edit,
+    Eye,
+    EyeOff,
+    HashIcon,
+    Mail,
+    Plus,
+    RefreshCw,
+    Search,
+    Star,
+    Trash2,
+    Upload,
+    User,
+    User2,
+    UserCog,
+    Users,
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -28,9 +62,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import AdminLayout from '@/layouts/app/app-adminkmz-layout';
 import { cn } from '@/lib/utils';
 import {
+    destroy as destroyOutsourcing,
     store as storeOutsourcing,
     update as updateOutsourcing,
 } from '@/routes/outsourcing';
@@ -41,30 +75,6 @@ import {
 import { datauser } from '@/routes/synchronization';
 import { tempImage } from '@/routes/upload';
 import { index } from '@/routes/user';
-import { Link, router, usePage } from '@inertiajs/react';
-import {
-    Briefcase,
-    Building,
-    Calendar,
-    CheckCircle,
-    Clock,
-    Edit,
-    Eye,
-    EyeOff,
-    HashIcon,
-    Mail,
-    Plus,
-    RefreshCw,
-    Search,
-    Star,
-    Trash2,
-    Upload,
-    User,
-    User2,
-    UserCog,
-    Users,
-} from 'lucide-react';
-import { useEffect, useState } from 'react';
 import type { UserManagementPageProps, UserManagementRow } from '@/types';
 
 export default function UserManagement({
@@ -87,6 +97,10 @@ export default function UserManagement({
     const [searchTerm, setSearchTerm] = useState('');
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isDialogAsnOpen, setIsDialogAsnOpen] = useState(false);
+    const [outsourcingToDelete, setOutsourcingToDelete] = useState<
+        string | null
+    >(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [editingUser, setEditingUser] = useState<UserManagementRow | null>(
         null,
     );
@@ -202,7 +216,29 @@ export default function UserManagement({
     };
 
     const handleDelete = (id: string) => {
-        //
+        setOutsourcingToDelete(id);
+    };
+
+    const confirmDelete = () => {
+        if (!outsourcingToDelete) {
+            return;
+        }
+
+        setIsDeleting(true);
+        router.delete(destroyOutsourcing.url(outsourcingToDelete), {
+            preserveScroll: true,
+            onSuccess: () => {
+                setOutsourcingToDelete(null);
+                toast.success('Data Outsourcing berhasil dihapus.');
+            },
+            onError: (errors) => {
+                const error = Object.values(errors)[0];
+                toast.error('Data Outsourcing gagal dihapus.', {
+                    description: typeof error === 'string' ? error : undefined,
+                });
+            },
+            onFinish: () => setIsDeleting(false),
+        });
     };
 
     const handleSave = (type: string) => {
@@ -298,7 +334,6 @@ export default function UserManagement({
                             ...prev,
                             image: pathTemp,
                         }));
-                        console.log('Image uploaded successfully:', pathTemp);
                     }
                 },
                 onError: (err) => {
@@ -639,18 +674,6 @@ export default function UserManagement({
                                                     >
                                                         <Edit className="h-3 w-3" />
                                                     </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                user.id,
-                                                            )
-                                                        }
-                                                        className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
                                                     <div className="ml-2 flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                                                         <HashIcon className="h-3 w-3" />
                                                         <span className="">
@@ -809,6 +832,42 @@ export default function UserManagement({
                 </CardContent>
             </Card>
 
+            <AlertDialog
+                open={outsourcingToDelete !== null}
+                onOpenChange={(open) => {
+                    if (!open && !isDeleting) {
+                        setOutsourcingToDelete(null);
+                    }
+                }}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            Hapus data Outsourcing?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Data Outsourcing yang dihapus tidak dapat
+                            dikembalikan. Akun User yang terhubung juga akan
+                            ikut dihapus.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>
+                            Batal
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isDeleting}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                confirmDelete();
+                            }}
+                        >
+                            {isDeleting ? 'Menghapus...' : 'Hapus'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent className="max-h-[80vh] gap-0.5 overflow-y-auto sm:max-w-175">
@@ -833,8 +892,7 @@ export default function UserManagement({
                                 <Avatar className="h-16 w-16">
                                     <AvatarImage
                                         src={
-                                            `/storage/${formData.image}` ||
-                                            '/placeholder.svg'
+                                            formData.image || '/placeholder.svg'
                                         }
                                         alt="Preview"
                                     />
@@ -1102,8 +1160,7 @@ export default function UserManagement({
                                 <Avatar className="h-16 w-16">
                                     <AvatarImage
                                         src={
-                                            `/storage/${formData.image}` ||
-                                            '/placeholder.svg'
+                                            formData.image || '/placeholder.svg'
                                         }
                                         alt="Preview"
                                     />
