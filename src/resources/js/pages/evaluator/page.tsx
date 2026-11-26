@@ -908,7 +908,11 @@ export default function EvaluatorPage({
                                                                                 <CardContent className="p-4">
                                                                                     <div className="flex items-start gap-3">
                                                                                         <img
-                                                                                            src={`/${employee.outsourcings.image}`}
+                                                                                            src={
+                                                                                                employee
+                                                                                                    .outsourcings
+                                                                                                    .image
+                                                                                            }
                                                                                             alt={
                                                                                                 employee
                                                                                                     .outsourcings
