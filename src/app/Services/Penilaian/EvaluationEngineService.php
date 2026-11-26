@@ -104,6 +104,8 @@ class EvaluationEngineService
             'weightedScore' => round($weightedFinal, 2),
             'status' => $penugasan->status,
             'notes' => $penugasan->catatan,
+            'developmentAreas' => $penugasan->area_pengembangan,
+            'observedStrengths' => $penugasan->kekuatan_teramati,
             'aspects' => $pilarResults,
         ];
     }

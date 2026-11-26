@@ -286,7 +286,7 @@ export default function PeerAssignment({
                                                             <Avatar className="h-12 w-12">
                                                                 <AvatarImage
                                                                     src={
-                                                                        `/storage/${penugasan.image || '/placeholder.svg'}` ||
+                                                                        penugasan.image ||
                                                                         '/placeholder.svg'
                                                                     }
                                                                     alt={
@@ -374,7 +374,9 @@ export default function PeerAssignment({
                                                                             {
                                                                                 uuid: penugasan.uuid,
                                                                                 name: penugasan.name,
-                                                                                biro: penugasan.biro ?? '',
+                                                                                biro:
+                                                                                    penugasan.biro ??
+                                                                                    '',
                                                                                 evaluators:
                                                                                     penugasan.evaluators,
                                                                                 jabatan:

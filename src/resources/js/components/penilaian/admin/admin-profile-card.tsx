@@ -5,9 +5,8 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-// import { SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { Building2, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export function AdminProfileCard() {
     const { auth } = usePage().props;
@@ -45,7 +44,7 @@ export function AdminProfileCard() {
 
                                 const href =
                                     role === 'administrator'
-                                        ? '/dashboard/administrator'
+                                        ? '/dashboard' //kedapan dashboard administrator '/dashboard/administrator
                                         : role === 'operator'
                                           ? '/dashboard'
                                           : '/';

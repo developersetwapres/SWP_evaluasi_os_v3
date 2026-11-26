@@ -27,11 +27,14 @@ import {
     Clock,
     LogOut,
     History,
+    MessageSquareText,
+    TrendingUp,
     User,
     Users,
     Award,
     Briefcase,
 } from 'lucide-react';
+
 import {
     getScoreBadgeColor,
     getScoreColor,
@@ -123,9 +126,9 @@ export default function EvaluatorPage({
                                         <CardTitle className="text-lg text-white md:text-4xl">
                                             {user?.userable?.name}
                                         </CardTitle>
-                                        <CardDescription className="text-xs text-green-100 md:text-sm">
+                                        <CardDescription className="text-sm font-medium text-white md:text-lg">
                                             {user?.userable_type ==
-                                            'App\Models\Outsourcing'
+                                            'App\\Models\\Outsourcing'
                                                 ? typeof user?.userable
                                                       ?.jabatan === 'object'
                                                     ? user.userable.jabatan
@@ -138,6 +141,48 @@ export default function EvaluatorPage({
                                             {' • '}
                                             {user?.userable?.biro?.nama_biro}
                                         </CardDescription>
+
+                                        <div className="mt-3 flex items-center space-x-2">
+                                            <span className="text-xs font-medium text-green-100 md:text-sm">
+                                                Role:
+                                            </span>
+
+                                            {(user.role ?? []).map(
+                                                (r: string, i: number) => {
+                                                    const role =
+                                                        r.toLowerCase();
+
+                                                    const href =
+                                                        role === 'administrator'
+                                                            ? '/dashboard' //kedapan dashboard administrator '/dashboard/administrator
+                                                            : role ===
+                                                                'operator'
+                                                              ? '/dashboard'
+                                                              : '/';
+
+                                                    const label =
+                                                        role
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                        role.slice(1);
+
+                                                    return (
+                                                        <Link
+                                                            key={i}
+                                                            href={href}
+                                                            className="text-xs text-green-100 hover:underline md:text-sm"
+                                                        >
+                                                            {label}
+                                                            {i <
+                                                                (user.role
+                                                                    ?.length ??
+                                                                    0) -
+                                                                    1 && ', '}
+                                                        </Link>
+                                                    );
+                                                },
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -208,8 +253,8 @@ export default function EvaluatorPage({
                             {/* Current Semester Tab */}
                             <TabsContent value="current" className="space-y-6">
                                 {typeUser === 'outsourcing' && (
-                                    <Card className="border-0 bg-linear-to-br from-blue-50 shadow-md">
-                                        <CardContent>
+                                    <Card className="gap-0 border-0 bg-linear-to-br from-blue-50 shadow-md">
+                                        <CardHeader>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className="rounded-lg bg-gray-100 p-2">
@@ -228,18 +273,21 @@ export default function EvaluatorPage({
                                                     </div>
                                                 </div>
                                             </div>
+                                        </CardHeader>
 
-                                            <div className="mt-4 grid gap-2 md:grid-cols-3">
+                                        <CardContent>
+                                            <div className="mt-4 grid gap-4 md:grid-cols-3">
                                                 {resultScore?.map(
                                                     (
                                                         score: EvaluatorScore,
                                                         index: number,
                                                     ) => (
                                                         <Card
-                                                            className="gap-2.5 border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white px-4 py-7 shadow-md"
+                                                            className="gap-4 border-l-4 border-l-purple-500 bg-gradient-to-br from-purple-50 to-white px-4 py-6 shadow-md"
                                                             key={index}
                                                         >
-                                                            <div className="mb-3 flex items-start justify-between">
+                                                            {/* Header Evaluator */}
+                                                            <div className="flex items-start justify-between">
                                                                 <div className="flex items-center gap-2">
                                                                     <div className="rounded-md bg-indigo-50 p-2">
                                                                         {score.type ===
@@ -253,46 +301,35 @@ export default function EvaluatorPage({
                                                                             <Award className="h-5 w-5 text-indigo-600" />
                                                                         ) : null}
                                                                     </div>
+
                                                                     <div>
                                                                         <h4 className="text-sm font-semibold text-gray-900">
-                                                                            {score.type
-                                                                                .replace(
-                                                                                    '_',
-                                                                                    ' ',
-                                                                                )
-                                                                                .replace(
-                                                                                    /^./,
-                                                                                    (
-                                                                                        c: string,
-                                                                                    ) =>
-                                                                                        c.toUpperCase(),
-                                                                                )}{' '}
-                                                                            (
+                                                                            {score.type ===
+                                                                            'atasan'
+                                                                                ? 'Penilaian oleh atasan'
+                                                                                : score.type ===
+                                                                                    'penerima_layanan1'
+                                                                                  ? 'Penerima layanan 1'
+                                                                                  : score.type ===
+                                                                                      'penerima_layanan2'
+                                                                                    ? 'Penerima layanan 2'
+                                                                                    : 'Evaluator'}
+                                                                        </h4>
+
+                                                                        <p className="text-xs text-gray-500">
+                                                                            Bobot
+                                                                            Nilai
                                                                             {(
                                                                                 score?.bobot *
                                                                                 100
                                                                             ).toFixed(
                                                                                 0,
                                                                             )}
-                                                                            %)
-                                                                        </h4>
-
-                                                                        <p className="text-xs text-gray-500">
-                                                                            {score.type ===
-                                                                            'atasan'
-                                                                                ? 'Penilaian oleh atasan'
-                                                                                : ''}
-                                                                            {score.type ===
-                                                                            'penerima_layanan2'
-                                                                                ? 'Penilaian oleh teman setingkat'
-                                                                                : ''}
-                                                                            {score.type ===
-                                                                            'penerima_layanan1'
-                                                                                ? 'Penilaian oleh penerima layanan'
-                                                                                : ''}
+                                                                            %
                                                                         </p>
                                                                     </div>
                                                                 </div>
+
                                                                 <Badge
                                                                     className={`${
                                                                         score.status ===
@@ -308,12 +345,14 @@ export default function EvaluatorPage({
                                                                 </Badge>
                                                             </div>
 
+                                                            {/* Score */}
                                                             <div className="flex flex-col items-center">
-                                                                <div className="mb-6 w-2/3 rounded-lg bg-white p-3 text-center shadow-sm">
+                                                                <div className="mb-5 w-2/3 rounded-lg bg-white p-3 text-center shadow-sm">
                                                                     <div className="text-sm text-gray-600">
                                                                         Score
                                                                         Asli
                                                                     </div>
+
                                                                     <div
                                                                         className={`text-2xl font-bold ${getScoreColor(score?.averageScore)}`}
                                                                     >
@@ -322,6 +361,7 @@ export default function EvaluatorPage({
                                                                         }
                                                                     </div>
                                                                 </div>
+
                                                                 <div className="text-center font-mono text-sm opacity-90">
                                                                     {
                                                                         score?.averageScore
@@ -343,13 +383,90 @@ export default function EvaluatorPage({
                                                                 </div>
                                                             </div>
 
-                                                            <div className="text-center text-sm text-gray-600">
-                                                                {score.notes
-                                                                    ? score.notes
-                                                                    : score.status ===
-                                                                        'completed'
-                                                                      ? '"Tidak ada saran dari penilai"'
-                                                                      : '"Belum ada catatan"'}
+                                                            {/* Feedback Evaluator */}
+                                                            <div className="space-y-3 border-t border-purple-100 pt-4">
+                                                                {/* Catatan */}
+                                                                {score.notes && (
+                                                                    <div className="rounded-xl border border-blue-100 bg-white/80 p-3 shadow-sm">
+                                                                        <div className="mb-2 flex items-center gap-2">
+                                                                            <div className="rounded-lg bg-blue-50 p-2">
+                                                                                <MessageSquareText className="h-4 w-4 text-blue-600" />
+                                                                            </div>
+
+                                                                            <h5 className="text-xs font-semibold text-blue-700">
+                                                                                Catatan
+                                                                            </h5>
+                                                                        </div>
+
+                                                                        <p className="text-sm leading-relaxed text-gray-600">
+                                                                            {
+                                                                                score.notes
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Area Pengembangan */}
+                                                                {score.developmentAreas && (
+                                                                    <div className="rounded-xl border border-orange-100 bg-white/80 p-3 shadow-sm">
+                                                                        <div className="mb-2 flex items-center gap-2">
+                                                                            <div className="rounded-lg bg-orange-50 p-2">
+                                                                                <TrendingUp className="h-4 w-4 text-orange-600" />
+                                                                            </div>
+
+                                                                            <h5 className="text-xs font-semibold text-orange-700">
+                                                                                Area
+                                                                                Pengembangan
+                                                                            </h5>
+                                                                        </div>
+
+                                                                        <p className="text-sm leading-relaxed text-gray-600">
+                                                                            {
+                                                                                score.developmentAreas
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Kekuatan Teramati */}
+                                                                {score.observedStrengths && (
+                                                                    <div className="rounded-xl border border-emerald-100 bg-white/80 p-3 shadow-sm">
+                                                                        <div className="mb-2 flex items-center gap-2">
+                                                                            <div className="rounded-lg bg-emerald-50 p-2">
+                                                                                <Award className="h-4 w-4 text-emerald-600" />
+                                                                            </div>
+
+                                                                            <h5 className="text-xs font-semibold text-emerald-700">
+                                                                                Kekuatan
+                                                                                Teramati
+                                                                            </h5>
+                                                                        </div>
+
+                                                                        <p className="text-sm leading-relaxed text-gray-600">
+                                                                            {
+                                                                                score.observedStrengths
+                                                                            }
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Empty Feedback */}
+                                                                {!score.notes &&
+                                                                    !score.developmentAreas &&
+                                                                    !score.observedStrengths && (
+                                                                        <div className="rounded-xl border border-gray-100 bg-white/80 p-4 text-center">
+                                                                            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+                                                                                <MessageSquareText className="h-5 w-5 text-gray-400" />
+                                                                            </div>
+
+                                                                            <p className="text-sm text-gray-500">
+                                                                                {score.status ===
+                                                                                'completed'
+                                                                                    ? 'Evaluator belum memberikan catatan feedback.'
+                                                                                    : 'Feedback belum tersedia.'}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
                                                             </div>
                                                         </Card>
                                                     ),
@@ -358,6 +475,7 @@ export default function EvaluatorPage({
                                         </CardContent>
                                     </Card>
                                 )}
+
                                 <Card className="border-0 bg-linear-to-br from-blue-50 shadow-md">
                                     <CardContent>
                                         <div className="mb-6 flex items-center justify-between">
@@ -581,11 +699,12 @@ export default function EvaluatorPage({
                                     </CardContent>
                                 </Card>
                             </TabsContent>
+
                             {/* History Tab */}
                             <TabsContent value="history" className="space-y-6">
                                 {typeUser === 'outsourcing' && (
-                                    <Card className="border-0 bg-linear-to-br from-blue-50 pb-7 shadow-md">
-                                        <CardContent>
+                                    <Card className="gap-0 border-0 bg-linear-to-br from-blue-50 pb-7 shadow-md">
+                                        <CardHeader>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center gap-3">
                                                     <div className="rounded-lg bg-gray-100 p-2">
@@ -603,7 +722,8 @@ export default function EvaluatorPage({
                                                     </div>
                                                 </div>
                                             </div>
-
+                                        </CardHeader>
+                                        <CardContent>
                                             <div className="mt-4">
                                                 <Accordion
                                                     type="single"
@@ -683,41 +803,31 @@ export default function EvaluatorPage({
                                                                                                 </div>
                                                                                                 <div>
                                                                                                     <h4 className="text-sm font-semibold text-gray-900">
-                                                                                                        {/* {score.type
-                                                                                                            .replace(
-                                                                                                                '_',
-                                                                                                                ' ',
-                                                                                                            )
-                                                                                                            .replace(
-                                                                                                                /^./,
-                                                                                                                (
-                                                                                                                    c: string,
-                                                                                                                ) =>
-                                                                                                                    c.toUpperCase(),
-                                                                                                            )}{' '}
-                                                                                                        (
+                                                                                                        {score.type ===
+                                                                                                        'atasan'
+                                                                                                            ? 'Penilaian oleh Atasan'
+                                                                                                            : ''}
+                                                                                                        {score.type ===
+                                                                                                        'penerima_layanan1'
+                                                                                                            ? 'Penerima Layanan 1'
+                                                                                                            : ''}
+                                                                                                        {score.type ===
+                                                                                                        'penerima_layanan2'
+                                                                                                            ? 'Penerima Layanan 2'
+                                                                                                            : ''}
+                                                                                                    </h4>
+
+                                                                                                    <p className="text-xs text-gray-500">
+                                                                                                        Bobot
+                                                                                                        nilai{' '}
                                                                                                         {(
                                                                                                             score?.bobot *
                                                                                                             100
                                                                                                         ).toFixed(
                                                                                                             0,
                                                                                                         )}
-                                                                                                        %) */}
-                                                                                                    </h4>
 
-                                                                                                    <p className="text-xs text-gray-500">
-                                                                                                        {score.type ===
-                                                                                                        'atasan'
-                                                                                                            ? 'Penilaian oleh atasan langsung'
-                                                                                                            : ''}
-                                                                                                        {score.type ===
-                                                                                                        'penerima_layanan2'
-                                                                                                            ? 'Penilaian oleh teman setingkat'
-                                                                                                            : ''}
-                                                                                                        {score.type ===
-                                                                                                        'penerima_layanan1'
-                                                                                                            ? 'Penilaian oleh penerima layanan'
-                                                                                                            : ''}
+                                                                                                        %
                                                                                                     </p>
                                                                                                 </div>
                                                                                             </div>
@@ -773,13 +883,90 @@ export default function EvaluatorPage({
                                                                                             </div>
                                                                                         </div>
 
-                                                                                        <div className="text-center text-sm text-gray-600">
-                                                                                            {score.notes
-                                                                                                ? score.notes
-                                                                                                : score.status ===
-                                                                                                    'completed'
-                                                                                                  ? '"Tidak ada saran dari penilai"'
-                                                                                                  : '"Belum ada catatan"'}
+                                                                                        {/* Feedback Evaluator */}
+                                                                                        <div className="space-y-3 border-t border-purple-100 pt-4">
+                                                                                            {/* Catatan */}
+                                                                                            {score.notes && (
+                                                                                                <div className="rounded-xl border border-blue-100 bg-white/80 p-3 shadow-sm">
+                                                                                                    <div className="mb-2 flex items-center gap-2">
+                                                                                                        <div className="rounded-lg bg-blue-50 p-2">
+                                                                                                            <MessageSquareText className="h-4 w-4 text-blue-600" />
+                                                                                                        </div>
+
+                                                                                                        <h5 className="text-xs font-semibold text-blue-700">
+                                                                                                            Catatan
+                                                                                                        </h5>
+                                                                                                    </div>
+
+                                                                                                    <p className="text-sm leading-relaxed text-gray-600">
+                                                                                                        {
+                                                                                                            score.notes
+                                                                                                        }
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {/* Area Pengembangan */}
+                                                                                            {score.developmentAreas && (
+                                                                                                <div className="rounded-xl border border-orange-100 bg-white/80 p-3 shadow-sm">
+                                                                                                    <div className="mb-2 flex items-center gap-2">
+                                                                                                        <div className="rounded-lg bg-orange-50 p-2">
+                                                                                                            <TrendingUp className="h-4 w-4 text-orange-600" />
+                                                                                                        </div>
+
+                                                                                                        <h5 className="text-xs font-semibold text-orange-700">
+                                                                                                            Area
+                                                                                                            Pengembangan
+                                                                                                        </h5>
+                                                                                                    </div>
+
+                                                                                                    <p className="text-sm leading-relaxed text-gray-600">
+                                                                                                        {
+                                                                                                            score.developmentAreas
+                                                                                                        }
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {/* Kekuatan Teramati */}
+                                                                                            {score.observedStrengths && (
+                                                                                                <div className="rounded-xl border border-emerald-100 bg-white/80 p-3 shadow-sm">
+                                                                                                    <div className="mb-2 flex items-center gap-2">
+                                                                                                        <div className="rounded-lg bg-emerald-50 p-2">
+                                                                                                            <Award className="h-4 w-4 text-emerald-600" />
+                                                                                                        </div>
+
+                                                                                                        <h5 className="text-xs font-semibold text-emerald-700">
+                                                                                                            Kekuatan
+                                                                                                            Teramati
+                                                                                                        </h5>
+                                                                                                    </div>
+
+                                                                                                    <p className="text-sm leading-relaxed text-gray-600">
+                                                                                                        {
+                                                                                                            score.observedStrengths
+                                                                                                        }
+                                                                                                    </p>
+                                                                                                </div>
+                                                                                            )}
+
+                                                                                            {/* Empty Feedback */}
+                                                                                            {!score.notes &&
+                                                                                                !score.developmentAreas &&
+                                                                                                !score.observedStrengths && (
+                                                                                                    <div className="rounded-xl border border-gray-100 bg-white/80 p-4 text-center">
+                                                                                                        <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
+                                                                                                            <MessageSquareText className="h-5 w-5 text-gray-400" />
+                                                                                                        </div>
+
+                                                                                                        <p className="text-sm text-gray-500">
+                                                                                                            {score.status ===
+                                                                                                            'completed'
+                                                                                                                ? 'Evaluator belum memberikan catatan feedback.'
+                                                                                                                : 'Feedback belum tersedia.'}
+                                                                                                        </p>
+                                                                                                    </div>
+                                                                                                )}
                                                                                         </div>
                                                                                     </Card>
                                                                                 ),

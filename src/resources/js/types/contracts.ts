@@ -1,9 +1,7 @@
 export type PenilaianStatus = 'completed' | 'draft' | 'incomplete';
 
 export type EvaluatorType =
-    | 'atasan'
-    | 'penerima_layanan1'
-    | 'penerima_layanan2';
+    'atasan' | 'penerima_layanan1' | 'penerima_layanan2';
 
 export type EvaluatorSlot = {
     name: string | null;
@@ -44,6 +42,8 @@ export type EvaluatorScore = {
     weightedScore: number;
     status: PenilaianStatus;
     notes: string | null;
+    developmentAreas: string | null;
+    observedStrengths: string | null;
     aspects: Array<{
         id: number;
         title: string;
