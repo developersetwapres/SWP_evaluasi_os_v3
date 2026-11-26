@@ -381,7 +381,8 @@ class PenugasanController extends Controller
             ? $request->integer('jabatan_id')
             : Jabatan::where('kode_jabatan', 'DESAINER_GRAFIS')->value('id');
 
-        return Inertia::render('admin/saranperbaikan/page', [
+
+        $data = [
             'Outsourcings' => $service->saran($jabatanId),
 
             'allJabatan' => Jabatan::select('id', 'nama_jabatan')
@@ -390,7 +391,9 @@ class PenugasanController extends Controller
                 ->get(),
 
             'selectedJabatanId' => (string) $jabatanId,
-        ]);
+        ];
+
+        return Inertia::render('admin/saranperbaikan/page', $data);
     }
 
     public function exportSaranPerbaikan(

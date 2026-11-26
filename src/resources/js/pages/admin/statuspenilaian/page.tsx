@@ -98,7 +98,7 @@ export default function StatusPenilaian({
 
                         <div className="flex gap-2 md:justify-end">
                             <Link
-                                className="flex items-center gap-2 rounded-md bg-green-800 px-4 py-1.5 text-sm text-white hover:bg-green-700"
+                                className="flex items-center gap-2 rounded-md bg-green-800 px-4 py-1.5 text-sm text-white hover:bg-green-900"
                                 href={evaluators.url()}
                             >
                                 <FileSpreadsheet className="h-4 w-4" />
@@ -106,7 +106,7 @@ export default function StatusPenilaian({
                             </Link>
 
                             <Link
-                                className="flex items-center gap-2 rounded-md bg-green-800 px-4 py-1.5 text-sm text-white hover:bg-green-700"
+                                className="flex items-center gap-2 rounded-md bg-green-800 px-4 py-1.5 text-sm text-white hover:bg-green-900"
                                 href={outsourcings.url()}
                             >
                                 <FileSpreadsheet className="h-4 w-4" />

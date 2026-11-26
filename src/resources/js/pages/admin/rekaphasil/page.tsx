@@ -25,11 +25,7 @@ import {
 import { dashboard } from '@/routes';
 import { exportMentahan, rekapaspekevaluator } from '@/routes/os';
 import { getScoreColor } from '@/utils/score';
-import type {
-    EvaluatorScore,
-    RekapHasilPageProps,
-    RekapResult,
-} from '@/types';
+import type { EvaluatorScore, RekapHasilPageProps, RekapResult } from '@/types';
 
 export default function ResultsRecapPage({
     evaluationResults,
@@ -128,7 +124,7 @@ export default function ResultsRecapPage({
                             </SelectContent>
                         </Select>
                         <Button
-                            className="flex items-center space-x-2"
+                            className="flex items-center space-x-2 bg-green-800 hover:bg-green-900"
                             onClick={() => exportToExcel(results)}
                         >
                             <Download className="h-4 w-4" />
@@ -136,7 +132,7 @@ export default function ResultsRecapPage({
                         </Button>
 
                         <Link
-                            className="flex items-center gap-2 space-x-2 rounded-md bg-gray-900 px-4 py-1.5 text-sm text-white hover:bg-black"
+                            className="flex items-center gap-2 space-x-2 rounded-md bg-green-800 px-4 py-1.5 text-sm text-white hover:bg-green-900"
                             href={exportMentahan.url()}
                         >
                             <Download className="h-4 w-4" />
