@@ -213,22 +213,26 @@ export default function UserManagement({
                     : updatePegawai.url(editingUser.id);
 
             router.put(update, formData, {
-                onSuccess: () => {
+                onSuccess: (page) => {
                     setIsDialogOpen(false);
                     setIsDialogAsnOpen(false);
                     setOnProcessing(false);
 
-                    // toast({
-                    //     title: 'Validasi Berhasil',
-                    //     description: 'Data user berhasil diperbarui.',
-                    // });
+                    const flash = page.props.flash;
+
+                    if (flash.success) {
+                        toast.success('Sinkronisasi Berhasil', {
+                            description: flash.success,
+                        });
+                    }
                 },
                 onError: (err) => {
-                    // toast({
-                    //     title: 'Validasi gagal',
-                    //     description: Object.values(err)[0],
-                    //     variant: 'destructive',
-                    // });
+                    if (flash.error) {
+                        toast.error('Sinkronisasi Gagal', {
+                            description: Object.values(err)[0],
+                        });
+                    }
+
                     setOnProcessing(false);
                 },
             });
@@ -237,22 +241,26 @@ export default function UserManagement({
                 type == 'os' ? storeOutsourcing.url() : storePegawai.url();
 
             router.post(store, formData, {
-                onSuccess: () => {
+                onSuccess: (page) => {
                     setIsDialogOpen(false);
                     setIsDialogAsnOpen(false);
                     setOnProcessing(false);
 
-                    // toast({
-                    //     title: 'Validasi Berhasil',
-                    //     description: 'Data user berhasil ditambahkan.',
-                    // });
+                    const flash = page.props.flash;
+
+                    if (flash.success) {
+                        toast.success('Sinkronisasi Berhasil', {
+                            description: flash.success,
+                        });
+                    }
                 },
                 onError: (err) => {
-                    // toast({
-                    //     title: 'Validasi gagal',
-                    //     description: Object.values(err)[0],
-                    //     variant: 'destructive',
-                    // });
+                    if (flash.error) {
+                        toast.error('Sinkronisasi Gagal', {
+                            description: Object.values(err)[0],
+                        });
+                    }
+
                     setOnProcessing(false);
                 },
             });
@@ -931,7 +939,7 @@ export default function UserManagement({
                                         })
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Pilih unit kerja" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -962,7 +970,7 @@ export default function UserManagement({
                                         })
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Pilih jabatan" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -989,7 +997,7 @@ export default function UserManagement({
                                         })
                                     }
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Pilih status os" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -1197,7 +1205,7 @@ export default function UserManagement({
                                     })
                                 }
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Pilih unit kerja" />
                                 </SelectTrigger>
                                 <SelectContent>
