@@ -170,13 +170,7 @@ class PenilaianController extends Controller
         //
     }
 
-    public function rekaphasil(): Response
-    {
-
-        return Inertia::render('admin/rekaphasil/page');
-    }
-
-    public function rekaphasilX(
+    public function rekaphasil(
         FilterRekapHasilRequest $request,
         EvaluationEngineService $engine
     ): Response {

@@ -2,9 +2,10 @@ import { createInertiaApp } from '@inertiajs/react';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { initializeTheme } from '@/hooks/use-appearance';
-import AppLayout from '@/layouts/app-layout';
+import AppLayoutOperator from '@/layouts/app-layout-operator';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import AppLayoutAdministrator from '@/layouts/app-layout-administrator';
 
 const appName =
     import.meta.env.VITE_APP_NAME ||
@@ -20,8 +21,10 @@ createInertiaApp({
                 return AuthLayout;
             case name.startsWith('settings/'):
                 return [SettingsLayout];
+            case name.startsWith('admin/administrator'):
+                return false; //Lansung di page
             case name.startsWith('admin/'):
-                return [AppLayout];
+                return [AppLayoutOperator];
         }
     },
     strictMode: true,

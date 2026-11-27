@@ -1,20 +1,25 @@
-import { AppContent } from '@/components/app-content';
-import { AppShell } from '@/components/app-shell';
-import { AppSidebar } from '@/components/app-sidebar';
-import { AppSidebarHeader } from '@/components/app-sidebar-header';
-import type { AppLayoutProps } from '@/types';
+import { AdminHeader } from '@/components/penilaian/admin/admin-header';
+import { AdminNav } from '@/components/penilaian/admin/admin-nav';
+import { AdminProfileCard } from '@/components/penilaian/admin/admin-profile-card';
+import type React from 'react';
 
-export default function AppSidebarLayout({
+export default function AdminLayout({
     children,
-    breadcrumbs = [],
-}: AppLayoutProps) {
+}: {
+    children: React.ReactNode;
+}) {
     return (
-        <AppShell variant="sidebar">
-            <AppSidebar />
-            <AppContent variant="sidebar" className="overflow-x-hidden">
-                <AppSidebarHeader breadcrumbs={breadcrumbs} />
-                {children}
-            </AppContent>
-        </AppShell>
+        <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
+            <AdminHeader />
+            <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+                <div className="space-y-8">
+                    <AdminProfileCard />
+                    <div className="space-y-6">
+                        <AdminNav />
+                        {children}
+                    </div>
+                </div>
+            </main>
+        </div>
     );
 }

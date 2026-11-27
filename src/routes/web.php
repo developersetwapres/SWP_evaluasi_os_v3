@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MasterPegawaiController;
 use App\Http\Controllers\OutsourcingController;
 use App\Http\Controllers\PenilaianController;
@@ -54,9 +55,14 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
 
     Route::put('synchronization-data-user/{type}', [SynchronizationUserController::class, 'update'])->name('synchronization.datauser');
 
-    // Dashboard Administrator
 
-    Route::get('/dashboard/administrator', [UserController::class, 'indexAdministrator'])->name('user.indexAdministrator');
+
+    // Dashboard Administrator -------------------------------------------------
+    Route::get('/dashboard/administrator', [DashboardController::class, 'home'])
+        ->name('administrator.home');
+
+    Route::get('/dashboard/administrator-user-management', [UserController::class, 'indexAdministrator'])
+        ->name('user.indexAdministrator');
 });
 
 require __DIR__ . '/settings.php';

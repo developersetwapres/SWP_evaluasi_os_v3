@@ -5,6 +5,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { home } from '@/routes/administrator';
 import { Link, usePage } from '@inertiajs/react';
 import { User } from 'lucide-react';
 
@@ -44,7 +45,7 @@ export function AdminProfileCard() {
 
                                 const href =
                                     role === 'administrator'
-                                        ? '/dashboard/administrator'
+                                        ? home()
                                         : role === 'operator'
                                           ? '/dashboard'
                                           : '/';

@@ -6,6 +6,8 @@ use App\Models\Biro;
 use App\Models\Jabatan;
 use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -109,9 +111,31 @@ class UserController extends Controller
     }
 
 
-    public function indexAdministrator(): Response
+    public function indexAdministrator(Request $request): Response
     {
-        $data = [];
+
+        $search = $request->input('search');
+        $status = $request->input('status');
+
+        if ($request->query('user')) {
+            #
+        } else {
+            $user = User::query()
+                ->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role'])
+                ->with([
+                    'userable' => fn($q) => $q->select(['id', 'uuid', 'nip', 'name'])
+                ])
+                ->whereHasMorph('userable', [Outsourcing::class])
+                ->orderBy('role', 'asc')
+                ->take(10)
+                ->paginate(10)
+                ->withQueryString();
+        }
+
+        $data = [
+            'users' => $user,
+            'filters' => $request->only(['search', 'status']),
+        ];
 
         return Inertia::render('admin/administrator/user/page', $data);
     }
