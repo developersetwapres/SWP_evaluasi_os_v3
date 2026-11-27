@@ -63,6 +63,10 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
 
     Route::get('/dashboard/administrator-user-management', [UserController::class, 'indexAdministrator'])
         ->name('user.indexAdministrator');
+    Route::put('/dashboard/administrator-user-management/{user}', [UserController::class, 'updateAdministrator'])
+        ->name('user.updateAdministrator');
+    Route::delete('/dashboard/administrator-user-management/{user}', [UserController::class, 'destroyAdministrator'])
+        ->name('user.destroyAdministrator');
 });
 
 require __DIR__ . '/settings.php';

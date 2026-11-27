@@ -9,6 +9,8 @@ use App\Models\Outsourcing;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -114,21 +116,33 @@ class UserController extends Controller
 
     public function indexAdministrator(Request $request): Response
     {
-        $search = trim((string) $request->query('search', ''));
+        $filters = $request->validate([
+            'search' => ['nullable', 'string'],
+            'user_type' => ['nullable', 'in:all,outsourcing,pegawai'],
+        ]);
+
+        $search = trim($filters['search'] ?? '');
+        $userType = $filters['user_type'] ?? 'all';
+
+        $userableTypes = match ($userType) {
+            'outsourcing' => [Outsourcing::class],
+            'pegawai' => [MasterPegawai::class],
+            default => [Outsourcing::class, MasterPegawai::class],
+        };
 
         $user = User::query()
-            ->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role'])
+            ->select(['id', 'userable_id', 'userable_type', 'nip', 'nip_sso', 'email', 'role'])
             ->with([
                 'userable' => fn($q) => $q->select(['id', 'uuid', 'nip', 'name'])
             ])
-            ->whereHasMorph('userable', [Outsourcing::class])
+            ->whereHasMorph('userable', $userableTypes)
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where(function (Builder $query) use ($search): void {
                     $query->where('nip', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%")
                         ->orWhereHasMorph(
                             'userable',
-                            [Outsourcing::class],
+                            [Outsourcing::class, MasterPegawai::class],
                             fn(Builder $userableQuery) => $userableQuery->where('name', 'like', "%{$search}%")
                         );
                 });
@@ -139,9 +153,40 @@ class UserController extends Controller
 
         $data = [
             'users' => $user,
-            'filters' => ['search' => $search],
+            'filters' => [
+                'search' => $search,
+                'user_type' => $userType,
+            ],
         ];
 
         return Inertia::render('admin/administrator/user/page', $data);
+    }
+
+    public function updateAdministrator(Request $request, User $user): RedirectResponse
+    {
+        $userable = $user->userable;
+        abort_unless($userable instanceof Outsourcing || $userable instanceof MasterPegawai, 404);
+
+        $validated = $request->validate([
+            'role' => ['required', 'array', 'min:1', 'max:3'],
+            'role.*' => ['required', 'string', 'distinct', 'in:evaluator,administrator,operator'],
+        ]);
+
+        $user->update(['role' => $validated['role']]);
+
+        return back()->with('success', 'Role user berhasil diperbarui.');
+    }
+
+    public function destroyAdministrator(User $user): RedirectResponse
+    {
+        $userable = $user->userable;
+        abort_unless($userable instanceof Outsourcing || $userable instanceof MasterPegawai, 404);
+
+        DB::transaction(function () use ($user, $userable): void {
+            $user->delete();
+            $userable->delete();
+        });
+
+        return back()->with('success', 'User dan data outsourcing terkait berhasil dihapus.');
     }
 }

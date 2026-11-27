@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Outsourcing;
+use App\Models\MasterPegawai;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -14,6 +15,24 @@ function createAdministratorUser(string $name, string $nip, string $email): User
     return User::factory()->create([
         'userable_id' => $outsourcing->nip,
         'userable_type' => Outsourcing::class,
+        'nip' => $nip,
+        'email' => $email,
+        'role' => ['evaluator'],
+    ]);
+}
+
+function createPegawaiAdministratorUser(string $name, string $nip, string $email): User
+{
+    $pegawai = MasterPegawai::create([
+        'name' => $name,
+        'nip' => $nip,
+        'image' => 'pegawai.png',
+        'kode_unit' => '02',
+    ]);
+
+    return User::factory()->create([
+        'userable_id' => $pegawai->nip,
+        'userable_type' => MasterPegawai::class,
         'nip' => $nip,
         'email' => $email,
         'role' => ['evaluator'],
@@ -46,10 +65,47 @@ it('searches administrator users by morphed name, nip, and email', function (): 
     }
 });
 
+it('searches and filters users across both morph types', function (): void {
+    createAdministratorUser('Toni Outsourcing', 'NA200810198801', 'toni@example.test');
+    $pegawaiUser = createPegawaiAdministratorUser(
+        'Siti Pegawai',
+        '198801012020012001',
+        'siti@example.test',
+    );
+
+    $this->actingAs(administratorForUserManagement())
+        ->get(route('user.indexAdministrator'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.user_type', 'all')
+            ->where('users.total', 2));
+
+    $this->actingAs(administratorForUserManagement())
+        ->get(route('user.indexAdministrator', [
+            'search' => 'Siti Pegawai',
+            'user_type' => 'pegawai',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.user_type', 'pegawai')
+            ->where('filters.search', 'Siti Pegawai')
+            ->where('users.total', 1)
+            ->where('users.data.0.id', $pegawaiUser->id)
+            ->where('users.data.0.userable.name', 'Siti Pegawai'));
+
+    $this->actingAs(administratorForUserManagement())
+        ->get(route('user.indexAdministrator', ['user_type' => 'outsourcing']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.user_type', 'outsourcing')
+            ->where('users.total', 1)
+            ->where('users.data.0.userable.name', 'Toni Outsourcing'));
+});
+
 it('paginates administrator users and retains the search query', function (): void {
     $admin = administratorForUserManagement();
 
-    for ($index = 1; $index <= 11; $index++) {
+    for ($index = 1; $index <= 16; $index++) {
         createAdministratorUser(
             "User {$index}",
             sprintf('NIP%09d', $index),
@@ -64,6 +120,94 @@ it('paginates administrator users and retains the search query', function (): vo
             ->component('admin/administrator/user/page')
             ->where('filters.search', 'User')
             ->where('users.current_page', 2)
-            ->where('users.total', 11)
+            ->where('users.total', 16)
             ->has('users.data', 1));
+});
+
+it('updates an outsourcing user with multiple allowed roles', function (): void {
+    $user = createAdministratorUser(
+        'Toni Rahman',
+        'NA200810198801',
+        'toni@example.test',
+    );
+
+    $this->actingAs(administratorForUserManagement())
+        ->put(route('user.updateAdministrator', $user->id), [
+            'role' => ['operator', 'administrator'],
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($user->fresh()->role)->toBe(['operator', 'administrator']);
+});
+
+it('updates a pegawai user role', function (): void {
+    $user = createPegawaiAdministratorUser(
+        'Siti Pegawai',
+        '198801012020012001',
+        'siti@example.test',
+    );
+
+    $this->actingAs(administratorForUserManagement())
+        ->put(route('user.updateAdministrator', $user->id), [
+            'role' => ['evaluator', 'operator'],
+        ])
+        ->assertRedirect()
+        ->assertSessionHasNoErrors();
+
+    expect($user->fresh()->role)->toBe(['evaluator', 'operator']);
+});
+
+it('rejects roles outside the administrator user role options', function (): void {
+    $user = createAdministratorUser(
+        'Toni Rahman',
+        'NA200810198801',
+        'toni@example.test',
+    );
+
+    $this->actingAs(administratorForUserManagement())
+        ->put(route('user.updateAdministrator', $user->id), [
+            'role' => 'unknown',
+        ])
+        ->assertSessionHasErrors('role');
+
+    expect($user->fresh()->role)->toBe(['evaluator']);
+});
+
+it('deletes an outsourcing user and its morph record', function (): void {
+    $user = createAdministratorUser(
+        'Toni Rahman',
+        'NA200810198801',
+        'toni@example.test',
+    );
+    $outsourcing = Outsourcing::query()
+        ->where('nip', $user->nip)
+        ->firstOrFail();
+
+    $this->actingAs(administratorForUserManagement())
+        ->delete(route('user.destroyAdministrator', $user->id))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    $this->assertDatabaseMissing('outsourcings', ['id' => $outsourcing->id]);
+});
+
+it('deletes a pegawai user and its morph record', function (): void {
+    $user = createPegawaiAdministratorUser(
+        'Siti Pegawai',
+        '198801012020012001',
+        'siti@example.test',
+    );
+    $pegawai = MasterPegawai::query()
+        ->where('nip', $user->nip)
+        ->firstOrFail();
+
+    $this->actingAs(administratorForUserManagement())
+        ->delete(route('user.destroyAdministrator', $user->id))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    $this->assertDatabaseMissing('master_pegawais', ['id' => $pegawai->id]);
 });
