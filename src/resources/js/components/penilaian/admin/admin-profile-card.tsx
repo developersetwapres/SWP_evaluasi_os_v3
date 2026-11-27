@@ -44,7 +44,7 @@ export function AdminProfileCard() {
 
                                 const href =
                                     role === 'administrator'
-                                        ? '/dashboard' //kedapan dashboard administrator '/dashboard/administrator
+                                        ? '/dashboard/administrator'
                                         : role === 'operator'
                                           ? '/dashboard'
                                           : '/';
@@ -57,7 +57,7 @@ export function AdminProfileCard() {
                                     <Link
                                         key={i}
                                         href={href}
-                                        className="hover:underline"
+                                        className="underline"
                                     >
                                         {label}
                                         {i < (user.role?.length ?? 0) - 1 &&

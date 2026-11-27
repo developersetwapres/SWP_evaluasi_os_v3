@@ -53,6 +53,10 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::post('/upload-temp-image', [FotoUserService::class, 'uploadTempImage'])->name('upload.tempImage');
 
     Route::put('synchronization-data-user/{type}', [SynchronizationUserController::class, 'update'])->name('synchronization.datauser');
+
+    // Dashboard Administrator
+
+    Route::get('/dashboard/administrator', [UserController::class, 'indexAdministrator'])->name('user.indexAdministrator');
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

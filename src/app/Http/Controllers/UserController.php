@@ -107,4 +107,12 @@ class UserController extends Controller
 
         return Inertia::render('admin/user/page', $data);
     }
+
+
+    public function indexAdministrator(): Response
+    {
+        $data = [];
+
+        return Inertia::render('admin/administrator/user/page', $data);
+    }
 }

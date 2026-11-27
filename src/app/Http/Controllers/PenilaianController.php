@@ -46,7 +46,7 @@ class PenilaianController extends Controller
         }
 
         $outsourcing = $penugasan->outsourcings()
-            ->select(['id','uuid','nip','name','image','jabatan_id','kode_biro'])
+            ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan_id', 'kode_biro'])
             ->with([
                 'jabatan:id,nama_jabatan',
                 'biro:kode_biro,nama_biro',
@@ -55,17 +55,17 @@ class PenilaianController extends Controller
         $jabatanId = $outsourcing->jabatan_id;
 
         $evaluatorUser = $penugasan->evaluators()
-            ->select(['id','email','userable_id','userable_type','nip'])
+            ->select(['id', 'email', 'userable_id', 'userable_type', 'nip'])
             ->with([
                 'userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
                     Outsourcing::class => fn($query) => $query
-                        ->select(['id','uuid','nip','name','image','jabatan_id','kode_biro'])
+                        ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan_id', 'kode_biro'])
                         ->with([
                             'jabatan:id,nama_jabatan',
                             'biro:kode_biro,nama_biro',
                         ]),
                     MasterPegawai::class => fn($query) => $query
-                        ->select(['id','uuid','nip','name','image','jabatan','kode_biro'])
+                        ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan', 'kode_biro'])
                         ->with('biro:kode_biro,nama_biro'),
                 ]),
             ])
@@ -170,7 +170,13 @@ class PenilaianController extends Controller
         //
     }
 
-    public function rekaphasil(
+    public function rekaphasil(): Response
+    {
+
+        return Inertia::render('admin/rekaphasil/page');
+    }
+
+    public function rekaphasilX(
         FilterRekapHasilRequest $request,
         EvaluationEngineService $engine
     ): Response {
@@ -190,19 +196,19 @@ class PenilaianController extends Controller
             ])
             ->with([
                 'penugasanAktif' => fn($query) => $query
-                    ->select(['id','uuid','bobot_skor_id','siklus_id','outsourcing_id','penilai_id','tipe_penilai','status','catatan'])
+                    ->select(['id', 'uuid', 'bobot_skor_id', 'siklus_id', 'outsourcing_id', 'penilai_id', 'tipe_penilai', 'status', 'catatan'])
                     ->with([
                         'bobotSkor:id,bobot',
                         'evaluators' => fn($query) => $query
-                            ->select(['id','email','userable_id','userable_type','nip']),
+                            ->select(['id', 'email', 'userable_id', 'userable_type', 'nip']),
                         'evaluators.userable' => fn(MorphTo $morphTo) => $morphTo->constrain([
                             MasterPegawai::class => fn($query) => $query
-                                ->select(['id','uuid','nip','name','image','jabatan']),
+                                ->select(['id', 'uuid', 'nip', 'name', 'image', 'jabatan']),
                             Outsourcing::class => fn($query) => $query
-                                ->select(['id','uuid','nip','name','image']),
+                                ->select(['id', 'uuid', 'nip', 'name', 'image']),
                         ]),
                         'penilaian' => fn($query) => $query
-                            ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
+                            ->select(['id', 'uuid', 'penugasan_id', 'indikator_id', 'nilai']),
                         'penilaian.indikator:id,title,pilar_id',
                         'penilaian.indikator.pilar:id,title,bobot_skor_id',
                         'penilaian.indikator.pilar.bobotSkor:id,bobot',
@@ -282,23 +288,23 @@ class PenilaianController extends Controller
             ?? Jabatan::where('kode_jabatan', 'DESAINER_GRAFIS')->value('id');
 
         $outsourcings = Outsourcing::query()
-            ->select(['id','uuid','name','image','jabatan_id','is_active'])
+            ->select(['id', 'uuid', 'name', 'image', 'jabatan_id', 'is_active'])
             ->with([
-            'jabatan:id,nama_jabatan',
-            'penugasanAktif' => fn($query) => $query
-                ->select(['id','uuid','bobot_skor_id','siklus_id','outsourcing_id','penilai_id','tipe_penilai','status','catatan'])
-                ->with([
-                    'bobotSkor:id,bobot',
-                    'evaluators' => fn($query) => $query
-                        ->select(['id','email','userable_id','userable_type','nip']),
-                    'evaluators.userable',
-                    'penilaian' => fn($query) => $query
-                        ->select(['id','uuid','penugasan_id','indikator_id','nilai']),
-                    'penilaian.indikator:id,title,pilar_id',
-                    'penilaian.indikator.pilar:id,title,bobot_skor_id',
-                    'penilaian.indikator.pilar.bobotSkor:id,bobot',
-                ]),
-        ])
+                'jabatan:id,nama_jabatan',
+                'penugasanAktif' => fn($query) => $query
+                    ->select(['id', 'uuid', 'bobot_skor_id', 'siklus_id', 'outsourcing_id', 'penilai_id', 'tipe_penilai', 'status', 'catatan'])
+                    ->with([
+                        'bobotSkor:id,bobot',
+                        'evaluators' => fn($query) => $query
+                            ->select(['id', 'email', 'userable_id', 'userable_type', 'nip']),
+                        'evaluators.userable',
+                        'penilaian' => fn($query) => $query
+                            ->select(['id', 'uuid', 'penugasan_id', 'indikator_id', 'nilai']),
+                        'penilaian.indikator:id,title,pilar_id',
+                        'penilaian.indikator.pilar:id,title,bobot_skor_id',
+                        'penilaian.indikator.pilar.bobotSkor:id,bobot',
+                    ]),
+            ])
             ->where('is_active', true)
             ->where('jabatan_id', $jabatanId)
             ->get();
