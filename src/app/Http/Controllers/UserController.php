@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -167,14 +168,40 @@ class UserController extends Controller
         $userable = $user->userable;
         abort_unless($userable instanceof Outsourcing || $userable instanceof MasterPegawai, 404);
 
-        $validated = $request->validate([
+        $rules = [
             'role' => ['required', 'array', 'min:1', 'max:3'],
             'role.*' => ['required', 'string', 'distinct', 'in:evaluator,administrator,operator'],
-        ]);
+        ];
 
-        $user->update(['role' => $validated['role']]);
+        if ($userable instanceof Outsourcing) {
+            $rules['nip'] = [
+                'sometimes',
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('users', 'nip')->ignore($user->getKey()),
+                Rule::unique('outsourcings', 'nip')->ignore($userable->getKey()),
+            ];
+        } else {
+            $rules['nip'] = ['prohibited'];
+        }
 
-        return back()->with('success', 'Role user berhasil diperbarui.');
+        $validated = $request->validate($rules);
+
+        DB::transaction(function () use ($validated, $user, $userable): void {
+            if ($userable instanceof Outsourcing && array_key_exists('nip', $validated)) {
+                $userable->update(['nip' => $validated['nip']]);
+                $user->update([
+                    'nip' => $validated['nip'],
+                    'userable_id' => $validated['nip'],
+                    'role' => $validated['role'],
+                ]);
+            } else {
+                $user->update(['role' => $validated['role']]);
+            }
+        });
+
+        return back()->with('success', 'Data user berhasil diperbarui.');
     }
 
     public function destroyAdministrator(User $user): RedirectResponse

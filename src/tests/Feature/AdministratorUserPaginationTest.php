@@ -130,15 +130,26 @@ it('updates an outsourcing user with multiple allowed roles', function (): void 
         'NA200810198801',
         'toni@example.test',
     );
+    $outsourcing = Outsourcing::query()
+        ->where('nip', $user->nip)
+        ->firstOrFail();
+    $newNip = 'NA200810198802';
 
     $this->actingAs(administratorForUserManagement())
         ->put(route('user.updateAdministrator', $user->id), [
             'role' => ['operator', 'administrator'],
+            'nip' => $newNip,
         ])
         ->assertRedirect()
         ->assertSessionHasNoErrors();
 
-    expect($user->fresh()->role)->toBe(['operator', 'administrator']);
+    $updatedUser = $user->fresh('userable');
+
+    expect($updatedUser->role)->toBe(['operator', 'administrator']);
+    expect($updatedUser->nip)->toBe($newNip);
+    expect($updatedUser->userable_id)->toBe($newNip);
+    expect($updatedUser->userable->nip)->toBe($newNip);
+    expect($outsourcing->fresh()->nip)->toBe($newNip);
 });
 
 it('updates a pegawai user role', function (): void {
@@ -156,6 +167,46 @@ it('updates a pegawai user role', function (): void {
         ->assertSessionHasNoErrors();
 
     expect($user->fresh()->role)->toBe(['evaluator', 'operator']);
+});
+
+it('does not allow editing a pegawai NIP', function (): void {
+    $user = createPegawaiAdministratorUser(
+        'Siti Pegawai',
+        '198801012020012001',
+        'siti@example.test',
+    );
+
+    $this->actingAs(administratorForUserManagement())
+        ->put(route('user.updateAdministrator', $user->id), [
+            'role' => ['evaluator', 'operator'],
+            'nip' => '198801012020012999',
+        ])
+        ->assertSessionHasErrors('nip');
+
+    expect($user->fresh()->nip)->toBe('198801012020012001');
+    expect($user->fresh()->userable_id)->toBe('198801012020012001');
+});
+
+it('rejects an outsourcing NIP already assigned to another user', function (): void {
+    $user = createAdministratorUser(
+        'Toni Rahman',
+        'NA200810198801',
+        'toni@example.test',
+    );
+    createAdministratorUser(
+        'Siti Zubaedah',
+        'NA201203197801',
+        'siti@example.test',
+    );
+
+    $this->actingAs(administratorForUserManagement())
+        ->put(route('user.updateAdministrator', $user->id), [
+            'role' => ['evaluator'],
+            'nip' => 'NA201203197801',
+        ])
+        ->assertSessionHasErrors('nip');
+
+    expect($user->fresh()->nip)->toBe('NA200810198801');
 });
 
 it('rejects roles outside the administrator user role options', function (): void {

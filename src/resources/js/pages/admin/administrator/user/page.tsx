@@ -52,10 +52,12 @@ function isUserTypeFilter(value: string): value is UserTypeFilter {
     return ['all', 'outsourcing', 'pegawai'].includes(value);
 }
 
+function isOutsourcingUser(user: User): boolean {
+    return user.userable_type?.endsWith('\\Outsourcing') ?? false;
+}
+
 function getUserTypeLabel(user: User): string {
-    return user.userable_type?.endsWith('\\Outsourcing')
-        ? 'Outsourcing'
-        : 'Pegawai';
+    return isOutsourcingUser(user) ? 'Outsourcing' : 'Pegawai';
 }
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -88,6 +90,7 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
         null,
     );
     const [roleDraft, setRoleDraft] = useState<UserRole[]>(['evaluator']);
+    const [nipDraft, setNipDraft] = useState('');
     const [savingRoleUserId, setSavingRoleUserId] = useState<number | null>(
         null,
     );
@@ -120,6 +123,7 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
         );
 
         setRoleDraft(selectedRoles.length > 0 ? selectedRoles : ['evaluator']);
+        setNipDraft(user.nip ?? '');
         setEditingRoleUserId(user.id);
     };
 
@@ -154,7 +158,10 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
         setSavingRoleUserId(user.id);
         router.put(
             updateAdministrator(user.id).url,
-            { role: roleDraft },
+            {
+                role: roleDraft,
+                ...(isOutsourcingUser(user) ? { nip: nipDraft.trim() } : {}),
+            },
             {
                 only: ['users', 'filters'],
                 preserveScroll: true,
@@ -162,12 +169,14 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                     setEditingRoleUserId(null);
 
                     toast.success(
-                        `Role ${user.userable?.name ?? 'user'} berhasil diperbarui.`,
+                        `Data user ${user.userable?.name ?? ''} berhasil diperbarui.`,
                     );
                 },
-                onError: () => {
+                onError: (errors) => {
                     toast.error(
-                        'Role user gagal diperbarui. Periksa kembali lalu coba lagi.',
+                        errors.nip ??
+                            errors.role ??
+                            'Data user gagal diperbarui. Periksa kembali lalu coba lagi.',
                     );
                 },
                 onHttpException: (response) => {
@@ -316,7 +325,25 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                     {(users.from ?? 1) + index}
                                                 </TableCell>
                                                 <TableCell>
-                                                    {user.nip}
+                                                    {editingRoleUserId ===
+                                                        user.id &&
+                                                    isOutsourcingUser(user) ? (
+                                                        <Input
+                                                            value={nipDraft}
+                                                            onChange={(event) =>
+                                                                setNipDraft(
+                                                                    event.target
+                                                                        .value,
+                                                                )
+                                                            }
+                                                            aria-label={`NIP ${user.userable?.name ?? user.email}`}
+                                                            className="h-8 w-44 bg-white font-mono"
+                                                        />
+                                                    ) : (
+                                                        <span className="font-mono text-sm">
+                                                            {user.nip ?? '-'}
+                                                        </span>
+                                                    )}
                                                 </TableCell>
                                                 <TableCell>
                                                     {user.userable?.name ?? '-'}
@@ -435,8 +462,8 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
-                                                                aria-label="Simpan role"
-                                                                title="Simpan role"
+                                                                aria-label="Simpan perubahan"
+                                                                title="Simpan perubahan"
                                                                 disabled={
                                                                     savingRoleUserId !==
                                                                         null ||
