@@ -215,32 +215,6 @@ export default function UserManagement({
         }
     };
 
-    const handleDelete = (id: string) => {
-        setOutsourcingToDelete(id);
-    };
-
-    const confirmDelete = () => {
-        if (!outsourcingToDelete) {
-            return;
-        }
-
-        setIsDeleting(true);
-        router.delete(destroyOutsourcing.url(outsourcingToDelete), {
-            preserveScroll: true,
-            onSuccess: () => {
-                setOutsourcingToDelete(null);
-                toast.success('Data Outsourcing berhasil dihapus.');
-            },
-            onError: (errors) => {
-                const error = Object.values(errors)[0];
-                toast.error('Data Outsourcing gagal dihapus.', {
-                    description: typeof error === 'string' ? error : undefined,
-                });
-            },
-            onFinish: () => setIsDeleting(false),
-        });
-    };
-
     const handleSave = (type: string) => {
         if (editingUser) {
             const update =
@@ -789,18 +763,7 @@ export default function UserManagement({
                                                     >
                                                         <Edit className="h-3 w-3" />
                                                     </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() =>
-                                                            handleDelete(
-                                                                user.id,
-                                                            )
-                                                        }
-                                                        className="hover:border-red-200 hover:bg-red-50 hover:text-red-600"
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
+
                                                     <div className="ml-2 flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
                                                         <HashIcon className="h-3 w-3" />
                                                         <span className="">
@@ -831,42 +794,6 @@ export default function UserManagement({
                     )}
                 </CardContent>
             </Card>
-
-            <AlertDialog
-                open={outsourcingToDelete !== null}
-                onOpenChange={(open) => {
-                    if (!open && !isDeleting) {
-                        setOutsourcingToDelete(null);
-                    }
-                }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Hapus data Outsourcing?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Data Outsourcing yang dihapus tidak dapat
-                            dikembalikan. Akun User yang terhubung juga akan
-                            ikut dihapus.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={isDeleting}>
-                            Batal
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            disabled={isDeleting}
-                            onClick={(event) => {
-                                event.preventDefault();
-                                confirmDelete();
-                            }}
-                        >
-                            {isDeleting ? 'Menghapus...' : 'Hapus'}
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
 
             {/* Add/Edit Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -946,45 +873,48 @@ export default function UserManagement({
                                     placeholder="Masukkan nama lengkap"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            email: e.target.value,
-                                        })
-                                    }
-                                    placeholder="Masukkan email"
-                                    disabled={!editingUser}
-                                    className={
-                                        !editingUser
-                                            ? 'border-gray-400 bg-gray-200'
-                                            : ''
-                                    }
-                                />
-                            </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="nip">NIP/ NRP</Label>
-                                <Input
-                                    id="nip"
-                                    value={formData.nip}
-                                    onChange={(e) =>
-                                        setFormData({
-                                            ...formData,
-                                            nip: e.target.value,
-                                        })
-                                    }
-                                    disabled={Boolean(editingUser)}
-                                    placeholder="Masukkan NIP/NRP"
-                                />
-                            </div>
+                            {editingUser && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="email">Email</Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                email: e.target.value,
+                                            })
+                                        }
+                                        placeholder="Masukkan email"
+                                        disabled={!editingUser}
+                                        className={
+                                            !editingUser
+                                                ? 'border-gray-400 bg-gray-200'
+                                                : ''
+                                        }
+                                    />
+                                </div>
+                            )}
+
+                            {!editingUser && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="nip">NIP/ NRP</Label>
+                                    <Input
+                                        id="nip"
+                                        value={formData.nip}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                nip: e.target.value,
+                                            })
+                                        }
+                                        disabled={Boolean(editingUser)}
+                                        placeholder="Masukkan NIP/NRP"
+                                    />
+                                </div>
+                            )}
 
                             <div className="space-y-2">
                                 <Label htmlFor="unit_kerja">Unit Kerja</Label>
@@ -1014,9 +944,7 @@ export default function UserManagement({
                                     </SelectContent>
                                 </Select>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="jabatan">Jabatan</Label>
                                 <Select
@@ -1068,52 +996,55 @@ export default function UserManagement({
                                     </SelectContent>
                                 </Select>
                             </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="password">Password</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="password"
-                                        type={
-                                            showPassword ? 'text' : 'password'
-                                        }
-                                        value={formData.password}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                password: e.target.value,
-                                            })
-                                        }
-                                        placeholder={
-                                            editingUser
-                                                ? 'Kosongkan jika tidak ingin mengubah'
-                                                : 'Masukkan password'
-                                        }
-                                        disabled={!editingUser}
-                                        className={
-                                            !editingUser
-                                                ? 'border-gray-400 bg-gray-200'
-                                                : ''
-                                        }
-                                    />
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        size="icon"
-                                        className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                                        onClick={() =>
-                                            setShowPassword(!showPassword)
-                                        }
-                                    >
-                                        {showPassword ? (
-                                            <EyeOff className="h-4 w-4" />
-                                        ) : (
-                                            <Eye className="h-4 w-4" />
-                                        )}
-                                    </Button>
+
+                            {editingUser && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="password">Password</Label>
+                                    <div className="relative">
+                                        <Input
+                                            id="password"
+                                            type={
+                                                showPassword
+                                                    ? 'text'
+                                                    : 'password'
+                                            }
+                                            value={formData.password}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    password: e.target.value,
+                                                })
+                                            }
+                                            placeholder={
+                                                editingUser
+                                                    ? 'Kosongkan jika tidak ingin mengubah'
+                                                    : 'Masukkan password'
+                                            }
+                                            disabled={!editingUser}
+                                            className={
+                                                !editingUser
+                                                    ? 'border-gray-400 bg-gray-200'
+                                                    : ''
+                                            }
+                                        />
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                                            onClick={() =>
+                                                setShowPassword(!showPassword)
+                                            }
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff className="h-4 w-4" />
+                                            ) : (
+                                                <Eye className="h-4 w-4" />
+                                            )}
+                                        </Button>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                         </div>
                     </div>
 
@@ -1214,41 +1145,21 @@ export default function UserManagement({
                                     placeholder="Masukkan nama lengkap"
                                 />
                             </div>
+
                             <div className="space-y-2">
-                                <Label htmlFor="nip">NIP</Label>
+                                <Label htmlFor="jabatan">Jabatan</Label>
                                 <Input
-                                    id="nip"
-                                    value={formData.nip}
+                                    id="jabatan"
+                                    value={formData.jabatan}
                                     onChange={(e) =>
                                         setFormData({
                                             ...formData,
-                                            nip: e.target.value,
+                                            jabatan: e.target.value,
                                         })
                                     }
-                                    disabled={Boolean(editingUser)}
-                                    placeholder="Masukkan NIP/NRP"
-                                    className={
-                                        editingUser
-                                            ? 'border-gray-400 bg-gray-200'
-                                            : ''
-                                    }
+                                    placeholder="Masukkan jabatan"
                                 />
                             </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label htmlFor="jabatan">Jabatan</Label>
-                            <Input
-                                id="jabatan"
-                                value={formData.jabatan}
-                                onChange={(e) =>
-                                    setFormData({
-                                        ...formData,
-                                        jabatan: e.target.value,
-                                    })
-                                }
-                                placeholder="Masukkan jabatan"
-                            />
                         </div>
 
                         <div className="space-y-2">

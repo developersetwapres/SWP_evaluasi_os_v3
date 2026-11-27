@@ -38,7 +38,6 @@ Route::middleware(['auth', 'verified', 'role:operator'])->group(function () {
 });
 
 Route::middleware(['auth', 'verified', 'role:administrator'])->group(function () {
-    Route::delete('/dashboard/outsourcing-delete/{outsourcing:uuid}', [OutsourcingController::class, 'destroy'])->name('outsourcing.destroy');
     Route::put('/dashboard/outsourcing-update/{outsourcing:uuid}', [OutsourcingController::class, 'update'])->name('outsourcing.update');
     Route::post('/dashboard/outsourcing-store', [OutsourcingController::class, 'store'])->name('outsourcing.store');
 

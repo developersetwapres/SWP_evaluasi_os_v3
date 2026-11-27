@@ -17,9 +17,11 @@ type PaginationMeta = {
 export function ServerPagination({
     meta,
     onPageChange,
+    disabled = false,
 }: {
     meta: PaginationMeta;
     onPageChange: (page: number) => void;
+    disabled?: boolean;
 }) {
     const currentPage = meta?.current_page ?? 1;
     const totalPages = meta?.last_page ?? 1;
@@ -82,7 +84,7 @@ export function ServerPagination({
                     size="icon"
                     className="h-8 w-8 bg-transparent"
                     onClick={() => onPageChange(1)}
-                    disabled={currentPage === 1}
+                    disabled={disabled || currentPage === 1}
                 >
                     <ChevronsLeft className="h-4 w-4" />
                     <span className="sr-only">Halaman pertama</span>
@@ -92,7 +94,7 @@ export function ServerPagination({
                     size="icon"
                     className="h-8 w-8 bg-transparent"
                     onClick={() => onPageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
+                    disabled={disabled || currentPage === 1}
                 >
                     <ChevronLeft className="h-4 w-4" />
                     <span className="sr-only">Halaman sebelumnya</span>
@@ -116,6 +118,7 @@ export function ServerPagination({
                                 size="icon"
                                 className="h-8 w-8"
                                 onClick={() => onPageChange(page as number)}
+                                disabled={disabled}
                             >
                                 {page}
                             </Button>
@@ -128,7 +131,7 @@ export function ServerPagination({
                     size="icon"
                     className="h-8 w-8 bg-transparent"
                     onClick={() => onPageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    disabled={disabled || currentPage === totalPages}
                 >
                     <ChevronRight className="h-4 w-4" />
                     <span className="sr-only">Halaman selanjutnya</span>
@@ -138,7 +141,7 @@ export function ServerPagination({
                     size="icon"
                     className="h-8 w-8 bg-transparent"
                     onClick={() => onPageChange(totalPages)}
-                    disabled={currentPage === totalPages}
+                    disabled={disabled || currentPage === totalPages}
                 >
                     <ChevronsRight className="h-4 w-4" />
                     <span className="sr-only">Halaman terakhir</span>

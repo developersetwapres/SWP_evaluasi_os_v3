@@ -137,12 +137,7 @@ class OutsourcingController extends Controller
      */
     public function destroy(Outsourcing $outsourcing)
     {
-        DB::transaction(function () use ($outsourcing) {
-            $outsourcing->user()->delete();
-            $outsourcing->delete();
-        });
-
-        return redirect()->back()->with('success', 'Data Outsourcing berhasil dihapus.');
+        //
     }
 
     public function nilaiAkhir(

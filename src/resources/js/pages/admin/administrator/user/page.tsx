@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { Check, LoaderCircle, Pencil, Search, Trash2 } from 'lucide-react';
+import { Check, LoaderCircle, Pencil, Search, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { toast } from 'sonner';
@@ -127,6 +127,10 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
         setEditingRoleUserId(user.id);
     };
 
+    const cancelEditingRole = () => {
+        setEditingRoleUserId(null);
+    };
+
     const toggleRole = (role: UserRole, checked: boolean) => {
         setRoleDraft((currentRoles) => {
             if (checked && !currentRoles.includes(role)) {
@@ -249,8 +253,21 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                         setSearchTerm(event.target.value)
                                     }
                                     className="min-w-0 flex-1 bg-white"
+                                    disabled={
+                                        editingRoleUserId !== null ||
+                                        savingRoleUserId !== null ||
+                                        deletingUserId !== null
+                                    }
                                 />
-                                <Button type="submit" className="gap-2">
+                                <Button
+                                    type="submit"
+                                    className="gap-2"
+                                    disabled={
+                                        editingRoleUserId !== null ||
+                                        savingRoleUserId !== null ||
+                                        deletingUserId !== null
+                                    }
+                                >
                                     <Search className="h-4 w-4" />
                                     Cari
                                 </Button>
@@ -261,6 +278,11 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                 </span>
                                 <Select
                                     value={userTypeFilter}
+                                    disabled={
+                                        editingRoleUserId !== null ||
+                                        savingRoleUserId !== null ||
+                                        deletingUserId !== null
+                                    }
                                     onValueChange={(value) => {
                                         if (isUserTypeFilter(value)) {
                                             visitUsers(
@@ -338,6 +360,12 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                             }
                                                             aria-label={`NIP ${user.userable?.name ?? user.email}`}
                                                             className="h-8 w-44 bg-white font-mono"
+                                                            disabled={
+                                                                savingRoleUserId !==
+                                                                    null ||
+                                                                deletingUserId !==
+                                                                    null
+                                                            }
                                                         />
                                                     ) : (
                                                         <span className="font-mono text-sm">
@@ -385,11 +413,15 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                                                 role,
                                                                             )}
                                                                             disabled={
-                                                                                roleDraft.length ===
+                                                                                savingRoleUserId !==
+                                                                                    null ||
+                                                                                deletingUserId !==
+                                                                                    null ||
+                                                                                (roleDraft.length ===
                                                                                     1 &&
-                                                                                roleDraft.includes(
-                                                                                    role,
-                                                                                )
+                                                                                    roleDraft.includes(
+                                                                                        role,
+                                                                                    ))
                                                                             }
                                                                             onCheckedChange={(
                                                                                 checked,
@@ -438,22 +470,53 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                             type="button"
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"
-                                                            aria-label={`Edit role ${user.userable?.name ?? user.email}`}
-                                                            title="Edit role"
+                                                            className={
+                                                                editingRoleUserId ===
+                                                                user.id
+                                                                    ? 'h-8 w-8 text-rose-600 hover:bg-rose-50 hover:text-rose-700'
+                                                                    : 'h-8 w-8 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700'
+                                                            }
+                                                            aria-label={
+                                                                editingRoleUserId ===
+                                                                user.id
+                                                                    ? 'Batalkan edit'
+                                                                    : `Edit role ${user.userable?.name ?? user.email}`
+                                                            }
+                                                            title={
+                                                                editingRoleUserId ===
+                                                                user.id
+                                                                    ? 'Batalkan edit'
+                                                                    : 'Edit role'
+                                                            }
                                                             disabled={
                                                                 savingRoleUserId !==
                                                                     null ||
                                                                 deletingUserId !==
-                                                                    null
+                                                                    null ||
+                                                                (editingRoleUserId !==
+                                                                    null &&
+                                                                    editingRoleUserId !==
+                                                                        user.id)
                                                             }
-                                                            onClick={() =>
-                                                                startEditingRole(
-                                                                    user,
-                                                                )
-                                                            }
+                                                            onClick={() => {
+                                                                if (
+                                                                    editingRoleUserId ===
+                                                                    user.id
+                                                                ) {
+                                                                    cancelEditingRole();
+                                                                } else {
+                                                                    startEditingRole(
+                                                                        user,
+                                                                    );
+                                                                }
+                                                            }}
                                                         >
-                                                            <Pencil className="h-4 w-4" />
+                                                            {editingRoleUserId ===
+                                                            user.id ? (
+                                                                <X className="h-4 w-4" />
+                                                            ) : (
+                                                                <Pencil className="h-4 w-4" />
+                                                            )}
                                                         </Button>
                                                         {editingRoleUserId ===
                                                             user.id && (
@@ -495,6 +558,8 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                                 savingRoleUserId !==
                                                                     null ||
                                                                 deletingUserId !==
+                                                                    null ||
+                                                                editingRoleUserId !==
                                                                     null
                                                             }
                                                             onClick={() =>
@@ -517,6 +582,11 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                         <ServerPagination
                             meta={users}
                             onPageChange={changePage}
+                            disabled={
+                                editingRoleUserId !== null ||
+                                savingRoleUserId !== null ||
+                                deletingUserId !== null
+                            }
                         />
                     </CardContent>
                 </Card>
