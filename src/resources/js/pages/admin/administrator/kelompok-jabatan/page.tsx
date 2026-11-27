@@ -6,6 +6,7 @@ import type {
     CrudOption,
 } from '@/components/administrator/crud-manager';
 import { dashboard } from '@/routes';
+import { home } from '@/routes/administrator';
 import { destroy, index, store, update } from '@/routes/kelompokJabatan';
 import type { BreadcrumbItem } from '@/types/navigation';
 import type { PaginatedData } from '@/types/pagination';
@@ -27,7 +28,7 @@ type KelompokJabatanPageProps = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },
-    { title: 'Administrator', href: '#' },
+    { title: 'Administrator', href: home() },
     { title: 'Kelompok Jabatan Os', href: index() },
 ];
 
@@ -77,10 +78,8 @@ export default function KelompokJabatanPage({
             urls={{
                 index: index.url(),
                 store: store.url(),
-                update: (kelompok) =>
-                    update(String(kelompok.uuid ?? '')).url,
-                destroy: (kelompok) =>
-                    destroy(String(kelompok.uuid ?? '')).url,
+                update: (kelompok) => update(String(kelompok.uuid ?? '')).url,
+                destroy: (kelompok) => destroy(String(kelompok.uuid ?? '')).url,
             }}
         />
     );

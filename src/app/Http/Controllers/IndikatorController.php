@@ -42,14 +42,6 @@ class IndikatorController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Indikator $indikator): Response
-    {
-        return Inertia::render('admin/administrator/indikator/page', $this->pageProps('show', $indikator->loadMissing(['pilar', 'kelompokJabatan', 'behavioral'])));
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Indikator $indikator): Response

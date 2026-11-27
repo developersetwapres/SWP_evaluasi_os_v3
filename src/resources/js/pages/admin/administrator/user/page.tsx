@@ -43,6 +43,7 @@ import {
 import type { User } from '@/types';
 import type { BreadcrumbItem } from '@/types/navigation';
 import type { PaginatedData } from '@/types/pagination';
+import { home } from '@/routes/administrator';
 
 const userRoleOptions = ['evaluator', 'administrator', 'operator'] as const;
 type UserRole = (typeof userRoleOptions)[number];
@@ -67,7 +68,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
     {
         title: 'Administrator',
-        href: '#',
+        href: home(),
     },
     {
         title: 'User Management',
@@ -343,10 +344,10 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                     ) : (
                                         users.data.map((user, index) => (
                                             <TableRow key={user.id}>
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     {(users.from ?? 1) + index}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     {editingRoleUserId ===
                                                         user.id &&
                                                     isOutsourcingUser(user) ? (
@@ -373,15 +374,15 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                         </span>
                                                     )}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     {user.userable?.name ?? '-'}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     {user.email ??
                                                         user.nip_sso ??
                                                         '-'}
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     <span
                                                         className={
                                                             getUserTypeLabel(
@@ -394,7 +395,7 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                         {getUserTypeLabel(user)}
                                                     </span>
                                                 </TableCell>
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     {editingRoleUserId ===
                                                     user.id ? (
                                                         <div className="flex flex-wrap gap-1.5">
@@ -464,7 +465,7 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                                         </div>
                                                     )}
                                                 </TableCell>
-                                                <TableCell className="text-right">
+                                                <TableCell className="py-1.5 text-right">
                                                     <div className="flex justify-end gap-1">
                                                         <Button
                                                             type="button"

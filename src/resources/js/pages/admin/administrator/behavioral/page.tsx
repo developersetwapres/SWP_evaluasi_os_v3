@@ -6,6 +6,7 @@ import type {
     CrudOption,
 } from '@/components/administrator/crud-manager';
 import { dashboard } from '@/routes';
+import { home } from '@/routes/administrator';
 import { destroy, index, store, update } from '@/routes/behavioral';
 import type { BreadcrumbItem } from '@/types/navigation';
 import type { PaginatedData } from '@/types/pagination';
@@ -28,7 +29,7 @@ type BehavioralPageProps = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },
-    { title: 'Administrator', href: '#' },
+    { title: 'Administrator', href: home() },
     { title: 'Behavioral', href: index() },
 ];
 
@@ -42,7 +43,7 @@ const columns: CrudColumn<BehavioralRecord>[] = [
     {
         key: 'skor',
         label: 'Skor',
-        render: (behavioral) => `Skor ${behavioral.skor}`,
+        render: (behavioral) => ` ${behavioral.skor}`,
     },
 ];
 

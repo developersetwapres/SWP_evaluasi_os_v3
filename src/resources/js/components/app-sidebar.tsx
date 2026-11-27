@@ -1,5 +1,16 @@
 import { Link } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import {
+    BookOpen,
+    Brain,
+    BriefcaseBusiness,
+    ChartNoAxesCombined,
+    FolderGit2,
+    Landmark,
+    LayoutGrid,
+    LucideHome,
+    Network,
+    Users,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -18,37 +29,43 @@ import { index as kelompokJabatanIndex } from '@/routes/kelompokJabatan';
 import { index as pilarIndex } from '@/routes/pilar';
 import { indexAdministrator } from '@/routes/user';
 import type { NavItem } from '@/types';
+import { home } from '@/routes/administrator';
 
 const mainNavItems: NavItem[] = [
     {
+        title: 'Dashboard',
+        href: home(),
+        icon: LucideHome,
+    },
+    {
         title: 'User Management',
         href: indexAdministrator(),
-        icon: LayoutGrid,
+        icon: Users,
     },
     {
         title: 'Pilar',
         href: pilarIndex(),
-        icon: BookOpen,
+        icon: Landmark,
     },
     {
         title: 'Indikator',
         href: indikatorIndex(),
-        icon: FolderGit2,
+        icon: ChartNoAxesCombined,
     },
     {
         title: 'Behavioral',
         href: behavioralIndex(),
-        icon: FolderGit2,
+        icon: Brain,
     },
     {
         title: 'Kelompok Jabatan Os',
         href: kelompokJabatanIndex(),
-        icon: FolderGit2,
+        icon: Network,
     },
     {
         title: 'Jabatan Outsourcing',
         href: jabatanIndex(),
-        icon: FolderGit2,
+        icon: BriefcaseBusiness,
     },
 ];
 

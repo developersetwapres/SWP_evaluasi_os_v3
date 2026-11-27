@@ -39,14 +39,6 @@ class KelompokJabatanController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(KelompokJabatan $kelompokJabatan): Response
-    {
-        return Inertia::render('admin/administrator/kelompok-jabatan/page', $this->pageProps('show', $kelompokJabatan->loadMissing(['jabatan', 'indikator'])));
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(KelompokJabatan $kelompokJabatan): Response

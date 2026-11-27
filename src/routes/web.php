@@ -59,10 +59,13 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
 
     Route::put('synchronization-data-user/{type}', [SynchronizationUserController::class, 'update'])->name('synchronization.datauser');
 
+
     // Dashboard Administrator -------------------------------------------------
+    //--------------------------------------------------------------------------
     Route::get('/dashboard/administrator', [DashboardController::class, 'home'])
         ->name('administrator.home');
 
+    // User ------------------------------------------------------------------
     Route::get('/dashboard/administrator/user-management', [UserController::class, 'indexAdministrator'])
         ->name('user.indexAdministrator');
     Route::put('/dashboard/administrator/user-management/{user}', [UserController::class, 'updateAdministrator'])
@@ -74,7 +77,6 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/administrator/pilar', [PilarController::class, 'index'])->name('pilar.index');
     Route::get('/dashboard/administrator/pilar/create', [PilarController::class, 'create'])->name('pilar.create');
     Route::post('/dashboard/administrator/pilar/store', [PilarController::class, 'store'])->name('pilar.store');
-    Route::get('/dashboard/administrator/pilar/{pilar:uuid}', [PilarController::class, 'show'])->name('pilar.show');
     Route::get('/dashboard/administrator/pilar/{pilar:uuid}/edit', [PilarController::class, 'edit'])->name('pilar.edit');
     Route::put('/dashboard/administrator/pilar/{pilar:uuid}', [PilarController::class, 'update'])->name('pilar.update');
     Route::delete('/dashboard/administrator/pilar/{pilar:uuid}', [PilarController::class, 'destroy'])->name('pilar.destroy');
@@ -83,7 +85,6 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/administrator/indikator', [IndikatorController::class, 'index'])->name('indikator.index');
     Route::get('/dashboard/administrator/indikator/create', [IndikatorController::class, 'create'])->name('indikator.create');
     Route::post('/dashboard/administrator/indikator/store', [IndikatorController::class, 'store'])->name('indikator.store');
-    Route::get('/dashboard/administrator/indikator/{indikator:uuid}', [IndikatorController::class, 'show'])->name('indikator.show');
     Route::get('/dashboard/administrator/indikator/{indikator:uuid}/edit', [IndikatorController::class, 'edit'])->name('indikator.edit');
     Route::put('/dashboard/administrator/indikator/{indikator:uuid}', [IndikatorController::class, 'update'])->name('indikator.update');
     Route::delete('/dashboard/administrator/indikator/{indikator:uuid}', [IndikatorController::class, 'destroy'])->name('indikator.destroy');
@@ -92,7 +93,6 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/administrator/behavioral', [BehavioralController::class, 'index'])->name('behavioral.index');
     Route::get('/dashboard/administrator/behavioral/create', [BehavioralController::class, 'create'])->name('behavioral.create');
     Route::post('/dashboard/administrator/behavioral/store', [BehavioralController::class, 'store'])->name('behavioral.store');
-    Route::get('/dashboard/administrator/behavioral/{behavioral:uuid}', [BehavioralController::class, 'show'])->name('behavioral.show');
     Route::get('/dashboard/administrator/behavioral/{behavioral:uuid}/edit', [BehavioralController::class, 'edit'])->name('behavioral.edit');
     Route::put('/dashboard/administrator/behavioral/{behavioral:uuid}', [BehavioralController::class, 'update'])->name('behavioral.update');
     Route::delete('/dashboard/administrator/behavioral/{behavioral:uuid}', [BehavioralController::class, 'destroy'])->name('behavioral.destroy');
@@ -101,7 +101,6 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/administrator/kelompok-jabatan', [KelompokJabatanController::class, 'index'])->name('kelompokJabatan.index');
     Route::get('/dashboard/administrator/kelompok-jabatan/create', [KelompokJabatanController::class, 'create'])->name('kelompokJabatan.create');
     Route::post('/dashboard/administrator/kelompok-jabatan/store', [KelompokJabatanController::class, 'store'])->name('kelompokJabatan.store');
-    Route::get('/dashboard/administrator/kelompok-jabatan/{kelompokJabatan:uuid}', [KelompokJabatanController::class, 'show'])->name('kelompokJabatan.show');
     Route::get('/dashboard/administrator/kelompok-jabatan/{kelompokJabatan:uuid}/edit', [KelompokJabatanController::class, 'edit'])->name('kelompokJabatan.edit');
     Route::put('/dashboard/administrator/kelompok-jabatan/{kelompokJabatan:uuid}', [KelompokJabatanController::class, 'update'])->name('kelompokJabatan.update');
     Route::delete('/dashboard/administrator/kelompok-jabatan/{kelompokJabatan:uuid}', [KelompokJabatanController::class, 'destroy'])->name('kelompokJabatan.destroy');
@@ -110,10 +109,9 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/administrator/jabatan', [JabatanController::class, 'index'])->name('jabatan.index');
     Route::get('/dashboard/administrator/jabatan/create', [JabatanController::class, 'create'])->name('jabatan.create');
     Route::post('/dashboard/administrator/jabatan/store', [JabatanController::class, 'store'])->name('jabatan.store');
-    Route::get('/dashboard/administrator/jabatan/{jabatan}', [JabatanController::class, 'show'])->name('jabatan.show');
     Route::get('/dashboard/administrator/jabatan/{jabatan}/edit', [JabatanController::class, 'edit'])->name('jabatan.edit');
     Route::put('/dashboard/administrator/jabatan/{jabatan}', [JabatanController::class, 'update'])->name('jabatan.update');
     Route::delete('/dashboard/administrator/jabatan/{jabatan}', [JabatanController::class, 'destroy'])->name('jabatan.destroy');
 });
 
-require __DIR__.'/settings.php';
+require __DIR__ . '/settings.php';

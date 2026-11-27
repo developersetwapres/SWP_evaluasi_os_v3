@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { Eye, LoaderCircle, Pencil, Plus, Search, Trash2 } from 'lucide-react';
+import { LoaderCircle, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { FormEvent, ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -79,7 +79,6 @@ export type CrudField<T extends CrudRecord> = {
     optionsKey?: string;
     defaultValue?: string;
     getValue?: (item: T) => string | number;
-    display?: (item: T) => string;
     parse?: (value: string) => unknown;
 };
 
@@ -91,7 +90,7 @@ export type CrudColumn<T extends CrudRecord> = {
 };
 
 export type CrudDialogState<T extends CrudRecord> = {
-    mode: 'create' | 'edit' | 'show';
+    mode: 'create' | 'edit';
     item?: T | null;
 } | null;
 
@@ -131,29 +130,6 @@ function fieldValue<T extends CrudRecord>(
     const raw = (item as unknown as Record<string, unknown>)[field.name];
 
     return raw === null || raw === undefined ? '' : String(raw);
-}
-
-function displayValue<T extends CrudRecord>(
-    item: T,
-    field: CrudField<T>,
-    formOptions: Record<string, CrudOption[]>,
-): string {
-    if (field.display) {
-        return field.display(item);
-    }
-
-    const value = fieldValue(item, field);
-
-    if (field.type === 'select' && field.optionsKey) {
-        const options = formOptions[field.optionsKey] ?? [];
-
-        return (
-            options.find((option) => String(option.value) === value)?.label ??
-            '-'
-        );
-    }
-
-    return value === '' ? '-' : value;
 }
 
 export default function CrudManager<T extends CrudRecord>({
@@ -239,7 +215,7 @@ export default function CrudManager<T extends CrudRecord>({
     const submitForm = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
-        if (!dialog || dialog.mode === 'show' || saving) {
+        if (!dialog || saving) {
             return;
         }
 
@@ -347,7 +323,7 @@ export default function CrudManager<T extends CrudRecord>({
         <AppLayoutAdministrator breadcrumbs={breadcrumbs}>
             <Head title={title} />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl bg-linear-to-br from-white to-blue-100 p-4">
-                <Card className="gap-0">
+                <Card>
                     <CardHeader>
                         <div className="flex flex-col gap-4">
                             <div>
@@ -422,14 +398,15 @@ export default function CrudManager<T extends CrudRecord>({
                                     ) : (
                                         items.data.map((item, index) => (
                                             <TableRow key={item.id}>
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     {(items.from ?? 1) + index}
                                                 </TableCell>
                                                 {columns.map((column) => (
                                                     <TableCell
                                                         key={column.key}
                                                         className={
-                                                            column.className
+                                                            column.className +
+                                                            ' py-1.5'
                                                         }
                                                     >
                                                         {column.render
@@ -448,24 +425,8 @@ export default function CrudManager<T extends CrudRecord>({
                                                               )}
                                                     </TableCell>
                                                 ))}
-                                                <TableCell>
+                                                <TableCell className="py-1.5">
                                                     <div className="flex items-center justify-end gap-1">
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            title="Lihat detail"
-                                                            aria-label={`Detail ${entityLabel}`}
-                                                            disabled={isBusy}
-                                                            onClick={() =>
-                                                                setDialog({
-                                                                    mode: 'show',
-                                                                    item,
-                                                                })
-                                                            }
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
                                                         <Button
                                                             type="button"
                                                             variant="ghost"
@@ -516,7 +477,7 @@ export default function CrudManager<T extends CrudRecord>({
             </div>
 
             <Dialog
-                open={dialog !== null && dialog.mode !== 'show'}
+                open={dialog !== null}
                 onOpenChange={(open) => {
                     if (!open) {
                         closeDialog();
@@ -633,54 +594,6 @@ export default function CrudManager<T extends CrudRecord>({
                             </Button>
                         </DialogFooter>
                     </form>
-                </DialogContent>
-            </Dialog>
-
-            <Dialog
-                open={dialog?.mode === 'show' && dialog.item !== null}
-                onOpenChange={(open) => {
-                    if (!open) {
-                        setDialog(null);
-                    }
-                }}
-            >
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Detail {entityLabel}</DialogTitle>
-                        <DialogDescription>
-                            Informasi lengkap data yang dipilih.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                        {fields.map((field) => (
-                            <div
-                                className="grid grid-cols-3 gap-4 border-b pb-2 text-sm last:border-0"
-                                key={field.name}
-                            >
-                                <span className="font-medium text-muted-foreground">
-                                    {field.label}
-                                </span>
-                                <span className="col-span-2 break-words">
-                                    {dialog?.item
-                                        ? displayValue(
-                                              dialog.item,
-                                              field,
-                                              formOptions,
-                                          )
-                                        : '-'}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                    <DialogFooter>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setDialog(null)}
-                        >
-                            Tutup
-                        </Button>
-                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 

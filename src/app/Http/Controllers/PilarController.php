@@ -41,14 +41,6 @@ class PilarController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Pilar $pilar): Response
-    {
-        return Inertia::render('admin/administrator/pilar/page', $this->pageProps('show', $pilar->loadMissing('bobotSkor')));
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Pilar $pilar): Response
@@ -91,10 +83,10 @@ class PilarController extends Controller
 
         $pilars = Pilar::query()
             ->select(['id', 'uuid', 'title', 'bobot_skor_id', 'created_at', 'updated_at'])
-            ->with(['bobotSkor' => fn (BelongsTo $query) => $query->select(['id', 'title', 'kode_bobot', 'bobot'])])
+            ->with(['bobotSkor' => fn(BelongsTo $query) => $query->select(['id', 'title', 'kode_bobot', 'bobot'])])
             ->when($search !== '', function (Builder $query) use ($search): void {
                 $query->where('title', 'like', "%{$search}%")
-                    ->orWhereHas('bobotSkor', fn (Builder $relationQuery) => $relationQuery->where('title', 'like', "%{$search}%"));
+                    ->orWhereHas('bobotSkor', fn(Builder $relationQuery) => $relationQuery->where('title', 'like', "%{$search}%"));
             })
             ->orderByDesc('id')
             ->paginate(15)
@@ -108,7 +100,7 @@ class PilarController extends Controller
                     ->select(['id', 'title'])
                     ->orderBy('title')
                     ->get()
-                    ->map(fn (BobotSkor $bobotSkor) => [
+                    ->map(fn(BobotSkor $bobotSkor) => [
                         'value' => $bobotSkor->getKey(),
                         'label' => $bobotSkor->title,
                     ])

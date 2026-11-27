@@ -6,6 +6,7 @@ import type {
     CrudOption,
 } from '@/components/administrator/crud-manager';
 import { dashboard } from '@/routes';
+import { home } from '@/routes/administrator';
 import { destroy, index, store, update } from '@/routes/jabatan';
 import type { BreadcrumbItem } from '@/types/navigation';
 import type { PaginatedData } from '@/types/pagination';
@@ -27,13 +28,13 @@ type JabatanPageProps = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },
-    { title: 'Administrator', href: '#' },
+    { title: 'Administrator', href: home() },
     { title: 'Jabatan Outsourcing', href: index() },
 ];
 
 const columns: CrudColumn<JabatanRecord>[] = [
     { key: 'nama_jabatan', label: 'Nama Jabatan' },
-    { key: 'kode_jabatan', label: 'Kode Jabatan' },
+    // { key: 'kode_jabatan', label: 'Kode Jabatan' },
     {
         key: 'kelompok_jabatan_id',
         label: 'Kelompok Jabatan',
@@ -56,12 +57,12 @@ const fields: CrudField<JabatanRecord>[] = [
         required: true,
         placeholder: 'Masukkan nama jabatan',
     },
-    {
-        name: 'kode_jabatan',
-        label: 'Kode Jabatan',
-        required: true,
-        placeholder: 'Masukkan kode jabatan',
-    },
+    // {
+    //     name: 'kode_jabatan',
+    //     label: 'Kode Jabatan',
+    //     required: true,
+    //     placeholder: 'Masukkan kode jabatan',
+    // },
 ];
 
 export default function JabatanPage({

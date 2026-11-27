@@ -41,14 +41,6 @@ class BehavioralController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     */
-    public function show(Behavioral $behavioral): Response
-    {
-        return Inertia::render('admin/administrator/behavioral/page', $this->pageProps('show', $behavioral->loadMissing('indikator')));
-    }
-
-    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Behavioral $behavioral): Response

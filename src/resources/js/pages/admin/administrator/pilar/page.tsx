@@ -6,6 +6,7 @@ import type {
     CrudOption,
 } from '@/components/administrator/crud-manager';
 import { dashboard } from '@/routes';
+import { home } from '@/routes/administrator';
 import { destroy, index, store, update } from '@/routes/pilar';
 import type { BreadcrumbItem } from '@/types/navigation';
 import type { PaginatedData } from '@/types/pagination';
@@ -15,7 +16,8 @@ type PilarRecord = {
     uuid?: string;
     title: string;
     bobot_skor_id: number;
-    bobot_skor?: { id: number; title: string } | null;
+
+    bobot_skor?: { id: number; title: string; bobot: number } | null;
 };
 
 type PilarPageProps = {
@@ -27,7 +29,7 @@ type PilarPageProps = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },
-    { title: 'Administrator', href: '#' },
+    { title: 'Administrator', href: home() },
     { title: 'Pilar', href: index() },
 ];
 
@@ -36,7 +38,7 @@ const columns: CrudColumn<PilarRecord>[] = [
     {
         key: 'bobot_skor_id',
         label: 'Bobot Skor',
-        render: (pilar) => pilar.bobot_skor?.title ?? '-',
+        render: (pilar) => `${Number(pilar.bobot_skor?.bobot ?? 0)}%`,
     },
 ];
 

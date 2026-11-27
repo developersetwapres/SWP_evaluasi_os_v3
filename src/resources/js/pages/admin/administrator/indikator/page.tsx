@@ -6,6 +6,7 @@ import type {
     CrudOption,
 } from '@/components/administrator/crud-manager';
 import { dashboard } from '@/routes';
+import { home } from '@/routes/administrator';
 import { destroy, index, store, update } from '@/routes/indikator';
 import type { BreadcrumbItem } from '@/types/navigation';
 import type { PaginatedData } from '@/types/pagination';
@@ -31,7 +32,7 @@ type IndikatorPageProps = {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: dashboard() },
-    { title: 'Administrator', href: '#' },
+    { title: 'Administrator', href: home() },
     { title: 'Indikator', href: index() },
 ];
 
@@ -79,17 +80,16 @@ const fields: CrudField<IndikatorRecord>[] = [
         required: true,
         placeholder: 'Masukkan definisi indikator',
     },
-    {
-        name: 'example',
-        label: 'Contoh (JSON array)',
-        type: 'textarea',
-        defaultValue: '[]',
-        required: true,
-        placeholder: '["Contoh penerapan indikator"]',
-        getValue: (indikator) => JSON.stringify(indikator.example ?? []),
-        display: (indikator) => JSON.stringify(indikator.example ?? []),
-        parse: (value) => JSON.parse(value) as unknown,
-    },
+    // {
+    //     name: 'example',
+    //     label: 'Contoh (JSON array)',
+    //     type: 'textarea',
+    //     defaultValue: '[]',
+    //     required: true,
+    //     placeholder: '["Contoh penerapan indikator"]',
+    //     getValue: (indikator) => JSON.stringify(indikator.example ?? []),
+    //     parse: (value) => JSON.parse(value) as unknown,
+    // },
 ];
 
 export default function IndikatorPage({
@@ -115,8 +115,7 @@ export default function IndikatorPage({
             urls={{
                 index: index.url(),
                 store: store.url(),
-                update: (indikator) =>
-                    update(String(indikator.uuid ?? '')).url,
+                update: (indikator) => update(String(indikator.uuid ?? '')).url,
                 destroy: (indikator) =>
                     destroy(String(indikator.uuid ?? '')).url,
             }}
