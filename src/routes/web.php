@@ -60,11 +60,11 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/administrator', [DashboardController::class, 'home'])
         ->name('administrator.home');
 
-    Route::get('/dashboard/administrator-user-management', [UserController::class, 'indexAdministrator'])
+    Route::get('/dashboard/administrator/user-management', [UserController::class, 'indexAdministrator'])
         ->name('user.indexAdministrator');
-    Route::put('/dashboard/administrator-user-management/{user}', [UserController::class, 'updateAdministrator'])
+    Route::put('/dashboard/administrator/user-management/{user}', [UserController::class, 'updateAdministrator'])
         ->name('user.updateAdministrator');
-    Route::delete('/dashboard/administrator-user-management/{user}', [UserController::class, 'destroyAdministrator'])
+    Route::delete('/dashboard/administrator/user-management/{user}', [UserController::class, 'destroyAdministrator'])
         ->name('user.destroyAdministrator');
 });
 

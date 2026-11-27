@@ -19,11 +19,7 @@ export default function UserPage() {
     return (
         <AppLayoutAdministrator breadcrumbs={breadcrumbs}>
             <Head title="Pemesanan Ruang Rapat" />
-            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl bg-linear-to-br from-white to-blue-100 p-4">
-                <Card className="gap-0">
-                    <h1>Dashboard Administrator</h1>
-                </Card>
-            </div>
+            <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl bg-linear-to-br from-white to-blue-100 p-4"></div>
         </AppLayoutAdministrator>
     );
 }

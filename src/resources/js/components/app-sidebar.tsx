@@ -20,6 +20,31 @@ const mainNavItems: NavItem[] = [
         href: indexAdministrator(),
         icon: LayoutGrid,
     },
+    {
+        title: 'Pilar',
+        href: '#',
+        icon: BookOpen,
+    },
+    {
+        title: 'Indikator',
+        href: '#',
+        icon: FolderGit2,
+    },
+    {
+        title: 'Behavioral',
+        href: '#',
+        icon: FolderGit2,
+    },
+    {
+        title: 'Kelompok Jabatan Os',
+        href: '#',
+        icon: FolderGit2,
+    },
+    {
+        title: 'Jabatan Outsourcing',
+        href: '#',
+        icon: FolderGit2,
+    },
 ];
 
 export function AppSidebar() {
