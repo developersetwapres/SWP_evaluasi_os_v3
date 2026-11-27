@@ -2,7 +2,6 @@ import { Link } from '@inertiajs/react';
 import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
-import { indexAdministrator } from '@/routes/user';
 import {
     Sidebar,
     SidebarContent,
@@ -12,6 +11,12 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as behavioralIndex } from '@/routes/behavioral';
+import { index as indikatorIndex } from '@/routes/indikator';
+import { index as jabatanIndex } from '@/routes/jabatan';
+import { index as kelompokJabatanIndex } from '@/routes/kelompokJabatan';
+import { index as pilarIndex } from '@/routes/pilar';
+import { indexAdministrator } from '@/routes/user';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -22,27 +27,27 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Pilar',
-        href: '#',
+        href: pilarIndex(),
         icon: BookOpen,
     },
     {
         title: 'Indikator',
-        href: '#',
+        href: indikatorIndex(),
         icon: FolderGit2,
     },
     {
         title: 'Behavioral',
-        href: '#',
+        href: behavioralIndex(),
         icon: FolderGit2,
     },
     {
         title: 'Kelompok Jabatan Os',
-        href: '#',
+        href: kelompokJabatanIndex(),
         icon: FolderGit2,
     },
     {
         title: 'Jabatan Outsourcing',
-        href: '#',
+        href: jabatanIndex(),
         icon: FolderGit2,
     },
 ];

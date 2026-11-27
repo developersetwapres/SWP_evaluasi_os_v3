@@ -12,7 +12,7 @@ class StoreJabatanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,9 @@ class StoreJabatanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'kelompok_jabatan_id' => ['required', 'integer', 'exists:kelompok_jabatans,id'],
+            'nama_jabatan' => ['required', 'string', 'max:150', 'unique:jabatans,nama_jabatan'],
+            'kode_jabatan' => ['required', 'string', 'max:150', 'unique:jabatans,kode_jabatan'],
         ];
     }
 }

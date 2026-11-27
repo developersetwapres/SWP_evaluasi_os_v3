@@ -12,7 +12,7 @@ class UpdateBehavioralRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,9 @@ class UpdateBehavioralRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'indikator_id' => ['required', 'integer', 'exists:indikators,id'],
+            'behavioral' => ['required', 'string'],
+            'skor' => ['required', 'integer', 'between:1,4'],
         ];
     }
 }

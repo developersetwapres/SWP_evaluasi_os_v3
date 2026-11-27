@@ -12,7 +12,7 @@ class StoreKelompokJabatanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,7 @@ class StoreKelompokJabatanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'nama_kelompok' => ['required', 'string', 'max:150', 'unique:kelompok_jabatans,nama_kelompok'],
         ];
     }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests;
 
+use App\Models\KelompokJabatan;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateKelompokJabatanRequest extends FormRequest
 {
@@ -12,7 +14,7 @@ class UpdateKelompokJabatanRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -22,8 +24,16 @@ class UpdateKelompokJabatanRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var KelompokJabatan|null $kelompokJabatan */
+        $kelompokJabatan = $this->route('kelompokJabatan');
+
         return [
-            //
+            'nama_kelompok' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('kelompok_jabatans', 'nama_kelompok')->ignore($kelompokJabatan?->getKey()),
+            ],
         ];
     }
 }

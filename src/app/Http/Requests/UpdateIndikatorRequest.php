@@ -12,7 +12,7 @@ class UpdateIndikatorRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -23,7 +23,11 @@ class UpdateIndikatorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'pilar_id' => ['required', 'integer', 'exists:pilars,id'],
+            'kelompok_jabatan_id' => ['required', 'integer', 'exists:kelompok_jabatans,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'defenisi' => ['required', 'string'],
+            'example' => ['required', 'array'],
         ];
     }
 }

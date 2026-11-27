@@ -64,7 +64,6 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import {
-    destroy as destroyOutsourcing,
     store as storeOutsourcing,
     update as updateOutsourcing,
 } from '@/routes/outsourcing';
