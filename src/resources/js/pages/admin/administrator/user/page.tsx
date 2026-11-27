@@ -1,9 +1,9 @@
-import AppLayoutAdministrator from '@/layouts/app-layout-administrator';
-import { dashboard } from '@/routes';
-import { indexAdministrator } from '@/routes/user';
-import type { User } from '@/types';
 import { Head, router } from '@inertiajs/react';
-import { BreadcrumbItem } from '@/types/navigation';
+import { Search } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { ServerPagination } from '@/components/penilaian/server-pagination';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
     Table,
     TableBody,
@@ -12,20 +12,12 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
-
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { ServerPagination } from '@/components/penilaian/server-pagination';
-import { useState } from 'react';
-import { PaginatedData } from '@/types/pagination';
+import AppLayoutAdministrator from '@/layouts/app-layout-administrator';
+import { dashboard } from '@/routes';
+import { indexAdministrator } from '@/routes/user';
+import type { User } from '@/types';
+import type { BreadcrumbItem } from '@/types/navigation';
+import type { PaginatedData } from '@/types/pagination';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -44,65 +36,64 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 type UserPageProps = {
     users: PaginatedData<User>;
-    filters: any;
+    filters: { search?: string | null };
 };
 
 export default function UserPage({ users, filters = {} }: UserPageProps) {
-    console.log(users);
-
     const [searchTerm, setSearchTerm] = useState(filters.search ?? '');
-    const [statusFilter, setStatusFilter] = useState(filters.status ?? 'all');
 
     const queryParameters = (page = 1) => ({
         page,
         ...(searchTerm ? { search: searchTerm } : {}),
-        ...(statusFilter !== 'all' ? { status: statusFilter } : {}),
     });
 
     const changePage = (page: number) => {
         router.get(indexAdministrator(), queryParameters(page), {
-            only: ['bookingRooms'],
+            only: ['users', 'filters'],
             preserveScroll: true,
-            preserveState: true,
         });
     };
 
+    useEffect(() => {
+        if (searchTerm === (filters.search ?? '')) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => {
+            router.get(
+                indexAdministrator(),
+                {
+                    page: 1,
+                    ...(searchTerm ? { search: searchTerm } : {}),
+                },
+                {
+                    only: ['users', 'filters'],
+                    preserveScroll: true,
+                    replace: true,
+                },
+            );
+        }, 300);
+
+        return () => window.clearTimeout(timeout);
+    }, [filters.search, searchTerm]);
+
     return (
         <AppLayoutAdministrator breadcrumbs={breadcrumbs}>
-            <Head title="Pemesanan Ruang Rapat" />
+            <Head title="User Management" />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl bg-linear-to-br from-white to-blue-100 p-4">
                 <Card className="gap-0">
                     <CardHeader>
-                        <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="mb-4 flex flex-col gap-4 md:flex-row md:items-center">
                             <div className="flex w-full max-w-sm items-center space-x-2">
                                 <Search className="h-4 w-4 text-gray-400" />
                                 <Input
-                                    placeholder="Cari nama pengaju, kegiatan, atau kode pemesanan..."
-                                    value=""
-
+                                    placeholder="Cari nama, NIP, atau email..."
+                                    value={searchTerm}
+                                    onChange={(event) =>
+                                        setSearchTerm(event.target.value)
+                                    }
                                     className="w-full"
                                 />
-                            </div>
-                            <div className="flex items-center space-x-2">
-                                <Select value={'statusFilter'}>
-                                    <SelectTrigger className="w-45">
-                                        <SelectValue placeholder="Filter Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">
-                                            Semua Status
-                                        </SelectItem>
-                                        <SelectItem value="booked">
-                                            Dipesan
-                                        </SelectItem>
-                                        <SelectItem value="rescheduled">
-                                            Dijadwalkan Ulang
-                                        </SelectItem>
-                                        <SelectItem value="rejected">
-                                            Ditolak
-                                        </SelectItem>
-                                    </SelectContent>
-                                </Select>
                             </div>
                         </div>
                     </CardHeader>
@@ -128,10 +119,10 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                     {users.data.length === 0 ? (
                                         <TableRow>
                                             <TableCell
-                                                colSpan={8}
+                                                colSpan={6}
                                                 className="py-4 text-center text-gray-500"
                                             >
-                                                Tidak ada data pemesanan yang
+                                                Tidak ada pengguna yang
                                                 ditemukan
                                             </TableCell>
                                         </TableRow>
@@ -139,7 +130,7 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                                         users.data.map((user, index) => (
                                             <TableRow key={user.id}>
                                                 <TableCell>
-                                                    {index + 1}
+                                                    {(users.from ?? 1) + index}
                                                 </TableCell>
                                                 <TableCell>
                                                     {user.nip}
@@ -163,7 +154,7 @@ export default function UserPage({ users, filters = {} }: UserPageProps) {
                         </div>
 
                         <ServerPagination
-                            meta={users.meta}
+                            meta={users}
                             onPageChange={changePage}
                         />
                     </CardContent>

@@ -7,6 +7,7 @@ use App\Models\Jabatan;
 use App\Models\MasterPegawai;
 use App\Models\Outsourcing;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -113,28 +114,32 @@ class UserController extends Controller
 
     public function indexAdministrator(Request $request): Response
     {
+        $search = trim((string) $request->query('search', ''));
 
-        $search = $request->input('search');
-        $status = $request->input('status');
-
-        if ($request->query('user')) {
-            #
-        } else {
-            $user = User::query()
-                ->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role'])
-                ->with([
-                    'userable' => fn($q) => $q->select(['id', 'uuid', 'nip', 'name'])
-                ])
-                ->whereHasMorph('userable', [Outsourcing::class])
-                ->orderBy('role', 'asc')
-                ->take(10)
-                ->paginate(10)
-                ->withQueryString();
-        }
+        $user = User::query()
+            ->select(['id', 'userable_id', 'userable_type', 'nip', 'email', 'role'])
+            ->with([
+                'userable' => fn($q) => $q->select(['id', 'uuid', 'nip', 'name'])
+            ])
+            ->whereHasMorph('userable', [Outsourcing::class])
+            ->when($search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $query) use ($search): void {
+                    $query->where('nip', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhereHasMorph(
+                            'userable',
+                            [Outsourcing::class],
+                            fn(Builder $userableQuery) => $userableQuery->where('name', 'like', "%{$search}%")
+                        );
+                });
+            })
+            ->orderBy('role', 'asc')
+            ->paginate(15)
+            ->withQueryString();
 
         $data = [
             'users' => $user,
-            'filters' => $request->only(['search', 'status']),
+            'filters' => ['search' => $search],
         ];
 
         return Inertia::render('admin/administrator/user/page', $data);
