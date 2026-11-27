@@ -1,14 +1,13 @@
 import { Link } from '@inertiajs/react';
 import {
-    BookOpen,
     Brain,
     BriefcaseBusiness,
+    CalendarRange,
     ChartNoAxesCombined,
-    FolderGit2,
     Landmark,
-    LayoutGrid,
     LucideHome,
     Network,
+    Scale,
     Users,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -22,14 +21,16 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { home } from '@/routes/administrator';
 import { index as behavioralIndex } from '@/routes/behavioral';
+import { index as bobotSkorIndex } from '@/routes/bobotSkor';
 import { index as indikatorIndex } from '@/routes/indikator';
 import { index as jabatanIndex } from '@/routes/jabatan';
 import { index as kelompokJabatanIndex } from '@/routes/kelompokJabatan';
 import { index as pilarIndex } from '@/routes/pilar';
+import { index as siklusIndex } from '@/routes/siklus';
 import { indexAdministrator } from '@/routes/user';
 import type { NavItem } from '@/types';
-import { home } from '@/routes/administrator';
 
 const mainNavItems: NavItem[] = [
     {
@@ -41,6 +42,11 @@ const mainNavItems: NavItem[] = [
         title: 'User Management',
         href: indexAdministrator(),
         icon: Users,
+    },
+    {
+        title: 'Bobot Nilai',
+        href: bobotSkorIndex(),
+        icon: Scale,
     },
     {
         title: 'Pilar',
@@ -66,6 +72,11 @@ const mainNavItems: NavItem[] = [
         title: 'Jabatan Outsourcing',
         href: jabatanIndex(),
         icon: BriefcaseBusiness,
+    },
+    {
+        title: 'Siklus Semester',
+        href: siklusIndex(),
+        icon: CalendarRange,
     },
 ];
 

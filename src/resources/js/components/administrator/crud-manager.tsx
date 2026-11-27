@@ -40,6 +40,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import {
     Table,
     TableBody,
@@ -73,7 +74,7 @@ export type CrudOption = {
 export type CrudField<T extends CrudRecord> = {
     name: string;
     label: string;
-    type?: 'text' | 'textarea' | 'number' | 'select';
+    type?: 'text' | 'textarea' | 'number' | 'select' | 'date' | 'switch';
     placeholder?: string;
     required?: boolean;
     optionsKey?: string;
@@ -94,6 +95,12 @@ export type CrudDialogState<T extends CrudRecord> = {
     item?: T | null;
 } | null;
 
+export type CrudToggle = {
+    key: string;
+    activeLabel?: string;
+    inactiveLabel?: string;
+};
+
 type CrudManagerProps<T extends CrudRecord> = {
     title: string;
     description: string;
@@ -109,10 +116,12 @@ type CrudManagerProps<T extends CrudRecord> = {
         index: string;
         store: string;
         update: (item: T) => string;
-        destroy: (item: T) => string;
+        destroy?: (item: T) => string;
     };
     initialDialog?: CrudDialogState<T>;
     emptyMessage?: string;
+    canDelete?: boolean;
+    toggle?: CrudToggle;
 };
 
 function fieldValue<T extends CrudRecord>(
@@ -132,6 +141,10 @@ function fieldValue<T extends CrudRecord>(
     return raw === null || raw === undefined ? '' : String(raw);
 }
 
+function isTruthy(value: unknown): boolean {
+    return Boolean(value);
+}
+
 export default function CrudManager<T extends CrudRecord>({
     title,
     description,
@@ -146,6 +159,8 @@ export default function CrudManager<T extends CrudRecord>({
     urls,
     initialDialog = null,
     emptyMessage = 'Belum ada data yang ditemukan.',
+    canDelete = true,
+    toggle,
 }: CrudManagerProps<T>) {
     const [searchTerm, setSearchTerm] = useState(filters.search ?? '');
     const [dialog, setDialog] = useState<CrudDialogState<T>>(
@@ -156,6 +171,7 @@ export default function CrudManager<T extends CrudRecord>({
     const [saving, setSaving] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<T | null>(null);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [togglingId, setTogglingId] = useState<number | null>(null);
 
     useEffect(() => {
         // Keep the dialog in sync with the state provided by a page visit.
@@ -241,7 +257,13 @@ export default function CrudManager<T extends CrudRecord>({
                 continue;
             }
 
-            payload[field.name] = field.type === 'number' ? Number(raw) : raw;
+            if (field.type === 'switch') {
+                payload[field.name] = raw === 'true' || raw === '1';
+            } else if (field.type === 'number') {
+                payload[field.name] = Number(raw);
+            } else {
+                payload[field.name] = raw;
+            }
         }
 
         const isEdit = dialog.mode === 'edit' && dialog.item !== null;
@@ -287,7 +309,7 @@ export default function CrudManager<T extends CrudRecord>({
     };
 
     const confirmDelete = () => {
-        if (!deleteTarget || deletingId !== null) {
+        if (!deleteTarget || !urls.destroy || deletingId !== null) {
             return;
         }
 
@@ -317,7 +339,73 @@ export default function CrudManager<T extends CrudRecord>({
         });
     };
 
-    const isBusy = saving || deletingId !== null;
+    const toggleStatus = (item: T, checked: boolean) => {
+        if (!toggle || togglingId !== null) {
+            return;
+        }
+
+        const payload: CrudPayload = {};
+
+        for (const field of fields) {
+            const raw = fieldValue(item, field);
+
+            if (field.parse) {
+                try {
+                    payload[field.name] = field.parse(raw) as CrudPayloadValue;
+                } catch {
+                    toast.error(
+                        `${field.label} tidak berupa format yang valid.`,
+                    );
+                    setTogglingId(null);
+
+                    return;
+                }
+
+                continue;
+            }
+
+            if (field.type === 'switch') {
+                payload[field.name] = raw === 'true' || raw === '1';
+            } else if (field.type === 'number') {
+                payload[field.name] = Number(raw);
+            } else {
+                payload[field.name] = raw;
+            }
+        }
+
+        payload[toggle.key] = checked;
+        setTogglingId(item.id);
+
+        router.put(urls.update(item), payload, {
+            only: [itemsKey, 'filters', 'initialDialog'],
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success(
+                    `${entityLabel} berhasil ${checked ? 'diaktifkan' : 'dinonaktifkan'}.`,
+                );
+            },
+            onError: () => {
+                toast.error(
+                    `Gagal mengubah status ${entityLabel.toLowerCase()}.`,
+                );
+            },
+            onHttpException: (response: { status: number }) => {
+                toast.error(
+                    `Gagal mengubah status ${entityLabel.toLowerCase()} (HTTP ${response.status}).`,
+                );
+
+                return true;
+            },
+            onNetworkError: () => {
+                toast.error(
+                    `Koneksi gagal. Status ${entityLabel.toLowerCase()} belum diubah.`,
+                );
+            },
+            onFinish: () => setTogglingId(null),
+        });
+    };
+
+    const isBusy = saving || deletingId !== null || togglingId !== null;
 
     return (
         <AppLayoutAdministrator breadcrumbs={breadcrumbs}>
@@ -409,20 +497,68 @@ export default function CrudManager<T extends CrudRecord>({
                                                             ' py-1.5'
                                                         }
                                                     >
-                                                        {column.render
-                                                            ? column.render(
-                                                                  item,
-                                                              )
-                                                            : String(
-                                                                  (
-                                                                      item as unknown as Record<
-                                                                          string,
-                                                                          unknown
-                                                                      >
-                                                                  )[
-                                                                      column.key
-                                                                  ] ?? '-',
-                                                              )}
+                                                        {toggle &&
+                                                        column.key ===
+                                                            toggle.key ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <Switch
+                                                                    checked={isTruthy(
+                                                                        (
+                                                                            item as unknown as Record<
+                                                                                string,
+                                                                                unknown
+                                                                            >
+                                                                        )[
+                                                                            toggle
+                                                                                .key
+                                                                        ],
+                                                                    )}
+                                                                    aria-label={`Status ${entityLabel}`}
+                                                                    disabled={
+                                                                        isBusy ||
+                                                                        dialog !==
+                                                                            null
+                                                                    }
+                                                                    onCheckedChange={(
+                                                                        checked,
+                                                                    ) =>
+                                                                        toggleStatus(
+                                                                            item,
+                                                                            checked,
+                                                                        )
+                                                                    }
+                                                                />
+                                                                <span className="text-sm text-muted-foreground">
+                                                                    {isTruthy(
+                                                                        (
+                                                                            item as unknown as Record<
+                                                                                string,
+                                                                                unknown
+                                                                            >
+                                                                        )[
+                                                                            toggle
+                                                                                .key
+                                                                        ],
+                                                                    )
+                                                                        ? (toggle.activeLabel ??
+                                                                          'Aktif')
+                                                                        : (toggle.inactiveLabel ??
+                                                                          'Tidak aktif')}
+                                                                </span>
+                                                            </div>
+                                                        ) : column.render ? (
+                                                            column.render(item)
+                                                        ) : (
+                                                            String(
+                                                                (
+                                                                    item as unknown as Record<
+                                                                        string,
+                                                                        unknown
+                                                                    >
+                                                                )[column.key] ??
+                                                                    '-',
+                                                            )
+                                                        )}
                                                     </TableCell>
                                                 ))}
                                                 <TableCell className="py-1.5">
@@ -440,22 +576,27 @@ export default function CrudManager<T extends CrudRecord>({
                                                         >
                                                             <Pencil className="h-4 w-4" />
                                                         </Button>
-                                                        <Button
-                                                            type="button"
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            title="Hapus data"
-                                                            aria-label={`Hapus ${entityLabel}`}
-                                                            className="text-red-600 hover:text-red-700"
-                                                            disabled={isBusy}
-                                                            onClick={() =>
-                                                                setDeleteTarget(
-                                                                    item,
-                                                                )
-                                                            }
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        {canDelete &&
+                                                        urls.destroy ? (
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                title="Hapus data"
+                                                                aria-label={`Hapus ${entityLabel}`}
+                                                                className="text-red-600 hover:text-red-700"
+                                                                disabled={
+                                                                    isBusy
+                                                                }
+                                                                onClick={() =>
+                                                                    setDeleteTarget(
+                                                                        item,
+                                                                    )
+                                                                }
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        ) : null}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -554,13 +695,40 @@ export default function CrudManager<T extends CrudRecord>({
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                ) : field.type === 'switch' ? (
+                                    <div className="flex items-center gap-2">
+                                        <Switch
+                                            id={`crud-${field.name}`}
+                                            checked={
+                                                form[field.name] === 'true' ||
+                                                form[field.name] === '1'
+                                            }
+                                            disabled={saving}
+                                            onCheckedChange={(checked) =>
+                                                setForm((current) => ({
+                                                    ...current,
+                                                    [field.name]: checked
+                                                        ? 'true'
+                                                        : 'false',
+                                                }))
+                                            }
+                                        />
+                                        <span className="text-sm text-muted-foreground">
+                                            {form[field.name] === 'true' ||
+                                            form[field.name] === '1'
+                                                ? 'Aktif'
+                                                : 'Tidak aktif'}
+                                        </span>
+                                    </div>
                                 ) : (
                                     <Input
                                         id={`crud-${field.name}`}
                                         type={
                                             field.type === 'number'
                                                 ? 'number'
-                                                : 'text'
+                                                : field.type === 'date'
+                                                  ? 'date'
+                                                  : 'text'
                                         }
                                         value={form[field.name] ?? ''}
                                         placeholder={field.placeholder}
@@ -597,47 +765,49 @@ export default function CrudManager<T extends CrudRecord>({
                 </DialogContent>
             </Dialog>
 
-            <AlertDialog
-                open={deleteTarget !== null}
-                onOpenChange={(open) => {
-                    if (!open && deletingId === null) {
-                        setDeleteTarget(null);
-                    }
-                }}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Hapus {entityLabel} ini?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Data {entityLabel.toLowerCase()} yang dipilih akan
-                            dihapus permanen. Tindakan ini tidak dapat
-                            dibatalkan.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel disabled={deletingId !== null}>
-                            Batal
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            className="gap-2"
-                            disabled={deletingId !== null}
-                            onClick={(event) => {
-                                event.preventDefault();
-                                confirmDelete();
-                            }}
-                        >
-                            {deletingId !== null ? (
-                                <LoaderCircle className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <Trash2 className="h-4 w-4" />
-                            )}
-                            Hapus permanen
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            {canDelete && urls.destroy ? (
+                <AlertDialog
+                    open={deleteTarget !== null}
+                    onOpenChange={(open) => {
+                        if (!open && deletingId === null) {
+                            setDeleteTarget(null);
+                        }
+                    }}
+                >
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>
+                                Hapus {entityLabel} ini?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Data {entityLabel.toLowerCase()} yang dipilih
+                                akan dihapus permanen. Tindakan ini tidak dapat
+                                dibatalkan.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel disabled={deletingId !== null}>
+                                Batal
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                                className="gap-2"
+                                disabled={deletingId !== null}
+                                onClick={(event) => {
+                                    event.preventDefault();
+                                    confirmDelete();
+                                }}
+                            >
+                                {deletingId !== null ? (
+                                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Trash2 className="h-4 w-4" />
+                                )}
+                                Hapus permanen
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            ) : null}
         </AppLayoutAdministrator>
     );
 }

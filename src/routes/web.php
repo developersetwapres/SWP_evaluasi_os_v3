@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BehavioralController;
+use App\Http\Controllers\BobotSkorController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IndikatorController;
 use App\Http\Controllers\JabatanController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\OutsourcingController;
 use App\Http\Controllers\PenilaianController;
 use App\Http\Controllers\PenugasanController;
 use App\Http\Controllers\PilarController;
+use App\Http\Controllers\SiklusController;
 use App\Http\Controllers\Synchronization\UserController as SynchronizationUserController;
 use App\Http\Controllers\UserController;
 use App\Services\Uploadfile\FotoUserService;
@@ -59,9 +61,8 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
 
     Route::put('synchronization-data-user/{type}', [SynchronizationUserController::class, 'update'])->name('synchronization.datauser');
 
-
     // Dashboard Administrator -------------------------------------------------
-    //--------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     Route::get('/dashboard/administrator', [DashboardController::class, 'home'])
         ->name('administrator.home');
 
@@ -112,6 +113,21 @@ Route::middleware(['auth', 'verified', 'role:administrator'])->group(function ()
     Route::get('/dashboard/administrator/jabatan/{jabatan}/edit', [JabatanController::class, 'edit'])->name('jabatan.edit');
     Route::put('/dashboard/administrator/jabatan/{jabatan}', [JabatanController::class, 'update'])->name('jabatan.update');
     Route::delete('/dashboard/administrator/jabatan/{jabatan}', [JabatanController::class, 'destroy'])->name('jabatan.destroy');
+
+    // Siklus Semester -------------------------------------------------------
+    Route::get('/dashboard/administrator/siklus-semester', [SiklusController::class, 'index'])->name('siklus.index');
+    Route::get('/dashboard/administrator/siklus-semester/create', [SiklusController::class, 'create'])->name('siklus.create');
+    Route::post('/dashboard/administrator/siklus-semester/store', [SiklusController::class, 'store'])->name('siklus.store');
+    Route::get('/dashboard/administrator/siklus-semester/{siklus:uuid}/edit', [SiklusController::class, 'edit'])->name('siklus.edit');
+    Route::put('/dashboard/administrator/siklus-semester/{siklus:uuid}', [SiklusController::class, 'update'])->name('siklus.update');
+
+    // Bobot Nilai -----------------------------------------------------------
+    Route::get('/dashboard/administrator/bobot-nilai', [BobotSkorController::class, 'index'])->name('bobotSkor.index');
+    Route::get('/dashboard/administrator/bobot-nilai/create', [BobotSkorController::class, 'create'])->name('bobotSkor.create');
+    Route::post('/dashboard/administrator/bobot-nilai/store', [BobotSkorController::class, 'store'])->name('bobotSkor.store');
+    Route::get('/dashboard/administrator/bobot-nilai/{bobotSkor}/edit', [BobotSkorController::class, 'edit'])->name('bobotSkor.edit');
+    Route::put('/dashboard/administrator/bobot-nilai/{bobotSkor}', [BobotSkorController::class, 'update'])->name('bobotSkor.update');
+    Route::delete('/dashboard/administrator/bobot-nilai/{bobotSkor}', [BobotSkorController::class, 'destroy'])->name('bobotSkor.destroy');
 });
 
-require __DIR__ . '/settings.php';
+require __DIR__.'/settings.php';
